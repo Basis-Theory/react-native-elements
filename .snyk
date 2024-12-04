@@ -1,0 +1,15 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JS-BRACES-6838727:
+    - '*':
+        reason: A fix was pushed into the master branch but not yet published.
+        expires: 2024-05-25T16:40:02.519Z
+        created: 2024-05-20T16:40:02.519Z
+  SNYK-JS-MICROMATCH-6838728:
+    - '*':
+        reason: A fix was pushed into the master branch but not yet published.
+        expires: 2024-05-25T16:40:02.519Z
+        created: 2024-05-20T16:40:02.519Z
+version: v1.25.0
+patch: {}
