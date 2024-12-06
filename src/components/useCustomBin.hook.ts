@@ -1,7 +1,7 @@
-import type { CreditCardType } from '@basis-theory/basis-theory-js/types/elements';
 import { creditCardType } from 'card-validator';
 import { always, compose, groupBy, ifElse, isEmpty } from 'ramda';
 import { useEffect, useState } from 'react';
+import { CreditCardType } from '../types/cardTypes';
 
 const throwIfDuppedCardConfig = ifElse(
   (arr: (CreditCardType[] | undefined)[]) =>
@@ -15,7 +15,7 @@ const throwIfDuppedCardConfig = ifElse(
   always(false)
 );
 
-const groupByCreditCardType = groupBy((obj: CreditCardType) => obj['type']);
+const groupByCreditCardType = groupBy((obj: CreditCardType) => obj.type);
 
 const checkDuppedCards = compose(
   throwIfDuppedCardConfig,

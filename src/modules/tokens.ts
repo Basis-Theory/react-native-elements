@@ -1,13 +1,8 @@
-import type {
-  CreateToken,
-  UpdateToken,
+import {
+  CreateTokenRequest,
   Token,
-  TokenizeData as _TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
-import type {
-  BasisTheory as BasisTheoryType,
-  RequestOptions,
-} from '@basis-theory/basis-theory-js/types/sdk';
+  UpdateTokenRequest,
+} from '@basis-theory/node-sdk/api';
 import type {
   BTRef,
   InputBTRefWithDatepart,
@@ -20,30 +15,40 @@ import {
 } from '../utils/dataManipulationUtils';
 import { logger } from '../utils/logging';
 import { isNilOrEmpty } from '../utils/shared';
+import { BasisTheoryClient } from '@basis-theory/node-sdk';
+import { Tokens as TokenClient } from '@basis-theory/node-sdk/api/resources/tokens/client/Client';
 
-export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
+export type CreateTokenWithBtRef = Omit<CreateTokenRequest, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
 };
 
-export type UpdateTokenWithBtRef = Omit<UpdateToken, 'data'> & {
+export type UpdateTokenWithBtRef = Omit<UpdateTokenRequest, 'data'> & {
   data: Record<
     string,
     BTRef | InputBTRefWithDatepart | string | null | undefined
   >;
 };
 
-export type TokenizeData = _TokenizeData<
-  BTRef | InputBTRefWithDatepart | PrimitiveType
->;
+export type TokenizeData =
+  | BTRef
+  | InputBTRefWithDatepart
+  | PrimitiveType
+  | unknown;
 
-export const Tokens = (bt: BasisTheoryType) => {
-  const getTokenById = async <T>(id: string, apiKey?: string) => {
+export const Tokens = (client: BasisTheoryClient) => {
+  const getTokenById = async (
+    id: string,
+    requestOptions?: TokenClient.RequestOptions,
+    alternativeClient?: BasisTheoryClient
+  ) => {
+    if (alternativeClient) {
+      client = alternativeClient;
+    }
+
     try {
-      const _token = await bt.tokens.retrieve(id, {
-        apiKey,
-      });
+      const _token = await client.tokens.get(id, requestOptions);
 
-      const token = replaceSensitiveData(_token) as Token<T>;
+      const token = replaceSensitiveData(_token) as Token;
 
       await logger.log.info(`Token retrieved ${id}`);
 
@@ -58,8 +63,13 @@ export const Tokens = (bt: BasisTheoryType) => {
 
   const create = async (
     tokenWithRef: CreateTokenWithBtRef,
-    requestOptions?: RequestOptions
+    requestOptions?: TokenClient.IdempotentRequestOptions,
+    alternativeClient?: BasisTheoryClient
   ) => {
+    if (alternativeClient) {
+      client = alternativeClient;
+    }
+
     if (!isNilOrEmpty(_elementErrors)) {
       throw new Error(
         'Unable to create token. Payload contains invalid values. Review elements events for more details.'
@@ -67,9 +77,9 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
 
     try {
-      const _token = replaceElementRefs<CreateToken>(tokenWithRef);
+      const _token = replaceElementRefs<CreateTokenRequest>(tokenWithRef);
 
-      const token = await bt.tokens.create(_token, requestOptions);
+      const token = await client.tokens.create(_token, requestOptions);
 
       await logger.log.info(`Token created: ${token.id}`);
 
@@ -82,8 +92,13 @@ export const Tokens = (bt: BasisTheoryType) => {
   const update = async (
     tokenId: string,
     tokenWithRef: UpdateTokenWithBtRef,
-    requestOptions?: RequestOptions
+    requestOptions?: TokenClient.IdempotentRequestOptions,
+    alternativeClient?: BasisTheoryClient
   ) => {
+    if (alternativeClient) {
+      client = alternativeClient;
+    }
+
     if (!isNilOrEmpty(_elementErrors)) {
       throw new Error(
         'Unable to create token. Payload contains invalid values. Review elements events for more details.'
@@ -91,9 +106,9 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
 
     try {
-      const _token = replaceElementRefs<UpdateToken>(tokenWithRef);
+      const _token = replaceElementRefs<UpdateTokenRequest>(tokenWithRef);
 
-      const token = await bt.tokens.update(tokenId, _token, requestOptions);
+      const token = await client.tokens.update(tokenId, _token, requestOptions);
 
       await logger.log.info(`Token updated: ${tokenId}`);
 
@@ -103,10 +118,17 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
   };
 
-  const deleteToken = async (id: string) => {
+  const deleteToken = async (
+    id: string,
+    requestOptions?: TokenClient.RequestOptions,
+    alternativeClient?: BasisTheoryClient
+  ) => {
+    if (alternativeClient) {
+      client = alternativeClient;
+    }
     try {
       if (id) {
-        await bt.tokens.delete(id);
+        await client.tokens.delete(id, requestOptions);
 
         await logger.log.info(`Token deleted: ${id}`);
       }
@@ -115,12 +137,20 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
   };
 
-  const tokenize = async (data: TokenizeData) => {
+  const tokenize = async (
+    data: TokenizeData,
+    requestOptions?: TokenClient.IdempotentRequestOptions,
+    alternativeClient?: BasisTheoryClient
+  ) => {
+    if (alternativeClient) {
+      client = alternativeClient;
+    }
+
     try {
       if (data) {
-        const _token = replaceElementRefs<_TokenizeData>(data);
+        const _token = replaceElementRefs<TokenizeData>(data);
 
-        return await bt.tokenize(_token);
+        return await client.tokens.tokenize(_token, requestOptions);
       }
     } catch (error) {
       await logger.log.error('Error while running tokenize', error as Error);

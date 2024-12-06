@@ -1,4 +1,3 @@
-import type { CreditCardType } from '@basis-theory/basis-theory-js/types/elements';
 import type { ForwardedRef } from 'react';
 import { useId, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
@@ -13,6 +12,7 @@ import { useMask } from './shared/useMask';
 import { useUserEventHandlers } from './shared/useUserEventHandlers';
 import { useCustomBin } from './useCustomBin.hook';
 import { useCleanupStateBeforeUnmount } from './shared/useCleanStateOnUnmount';
+import { CreditCardType } from '../types/cardTypes';
 
 type UseCardNumberElementProps = {
   btRef?: ForwardedRef<BTRef>;

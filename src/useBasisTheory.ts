@@ -1,35 +1,25 @@
-import type {
-  BasisTheoryInitOptionsWithoutElements,
-  BasisTheory as BasisTheoryType,
-} from '@basis-theory/basis-theory-js/types/sdk';
 import { useEffect, useState } from 'react';
-import { BasisTheory } from '@basis-theory/basis-theory-js';
+import { BasisTheoryClient } from '@basis-theory/node-sdk';
 
-import { Proxy } from './modules/proxy';
+// import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { Tokens } from './modules/tokens';
 import { useBasisTheoryFromContext } from './BasisTheoryProvider';
 import { logger } from './utils/logging';
 
-const _BasisTheoryElements = async ({
-  apiKey,
-  apiBaseUrl,
-}: BasisTheoryInitOptionsWithoutElements & { apiKey: string }) => {
-  const bt: BasisTheoryType = await new BasisTheory().init(
-    apiKey,
-    apiBaseUrl ? { apiBaseUrl } : undefined
-  );
+const _BasisTheoryElements = async (options: BasisTheoryClient.Options) => {
+  const client: BasisTheoryClient = new BasisTheoryClient(options);
 
-  const proxy = Proxy(bt);
+  // const proxy = Proxy(client);
 
-  const sessions = Sessions(bt);
+  const sessions = Sessions(client);
 
-  const tokens = Tokens(bt);
+  const tokens = Tokens(client);
 
   return {
     sessions,
     tokens,
-    proxy,
+    // proxy,
   };
 };
 
@@ -40,24 +30,20 @@ type UseBasisTheory = {
   bt?: BasisTheoryElements;
 };
 
-const useBasisTheory = (
-  apiKey: string,
-  options?: BasisTheoryInitOptionsWithoutElements
-): UseBasisTheory => {
+const useBasisTheory = (options: BasisTheoryClient.Options): UseBasisTheory => {
   const [state, setState] = useState<UseBasisTheory>({});
 
   const { bt } = useBasisTheoryFromContext();
 
-  if (!apiKey) {
-    // eslint-disable-next-line no-console
+  if (!options.apiKey) {
     console.error('Please enter a valid API key');
   }
 
   useEffect(() => {
     (async () => {
-      if (!state.bt && apiKey && !state.error) {
+      if (!state.bt && options.apiKey && !state.error) {
         try {
-          const bt = await _BasisTheoryElements({ apiKey, ...options });
+          const bt = await _BasisTheoryElements(options);
 
           await logger.log.info('Succesfully initialized Elements');
 
@@ -76,7 +62,7 @@ const useBasisTheory = (
         }
       }
     })();
-  }, [state, apiKey, options]);
+  }, [state, options]);
 
   if (state.bt || state.error) {
     return {

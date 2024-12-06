@@ -1,10 +1,10 @@
+import { BasisTheoryClient } from '@basis-theory/node-sdk';
 import { _elementErrors, _elementValues } from '../../src/ElementValues';
 import {
   CreateTokenWithBtRef,
   TokenizeData,
   Tokens,
 } from '../../src/modules/tokens';
-import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
 
 jest.mock('../../src/ElementValues', () => ({
   _elementValues: {},
@@ -30,9 +30,10 @@ describe('tokens', () => {
 
   test('calls bt tokens create', async () => {
     const mockCreate = jest.fn();
+
     const tokens = Tokens({
       tokens: { create: mockCreate },
-    } as unknown as BasisTheoryType);
+    } as unknown as BasisTheoryClient);
 
     const tokenWithRef = {
       id: 'tokenID',
@@ -72,8 +73,8 @@ describe('tokens', () => {
   test('calls bt tokens tokenize', async () => {
     const mockTokenize = jest.fn();
     const tokens = Tokens({
-      tokenize: mockTokenize,
-    } as unknown as BasisTheoryType);
+      tokens: { tokenize: mockTokenize },
+    } as unknown as BasisTheoryClient);
 
     const tokenizeDataWithRef = {
       card: {
@@ -111,14 +112,14 @@ describe('tokens', () => {
 
     await tokens.tokenize(tokenizeDataWithRef);
 
-    expect(mockTokenize).toHaveBeenCalledWith(expectedResult);
+    expect(mockTokenize).toHaveBeenCalledWith(expectedResult, undefined);
   });
 
   test('calls bt tokens update', async () => {
     const mockUpdate = jest.fn();
     const tokens = Tokens({
       tokens: { update: mockUpdate },
-    } as unknown as BasisTheoryType);
+    } as unknown as BasisTheoryClient);
 
     const tokenWithRef = {
       data: {
@@ -150,11 +151,11 @@ test('calls bt tokens delete', async () => {
   const mockDelete = jest.fn();
   const tokens = Tokens({
     tokens: { delete: mockDelete },
-  } as unknown as BasisTheoryType);
+  } as unknown as BasisTheoryClient);
 
   await tokens.delete('tokenID');
 
-  expect(mockDelete).toHaveBeenCalledWith('tokenID');
+  expect(mockDelete).toHaveBeenCalledWith('tokenID', undefined);
 });
 
 describe('tokens - Validation', () => {
@@ -163,7 +164,7 @@ describe('tokens - Validation', () => {
       secondArrayElement: 'incomplete',
     });
 
-    const tokens = Tokens({} as BasisTheoryType);
+    const tokens = Tokens({} as BasisTheoryClient);
 
     const tokenWithRef = {
       id: 'tokenID',

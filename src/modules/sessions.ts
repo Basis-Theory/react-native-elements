@@ -1,10 +1,10 @@
-import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
+import { BasisTheoryClient } from '@basis-theory/node-sdk';
 import { logger } from '../utils/logging';
 
-export const Sessions = (bt: BasisTheoryType) => {
+export const Sessions = (client: BasisTheoryClient) => {
   const create = async () => {
     try {
-      const session = await bt.sessions.create();
+      const session = await client.sessions.create();
 
       await logger.log.info('Session created');
 
