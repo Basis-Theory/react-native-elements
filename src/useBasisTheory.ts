@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BasisTheoryClient } from '@basis-theory/node-sdk';
 
-// import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { Tokens } from './modules/tokens';
 import { useBasisTheoryFromContext } from './BasisTheoryProvider';
@@ -10,8 +9,6 @@ import { logger } from './utils/logging';
 const _BasisTheoryElements = async (options: BasisTheoryClient.Options) => {
   const client: BasisTheoryClient = new BasisTheoryClient(options);
 
-  // const proxy = Proxy(client);
-
   const sessions = Sessions(client);
 
   const tokens = Tokens(client);
@@ -19,7 +16,6 @@ const _BasisTheoryElements = async (options: BasisTheoryClient.Options) => {
   return {
     sessions,
     tokens,
-    // proxy,
   };
 };
 

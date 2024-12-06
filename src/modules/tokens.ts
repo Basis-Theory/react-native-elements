@@ -36,7 +36,7 @@ export type TokenizeData =
   | unknown;
 
 export const Tokens = (client: BasisTheoryClient) => {
-  const getTokenById = async (
+  const getById = async (
     id: string,
     requestOptions?: TokenClient.RequestOptions,
     alternativeClient?: BasisTheoryClient
@@ -158,9 +158,7 @@ export const Tokens = (client: BasisTheoryClient) => {
   };
 
   return {
-    /** @deprecated use `bt.tokens.retrieve` instead */
-    getById: getTokenById,
-    retrieve: getTokenById,
+    getById,
     create,
     update,
     delete: deleteToken,
