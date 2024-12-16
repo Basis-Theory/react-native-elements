@@ -2,7 +2,6 @@
  * @format
  */
 
-import { VISA, MASTERCARD } from '@basis-theory/basis-theory-js/types/elements';
 import 'react-native';
 import React from 'react';
 
@@ -14,6 +13,7 @@ import {
 } from '@testing-library/react-native';
 import { CardNumberElement } from '../../src';
 import cardValidator from 'card-validator';
+import { MASTERCARD, VISA } from '../../src/types/cardTypes';
 
 describe('CardNumberElement', () => {
   beforeEach(() => {
