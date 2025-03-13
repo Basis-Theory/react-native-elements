@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.0.0...v1.1.0) (2025-03-13)
+
+
+### Features
+
+* sync with btrn ([#7](https://github.com/Basis-Theory/react-native-elements/issues/7)) ([a06616f](https://github.com/Basis-Theory/react-native-elements/commit/a06616f0e2a2e3310cb86136be47e23cc22dff4b))
+
 # 1.0.0 (2024-12-10)
 
 
