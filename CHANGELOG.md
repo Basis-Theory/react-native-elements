@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.1.1...v1.2.0) (2025-04-14)
+
+
+### Features
+
+* add token intents ([#15](https://github.com/Basis-Theory/react-native-elements/issues/15)) ([bf20c65](https://github.com/Basis-Theory/react-native-elements/commit/bf20c65278304f7a90949e500d400a5d84e05ae4))
+
 ## [1.1.1](https://github.com/Basis-Theory/react-native-elements/compare/v1.1.0...v1.1.1) (2025-03-17)
 
 
