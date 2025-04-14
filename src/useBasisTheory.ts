@@ -9,6 +9,7 @@ import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { Tokens } from './modules/tokens';
 import { useBasisTheoryFromContext } from './BasisTheoryProvider';
+import { TokenIntents } from './modules/tokenIntents';
 
 const _BasisTheoryElements = async ({
   apiKey,
@@ -25,10 +26,13 @@ const _BasisTheoryElements = async ({
 
   const tokens = Tokens(bt);
 
+  const tokenIntents = TokenIntents(bt);
+
   return {
-    sessions,
-    tokens,
     proxy,
+    sessions,
+    tokenIntents,
+    tokens,
   };
 };
 
