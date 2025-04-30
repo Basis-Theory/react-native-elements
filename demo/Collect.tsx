@@ -86,6 +86,25 @@ export const Collect = () => {
     }
   };
 
+  const encryptToken = async () => {
+    try {
+      const encryptedToken = await bt?.tokens.encrypt({
+        data: {
+          number: cardNumberRef.current,
+          expiration_month: cardExpirationDateRef.current?.month(),
+          expiration_year: cardExpirationDateRef.current?.year(),
+          cvc: cardVerificationCodeRef.current,
+        },
+        key_id: 'KID',
+        public_key: 'PUBLIC KEY',
+      });
+
+      return encryptedToken;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const createToken = async () => {
     try {
       const _token = await bt?.tokens.create({

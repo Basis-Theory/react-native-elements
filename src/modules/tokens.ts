@@ -24,6 +24,13 @@ export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
 };
 
+export type EncryptTokenWithBtRef = {
+  // why tokenRequests? instead of just data?
+  data: CreateToken;
+  public_key: string;
+  key_id: string;
+};
+
 export type UpdateTokenWithBtRef = Omit<UpdateToken, 'data'> & {
   data: Record<
     string,
@@ -62,6 +69,30 @@ export const Tokens = (bt: BasisTheoryType) => {
 
     try {
       const _token = replaceElementRefs<CreateToken>(tokenWithRef);
+
+      const token = await bt.tokens.create(_token, requestOptions);
+
+      return token;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const encrypt = async (
+    tokenWithRef: EncryptTokenWithBtRef,
+    requestOptions?: RequestOptions
+  ) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to create token. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
+    try {
+      const _token = replaceElementRefs<CreateToken>(tokenWithRef.data);
+
+      tokenWithRef.key_id;
+      tokenWithRef.public_key;
 
       const token = await bt.tokens.create(_token, requestOptions);
 
@@ -121,6 +152,7 @@ export const Tokens = (bt: BasisTheoryType) => {
     retrieve: getTokenById,
     create,
     update,
+    encrypt,
     delete: deleteToken,
     tokenize,
   };
