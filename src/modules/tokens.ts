@@ -19,6 +19,8 @@ import {
   replaceSensitiveData,
 } from '../utils/dataManipulationUtils';
 import { isNilOrEmpty } from '../utils/shared';
+import { EncryptToken } from '../model/EncryptTokenData';
+import { encryptToken } from '../tokenEncryption';
 
 export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
@@ -115,6 +117,25 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
   };
 
+  const encrypt = async (
+    encryptRequest: EncryptToken,
+  ) => {
+
+    console.log('encryptRequest', encryptRequest);
+    if (!isNilOrEmpty(_elementErrors)) {
+      console.log('element errors', _elementErrors);
+      throw new Error(
+        'Unable to encrypt token. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
+    try {
+      return await encryptToken(encryptRequest);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return {
     /** @deprecated use `bt.tokens.retrieve` instead */
     getById: getTokenById,
@@ -123,5 +144,6 @@ export const Tokens = (bt: BasisTheoryType) => {
     update,
     delete: deleteToken,
     tokenize,
+    encrypt,
   };
 };
