@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.2.0...v1.3.0) (2025-06-11)
+
+
+### Features
+
+* **eng-8294:** adding encryption method in token object ([#16](https://github.com/Basis-Theory/react-native-elements/issues/16)) ([1c6a8c9](https://github.com/Basis-Theory/react-native-elements/commit/1c6a8c927c4eaf8e802f703afad79c3cead6b0ed))
+
 # [1.2.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.1.1...v1.2.0) (2025-04-14)
 
 
