@@ -1,13 +1,6 @@
-import { EncryptedToken, EncryptToken, TokenData, TokenDataWithRef } from './model/EncryptTokenData';
-import { replaceElementRefs } from './utils/dataManipulationUtils';
-import { ReactNativeCrypto } from './crypto/reactNativeCrypto';
-
-const ENCRYPTION = {
-  KEY_TYPE: 'OKP',
-  CURVE: 'X25519',
-  ALGORITHM: 'ECDH-ES',
-  ENCRYPTION_ALGORITHM: 'A256GCM'
-} as const;
+import { EncryptedToken, EncryptToken, TokenData, TokenDataWithRef } from '../model/EncryptTokenData';
+import { replaceElementRefs } from '../utils/dataManipulationUtils';
+import { JWE } from './jwe';
 
 export class EncryptValidationError extends Error {
   public constructor(message: string) {
@@ -30,23 +23,7 @@ const createJWE = async (
   keyId: string
 ): Promise<string> => {
   try {
-    const crypto = ReactNativeCrypto.getInstance();
-
-    // Decode the public key from base64url
-    const publicKeyBytes = crypto.decodePublicKey(publicKeyBase64url);
-
-    // Create JWE header
-    const header = {
-      alg: ENCRYPTION.ALGORITHM,
-      enc: ENCRYPTION.ENCRYPTION_ALGORITHM,
-      kid: keyId
-    };
-
-    // Convert payload to bytes
-    const payloadBytes = new TextEncoder().encode(payload);
-
-    // Create JWE
-    return await crypto.createJWE(payloadBytes, publicKeyBytes, header);
+    return await new JWE().createJWE(payload, publicKeyBase64url, keyId);
   } catch (error) {
     throw new Error(
       `Failed to create JWE: ${
