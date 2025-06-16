@@ -24,6 +24,7 @@ import type {
 } from '@basis-theory/basis-theory-js/types/models';
 import { styles } from './styles';
 import type { ElementEvents } from '../App';
+import { EncryptedToken, EncryptToken } from '../src/model/EncryptTokenData';
 
 const Divider = () => <View style={styles.divider} />;
 
@@ -32,6 +33,7 @@ export const Collect = () => {
   const [tokenizedData, setTokenizedData] = useState<
     TokenizeData | undefined
   >();
+  const [encryptedToken, setEncryptedToken] = useState<EncryptedToken[] | undefined>();
 
   const [tokenId, setTokenId] = useState('');
 
@@ -45,7 +47,9 @@ export const Collect = () => {
   const cardExpirationDateRef = useRef<BTDateRef>(null);
   const cardVerificationCodeRef = useRef<BTRef>(null);
 
-  const { bt, error } = useBasisTheory('<API_KEY>');
+  const { bt, error } = useBasisTheory('key_dev_test_us_pvt_CbNcivtyB2jwNFB67QGmoJ.2a9cb03e146213d482b7615cb6bd0629', {
+    apiBaseUrl: 'https://api.flock-dev.com' // Replace with your desired API base URL
+  });
 
   const [cvcLength, setCvcLength] = useState<number>();
 
@@ -142,6 +146,29 @@ export const Collect = () => {
     }
   };
 
+  const encryptToken = async () => {
+    try {
+      const encryptRequest: EncryptToken = {
+        tokenRequests: {
+          type: 'card',
+          data: {
+            number: cardNumberRef.current,
+            expiration_month: cardExpirationDateRef.current?.month(),
+            expiration_year: cardExpirationDateRef.current?.year(),
+            cvc: cardVerificationCodeRef.current,
+          },
+        },
+        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\nFGlA/OOvOFcIkVgjMFKbPWzbheY826yk6D98qki1EQw=\n-----END PUBLIC KEY-----',
+        keyId: 'b6465886-a5aa-4787-9db4-86263ad53498'
+      };
+
+      const encrypted = await bt?.tokens.encrypt(encryptRequest);
+      setEncryptedToken(encrypted);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const clearToken = () => {
     cardExpirationDateRef.current?.clear();
     cardNumberRef.current?.clear();
@@ -150,6 +177,7 @@ export const Collect = () => {
     setTokenId('');
     setToken(undefined);
     setTokenizedData(undefined);
+    setEncryptedToken(undefined);
   };
 
   return (
@@ -230,6 +258,15 @@ export const Collect = () => {
             <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
           </Pressable>
 
+          <Pressable
+            onPress={encryptToken}
+            style={{
+              ...styles.button,
+            }}
+          >
+            <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
+          </Pressable>
+
           <Divider />
 
           <Pressable onPress={clearToken} style={styles.button}>
@@ -253,6 +290,16 @@ export const Collect = () => {
               <Text style={styles.text}>TOKENIZED DATA: </Text>
               <Text style={styles.text}>
                 {JSON.stringify(tokenizedData, undefined, 2)}
+              </Text>
+            </>
+          )}
+
+          {encryptedToken && (
+            <>
+              <Divider />
+              <Text style={styles.text}>ENCRYPTED TOKEN: </Text>
+              <Text style={styles.text}>
+                {JSON.stringify(encryptedToken, undefined, 2)}
               </Text>
             </>
           )}

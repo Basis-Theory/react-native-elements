@@ -1,6 +1,6 @@
-import { CompactEncrypt, importJWK, JWK, KeyLike } from 'jose';
 import { EncryptedToken, EncryptToken, TokenData, TokenDataWithRef } from './model/EncryptTokenData';
 import { replaceElementRefs } from './utils/dataManipulationUtils';
+import { ReactNativeCrypto } from './crypto/reactNativeCrypto';
 
 const ENCRYPTION = {
   KEY_TYPE: 'OKP',
@@ -17,24 +17,36 @@ export class EncryptValidationError extends Error {
 }
 
 /**
- * Creates a JSON Web Encryption (JWE) object for the given payload
+ * Creates a JSON Web Encryption (JWE) object for the given payload using ReactNativeCrypto
  * @param payload - The string payload to encrypt
- * @param jwk - The JSON Web Key containing key metadata
- * @param key - The cryptographic key for encryption
+ * @param publicKeyBase64url - The base64url encoded X25519 public key
+ * @param keyId - The key ID for the JWE header
  * @returns Promise resolving to the encrypted JWE string
  * @throws {Error} When encryption fails or parameters are invalid
  */
 const createJWE = async (
   payload: string,
-  jwk: JWK,
-  key: KeyLike | Uint8Array
+  publicKeyBase64url: string,
+  keyId: string
 ): Promise<string> => {
   try {
-    return new CompactEncrypt(
-      new TextEncoder().encode(payload)
-    )
-      .setProtectedHeader({ alg: ENCRYPTION.ALGORITHM, enc: ENCRYPTION.ENCRYPTION_ALGORITHM, kid: jwk.kid })
-      .encrypt(key);
+    const crypto = ReactNativeCrypto.getInstance();
+
+    // Decode the public key from base64url
+    const publicKeyBytes = crypto.decodePublicKey(publicKeyBase64url);
+
+    // Create JWE header
+    const header = {
+      alg: ENCRYPTION.ALGORITHM,
+      enc: ENCRYPTION.ENCRYPTION_ALGORITHM,
+      kid: keyId
+    };
+
+    // Convert payload to bytes
+    const payloadBytes = new TextEncoder().encode(payload);
+
+    // Create JWE
+    return await crypto.createJWE(payloadBytes, publicKeyBytes, header);
   } catch (error) {
     throw new Error(
       `Failed to create JWE: ${
@@ -59,22 +71,12 @@ const normalizeTokenRequests = (
   return Object.values(tokenRequests);
 };
 
-const removePEMFormat = (publicKeyPEM: string) =>
-  publicKeyPEM
-    .replace('-----BEGIN PUBLIC KEY-----', '')
-    .replace('-----END PUBLIC KEY-----', '')
-    .replace(/[\n\r]/gu, '')
-    .replace(/\+/gu, '-')
-    .replace(/\//gu, '_')
-    .replace(/[=]+$/gu, '');
-
 /**
- * Encrypts token data using JSON Web Encryption (JWE)
+ * Encrypts token data using JSON Web Encryption (JWE) with ReactNativeCrypto
  * @param payload - The encryption payload containing token requests, public key, and key ID
  * @returns Promise resolving to an array of encrypted tokens
  * @throws {Error} When encryption fails or payload is invalid
  */
-// TODO: To avoid duplication, add this to web-elements when we completely drop basis-theory-js
 export const encryptToken = async (
   payload: EncryptToken
 ): Promise<EncryptedToken[]> => {
@@ -95,16 +97,6 @@ export const encryptToken = async (
   }
 
   try {
-
-    const jwk: JWK = {
-      kty: ENCRYPTION.KEY_TYPE,
-      crv: ENCRYPTION.CURVE,
-      x: removePEMFormat(payload.publicKeyPEM),
-      kid: payload.keyId
-    };
-
-    const key = await importJWK(jwk, ENCRYPTION.ALGORITHM);
-
     const tokensWithRef: TokenDataWithRef[] = normalizeTokenRequests(payload.tokenRequests);
     if (!tokensWithRef.length) {
       throw new EncryptValidationError('No valid tokens found to encrypt');
@@ -118,9 +110,8 @@ export const encryptToken = async (
           throw new EncryptValidationError('Token type is required');
         }
 
-        const tokenPayload = JSON.stringify(token);
-        const encrypted = await createJWE(tokenPayload, jwk, key);
-
+        const tokenPayload = JSON.stringify(token.data);
+        const encrypted = await createJWE(tokenPayload, payload.publicKeyPEM, payload.keyId);
         return {
           encrypted,
           type: token.type,
