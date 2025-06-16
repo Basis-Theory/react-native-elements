@@ -47,9 +47,7 @@ export const Collect = () => {
   const cardExpirationDateRef = useRef<BTDateRef>(null);
   const cardVerificationCodeRef = useRef<BTRef>(null);
 
-  const { bt, error } = useBasisTheory('key_dev_test_us_pvt_CbNcivtyB2jwNFB67QGmoJ.2a9cb03e146213d482b7615cb6bd0629', {
-    apiBaseUrl: 'https://api.flock-dev.com' // Replace with your desired API base URL
-  });
+  const { bt, error } = useBasisTheory('<API_KEY>');
 
   const [cvcLength, setCvcLength] = useState<number>();
 
@@ -158,8 +156,9 @@ export const Collect = () => {
             cvc: cardVerificationCodeRef.current,
           },
         },
-        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\nFGlA/OOvOFcIkVgjMFKbPWzbheY826yk6D98qki1EQw=\n-----END PUBLIC KEY-----',
-        keyId: 'b6465886-a5aa-4787-9db4-86263ad53498'
+        // public key from dev environment
+        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\noCXqWBAnKV24Xt1/lCVzN3fg1w8INuCRcp8B0EwmbxA=\n-----END PUBLIC KEY-----',
+        keyId: '1c6e6249-9c55-47a1-a8c4-73c0b3d60a64'
       };
 
       const encrypted = await bt?.tokens.encrypt(encryptRequest);
