@@ -20,7 +20,7 @@ import {
 } from '../utils/dataManipulationUtils';
 import { isNilOrEmpty } from '../utils/shared';
 import { EncryptToken } from '../model/EncryptTokenData';
-import { encryptToken } from '../crypto/tokenEncryption';
+import { encryptToken, setupEncryption } from '../services/tokenEncryption';
 
 export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
@@ -38,6 +38,8 @@ export type TokenizeData = _TokenizeData<
 >;
 
 export const Tokens = (bt: BasisTheoryType) => {
+  setupEncryption();
+
   const getTokenById = async <T>(id: string, apiKey?: string) => {
     try {
       const _token = await bt.tokens.retrieve(id, {
@@ -117,10 +119,7 @@ export const Tokens = (bt: BasisTheoryType) => {
     }
   };
 
-  const encrypt = async (
-    encryptRequest: EncryptToken,
-  ) => {
-
+  const encrypt = async (encryptRequest: EncryptToken) => {
     if (!isNilOrEmpty(_elementErrors)) {
       throw new Error(
         'Unable to encrypt token. Payload contains invalid values. Review elements events for more details.'
