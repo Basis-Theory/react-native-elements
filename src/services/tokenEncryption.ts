@@ -1,6 +1,16 @@
-import { EncryptedToken, EncryptToken, TokenData, TokenDataWithRef } from '../model/EncryptTokenData';
+// This MUST be imported before any @noble libraries
+
+import 'react-native-get-random-values';
+import { install } from 'react-native-quick-crypto';
+
+import {
+  EncryptedToken,
+  EncryptToken,
+  TokenData,
+  TokenDataWithRef,
+} from '../model/EncryptTokenData';
 import { replaceElementRefs } from '../utils/dataManipulationUtils';
-import { JWE } from './jwe';
+import { JWE } from '../utils/jwe';
 
 export class EncryptValidationError extends Error {
   public constructor(message: string) {
@@ -8,6 +18,26 @@ export class EncryptValidationError extends Error {
     this.name = 'EncryptValidationError';
   }
 }
+
+export const setupEncryption = () => {
+  install();
+
+  if (!globalThis.crypto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { webcrypto } = require('react-native-quick-crypto');
+    if (webcrypto) {
+      globalThis.crypto = webcrypto;
+    } else {
+      throw new Error('Failed to setup crypto polyfill for React Native');
+    }
+  }
+
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error(
+      'crypto.getRandomValues is not available after polyfill setup'
+    );
+  }
+};
 
 /**
  * Creates a JSON Web Encryption (JWE) object for the given payload using ReactNativeCrypto
@@ -23,7 +53,7 @@ const createJWE = async (
   keyId: string
 ): Promise<string> => {
   try {
-    return await new JWE().createJWE(payload, publicKeyBase64url, keyId);
+    return await JWE.createJWE(payload, publicKeyBase64url, keyId);
   } catch (error) {
     throw new Error(
       `Failed to create JWE: ${
@@ -74,12 +104,16 @@ export const encryptToken = async (
   }
 
   try {
-    const tokensWithRef: TokenDataWithRef[] = normalizeTokenRequests(payload.tokenRequests);
+    const tokensWithRef: TokenDataWithRef[] = normalizeTokenRequests(
+      payload.tokenRequests
+    );
     if (!tokensWithRef.length) {
       throw new EncryptValidationError('No valid tokens found to encrypt');
     }
 
-    const tokens: TokenData[] = tokensWithRef.map(token => replaceElementRefs<TokenData>(token));
+    const tokens: TokenData[] = tokensWithRef.map((token) =>
+      replaceElementRefs<TokenData>(token)
+    );
 
     return await Promise.all(
       tokens.map(async (token) => {
@@ -88,7 +122,11 @@ export const encryptToken = async (
         }
 
         const tokenPayload = JSON.stringify(token.data);
-        const encrypted = await createJWE(tokenPayload, payload.publicKeyPEM, payload.keyId);
+        const encrypted = await createJWE(
+          tokenPayload,
+          payload.publicKeyPEM,
+          payload.keyId
+        );
         return {
           encrypted,
           type: token.type,
