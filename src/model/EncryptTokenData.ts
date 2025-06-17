@@ -1,6 +1,7 @@
 // TODO: Migrate to web-elements when we completely drop basis-theory-js
 import {
   CreateToken,
+  Primitive,
   TokenBase,
 } from '@basis-theory/basis-theory-js/types/models';
 import { BTRef, InputBTRefWithDatepart } from '../BaseElementTypes';
@@ -11,7 +12,7 @@ import { BTRef, InputBTRefWithDatepart } from '../BaseElementTypes';
  */
 type TokenDataWithRef = {
   /** Key-value pairs where values are element references or date part references */
-  data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
+  data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined | Primitive>;
   type: TokenBase['type'];
 };
 

@@ -24,6 +24,7 @@ import type {
 } from '@basis-theory/basis-theory-js/types/models';
 import { styles } from './styles';
 import type { ElementEvents } from '../App';
+import { EncryptedToken, EncryptToken } from '../src/model/EncryptTokenData';
 
 const Divider = () => <View style={styles.divider} />;
 
@@ -32,6 +33,7 @@ export const Collect = () => {
   const [tokenizedData, setTokenizedData] = useState<
     TokenizeData | undefined
   >();
+  const [encryptedToken, setEncryptedToken] = useState<EncryptedToken[] | undefined>();
 
   const [tokenId, setTokenId] = useState('');
 
@@ -142,6 +144,30 @@ export const Collect = () => {
     }
   };
 
+  const encryptToken = async () => {
+    try {
+      const encryptRequest: EncryptToken = {
+        tokenRequests: {
+          type: 'card',
+          data: {
+            number: cardNumberRef.current,
+            expiration_month: cardExpirationDateRef.current?.month(),
+            expiration_year: cardExpirationDateRef.current?.year(),
+            cvc: cardVerificationCodeRef.current,
+          },
+        },
+        // public key from dev environment
+        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\noCXqWBAnKV24Xt1/lCVzN3fg1w8INuCRcp8B0EwmbxA=\n-----END PUBLIC KEY-----',
+        keyId: '1c6e6249-9c55-47a1-a8c4-73c0b3d60a64'
+      };
+
+      const encrypted = await bt?.tokens.encrypt(encryptRequest);
+      setEncryptedToken(encrypted);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const clearToken = () => {
     cardExpirationDateRef.current?.clear();
     cardNumberRef.current?.clear();
@@ -150,6 +176,7 @@ export const Collect = () => {
     setTokenId('');
     setToken(undefined);
     setTokenizedData(undefined);
+    setEncryptedToken(undefined);
   };
 
   return (
@@ -230,6 +257,15 @@ export const Collect = () => {
             <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
           </Pressable>
 
+          <Pressable
+            onPress={encryptToken}
+            style={{
+              ...styles.button,
+            }}
+          >
+            <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
+          </Pressable>
+
           <Divider />
 
           <Pressable onPress={clearToken} style={styles.button}>
@@ -253,6 +289,16 @@ export const Collect = () => {
               <Text style={styles.text}>TOKENIZED DATA: </Text>
               <Text style={styles.text}>
                 {JSON.stringify(tokenizedData, undefined, 2)}
+              </Text>
+            </>
+          )}
+
+          {encryptedToken && (
+            <>
+              <Divider />
+              <Text style={styles.text}>ENCRYPTED TOKEN: </Text>
+              <Text style={styles.text}>
+                {JSON.stringify(encryptedToken, undefined, 2)}
               </Text>
             </>
           )}
