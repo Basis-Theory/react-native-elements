@@ -1,5 +1,3 @@
-import '../crypto/cryptoSetup';
-
 import { gcm } from '@noble/ciphers/aes';
 import { randomBytes } from '@noble/ciphers/webcrypto';
 import { x25519 } from '@noble/curves/ed25519';

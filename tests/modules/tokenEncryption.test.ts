@@ -4,7 +4,7 @@ import {
   Tokens,
 } from '../../src/modules/tokens';
 import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
-import { EncryptValidationError } from '../../src/crypto/tokenEncryption';
+import { EncryptValidationError } from '../../src/services/tokenEncryption';
 
 jest.mock('../../src/ElementValues', () => ({
   _elementValues: {},
