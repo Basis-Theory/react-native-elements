@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.3.0...v1.4.0) (2025-06-17)
+
+
+### Features
+
+* Replace jose with Noble for JWE Support in React Native ([#17](https://github.com/Basis-Theory/react-native-elements/issues/17)) ([b0d88ac](https://github.com/Basis-Theory/react-native-elements/commit/b0d88ac6f662f591e6847d462adb8454262426b8))
+
 # [1.3.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.2.0...v1.3.0) (2025-06-11)
 
 
