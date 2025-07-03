@@ -39,12 +39,14 @@ type EncryptToken = {
  * Result of token encryption operation.
  * Contains the encrypted token string and its original type.
  */
-type EncryptedToken = {
+type EncryptedSingleToken = {
   /** Base64-encoded encrypted token data */
   encrypted: string;
 
   /** Original token type before encryption */
   type: TokenBase['type'];
 };
+
+type EncryptedToken = EncryptedSingleToken | Record<string, EncryptedSingleToken>;
 
 export { EncryptToken, EncryptedToken, TokenData, TokenDataWithRef };
