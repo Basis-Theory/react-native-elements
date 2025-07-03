@@ -127,9 +127,8 @@ export const encryptToken = async (
             payload.keyId
           );
           
-          return [
-            key, 
-              {
+          return [key, 
+            {
               encrypted,
               type: token.type
             } 
