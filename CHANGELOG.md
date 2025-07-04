@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.4.0...v1.5.0) (2025-07-04)
+
+
+### Features
+
+* including token alias in the return when encrypting multiple tokens ([#20](https://github.com/Basis-Theory/react-native-elements/issues/20)) ([1c4be6c](https://github.com/Basis-Theory/react-native-elements/commit/1c4be6cf31e12e7893363346669565e65b4a7fb2))
+
 # [1.4.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.3.0...v1.4.0) (2025-06-17)
 
 
