@@ -43,10 +43,10 @@ describe('tokens - Encrypt', () => {
 
     const result = await Tokens({} as BasisTheoryType).encrypt(encryptRequest);
     expect(result).toBeDefined();
-    expect(result).toHaveLength(1);
-    expect(result![0].encrypted).toBeDefined();
-    expect(result![0].encrypted.split('.').length).toBe(5);
-    expect(result![0].type).toBe('card');
+    const singleResult = result as { encrypted: string; type: string };
+    expect(singleResult.encrypted).toBeDefined();
+    expect(singleResult.encrypted.split('.').length).toBe(5);
+    expect(singleResult.type).toBe('card');
   });
 
   test('calls bt encrypt with multiple token requests', async () => {
@@ -75,13 +75,13 @@ describe('tokens - Encrypt', () => {
 
     const result = await Tokens({} as BasisTheoryType).encrypt(encryptRequest);
     expect(result).toBeDefined();
-    expect(result).toHaveLength(2);
-    expect(result![0].encrypted).toBeDefined();
-    expect(result![0].encrypted.split('.').length).toBe(5);
-    expect(result![0].type).toBe('card');
-    expect(result![1].encrypted).toBeDefined();
-    expect(result![1].encrypted.split('.').length).toBe(5);
-    expect(result![1].type).toBe('bank');
+    const multipleResult = result as Record<string, { encrypted: string; type: string }>;
+    expect(multipleResult.card.encrypted).toBeDefined();
+    expect(multipleResult.card.encrypted.split('.').length).toBe(5);
+    expect(multipleResult.card.type).toBe('card');
+    expect(multipleResult.bank.encrypted).toBeDefined();
+    expect(multipleResult.bank.encrypted.split('.').length).toBe(5);
+    expect(multipleResult.bank.type).toBe('bank');
   });
 
   test('handles nested objects in encrypt requests', async () => {
@@ -107,10 +107,10 @@ describe('tokens - Encrypt', () => {
 
     const result = await Tokens({} as BasisTheoryType).encrypt(encryptRequest);
     expect(result).toBeDefined();
-    expect(result).toHaveLength(1);
-    expect(result![0].encrypted).toBeDefined();
-    expect(result![0].encrypted.split('.').length).toBe(5);
-    expect(result![0].type).toBe('card');
+    const singleResult = result as { encrypted: string; type: string };
+    expect(singleResult.encrypted).toBeDefined();
+    expect(singleResult.encrypted.split('.').length).toBe(5);
+    expect(singleResult.type).toBe('card');
   });
 
   test('throws error when publicKeyPEM is null', async () => {

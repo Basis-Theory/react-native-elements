@@ -33,7 +33,7 @@ export const Collect = () => {
   const [tokenizedData, setTokenizedData] = useState<
     TokenizeData | undefined
   >();
-  const [encryptedToken, setEncryptedToken] = useState<EncryptedToken[] | undefined>();
+  const [encryptedToken, setEncryptedToken] = useState<EncryptedToken | undefined>();
 
   const [tokenId, setTokenId] = useState('');
 

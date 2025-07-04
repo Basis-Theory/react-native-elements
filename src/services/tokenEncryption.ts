@@ -7,10 +7,10 @@ import {
   EncryptedToken,
   EncryptToken,
   TokenData,
-  TokenDataWithRef,
 } from '../model/EncryptTokenData';
 import { replaceElementRefs } from '../utils/dataManipulationUtils';
 import { JWE } from '../utils/jwe';
+import { isNilOrEmpty } from '../utils/shared';
 
 export class EncryptValidationError extends Error {
   public constructor(message: string) {
@@ -63,19 +63,25 @@ const createJWE = async (
   }
 };
 
+const isSingleToken = (tokenRequests: EncryptToken['tokenRequests']) => 'type' in tokenRequests;
+
 /**
- * Normalizes token requests to a consistent array format
- * @param tokenRequests - Token requests in either single token or object format
- * @returns Array of normalized token objects
+ * Validates if token requests contain valid tokens to encrypt. Tokens must have a type and data property.
+ * @param tokenRequests - The token requests to validate
+ * @throws {EncryptValidationError} When token requests are invalid
  */
-const normalizeTokenRequests = (
-  tokenRequests: EncryptToken['tokenRequests']
-): Array<TokenDataWithRef> => {
-  if ('type' in tokenRequests) {
-    return [tokenRequests as TokenDataWithRef];
+const validateTokenRequests = (tokenRequests: EncryptToken['tokenRequests']) => {
+  if (isNilOrEmpty(tokenRequests)) {
+    throw new EncryptValidationError('No valid tokens found to encrypt');
   }
 
-  return Object.values(tokenRequests);
+  if (isSingleToken(tokenRequests) && !tokenRequests.data) {
+    throw new EncryptValidationError('No valid tokens found to encrypt');
+  }
+
+  if (!isSingleToken && Object.entries(tokenRequests).some(([_, value]) => !value.data || !value.type)) {
+    throw new EncryptValidationError('No valid tokens found to encrypt');
+  }
 };
 
 /**
@@ -86,7 +92,7 @@ const normalizeTokenRequests = (
  */
 export const encryptToken = async (
   payload: EncryptToken
-): Promise<EncryptedToken[]> => {
+): Promise<EncryptedToken> => {
   if (!payload) {
     throw new EncryptValidationError('Encryption payload is required');
   }
@@ -99,40 +105,37 @@ export const encryptToken = async (
     throw new EncryptValidationError('Key ID is required');
   }
 
-  if (!payload.tokenRequests) {
-    throw new EncryptValidationError('Token requests are required');
-  }
-
   try {
-    const tokensWithRef: TokenDataWithRef[] = normalizeTokenRequests(
-      payload.tokenRequests
-    );
-    if (!tokensWithRef.length) {
-      throw new EncryptValidationError('No valid tokens found to encrypt');
+    validateTokenRequests(payload.tokenRequests);
+
+    if (isSingleToken(payload.tokenRequests)) {
+      const token = replaceElementRefs<TokenData>(payload.tokenRequests)
+      const tokenPayload = JSON.stringify(token.data);
+      const encrypted = await createJWE(tokenPayload, payload.publicKeyPEM, payload.keyId);
+      return { encrypted, type: token.type };
     }
 
-    const tokens: TokenData[] = tokensWithRef.map((token) =>
-      replaceElementRefs<TokenData>(token)
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(payload.tokenRequests).map(async ([key, tokenData]) => {
+          const token = replaceElementRefs<TokenData>(tokenData)
+
+          const tokenPayload = JSON.stringify(token.data);
+          const encrypted = await createJWE(
+            tokenPayload,
+            payload.publicKeyPEM,
+            payload.keyId
+          );
+          
+          return [key, 
+            {
+              encrypted,
+              type: token.type
+            } 
+          ];
+      }))
     );
 
-    return await Promise.all(
-      tokens.map(async (token) => {
-        if (!token.type) {
-          throw new EncryptValidationError('Token type is required');
-        }
-
-        const tokenPayload = JSON.stringify(token.data);
-        const encrypted = await createJWE(
-          tokenPayload,
-          payload.publicKeyPEM,
-          payload.keyId
-        );
-        return {
-          encrypted,
-          type: token.type,
-        };
-      })
-    );
   } catch (error) {
     if (error instanceof EncryptValidationError) {
       throw error;
