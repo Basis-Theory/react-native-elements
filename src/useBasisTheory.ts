@@ -1,15 +1,15 @@
+import { BasisTheory } from '@basis-theory/basis-theory-js';
 import type {
   BasisTheoryInitOptionsWithoutElements,
   BasisTheory as BasisTheoryType,
 } from '@basis-theory/basis-theory-js/types/sdk';
 import { useEffect, useState } from 'react';
-import { BasisTheory } from '@basis-theory/basis-theory-js';
 
+import { useBasisTheoryFromContext } from './BasisTheoryProvider';
 import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
-import { Tokens } from './modules/tokens';
-import { useBasisTheoryFromContext } from './BasisTheoryProvider';
 import { TokenIntents } from './modules/tokenIntents';
+import { Tokens } from './modules/tokens';
 
 const _BasisTheoryElements = async ({
   apiKey,
