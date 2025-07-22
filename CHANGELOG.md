@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.5.0...v2.0.0) (2025-07-22)
+
+
+* ENG-8704 - Upgrade React Native to 0.79.4 and add support for React 19. ([#21](https://github.com/Basis-Theory/react-native-elements/issues/21)) ([f6618c7](https://github.com/Basis-Theory/react-native-elements/commit/f6618c76433cf8563763f5bdcfb457a4a01c3a00))
+
+
+### BREAKING CHANGES
+
+* ENG-8704 - Upgrade React Native to 0.79.4 and add support for React 19!
+
 # [1.5.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.4.0...v1.5.0) (2025-07-04)
 
 
