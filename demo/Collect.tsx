@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
@@ -60,14 +59,16 @@ export const Collect = () => {
   const updateElementsEvents =
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
-      if (event.cvcLength) {
-        setCvcLength(event.cvcLength);
-      }
+      queueMicrotask(() => {
+        if (event.cvcLength) {
+          setCvcLength(event.cvcLength);
+        }
 
-      setElementsEvents({
-        ...elementsEvents,
-        [eventSource]: event,
-      });
+        setElementsEvents({
+          ...elementsEvents,
+          [eventSource]: event,
+        });
+      })
     };
 
   const createTokenWithTokenize = async () => {
@@ -180,7 +181,7 @@ export const Collect = () => {
   };
 
   return (
-    <SafeAreaView>
+     <View>
       <StatusBar />
       <ScrollView contentInsetAdjustmentBehavior="automatic">
         <View style={styles.viewContainer}>
@@ -304,6 +305,6 @@ export const Collect = () => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };

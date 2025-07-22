@@ -3,7 +3,6 @@
 import React, { useRef, useState } from 'react';
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
@@ -80,14 +79,16 @@ export const Reveal = () => {
   const updateElementsEvents =
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
-      setElementsEvents({
-        ...elementsEvents,
-        [eventSource]: event,
-      });
+      queueMicrotask(() => {
+        setElementsEvents({
+          ...elementsEvents,
+          [eventSource]: event,
+        });
+      })
     };
 
   return (
-    <SafeAreaView>
+    <View>
       <StatusBar />
       <ScrollView contentInsetAdjustmentBehavior="automatic">
         <View style={styles.viewContainer}>
@@ -119,6 +120,6 @@ export const Reveal = () => {
           </Pressable>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
