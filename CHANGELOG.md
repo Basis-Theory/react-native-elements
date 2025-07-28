@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/Basis-Theory/react-native-elements/compare/v2.0.0...v2.1.0) (2025-07-28)
+
+
+### Features
+
+* remove quick-crypto dependency ([#23](https://github.com/Basis-Theory/react-native-elements/issues/23)) ([98ac9ac](https://github.com/Basis-Theory/react-native-elements/commit/98ac9ace376bbbdfa1e980f86287c95ecfbdb600))
+
 # [2.0.0](https://github.com/Basis-Theory/react-native-elements/compare/v1.5.0...v2.0.0) (2025-07-22)
 
 
