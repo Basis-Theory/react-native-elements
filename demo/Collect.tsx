@@ -158,13 +158,12 @@ export const Collect = () => {
           },
         },
         // public key from dev environment
-        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\nOm6ozjtjoeipko2dcK5+nPlCJXNtXxwbzxTQn0gkKDo=\n-----END PUBLIC KEY-----',
-        keyId: 'c1c20387-9e42-4403-88e5-dd97210dd5aa'
+        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\noCXqWBAnKV24Xt1/lCVzN3fg1w8INuCRcp8B0EwmbxA=\n-----END PUBLIC KEY-----',
+        keyId: '1c6e6249-9c55-47a1-a8c4-73c0b3d60a64'
       };
 
       const encrypted = await bt?.tokens.encrypt(encryptRequest);
       setEncryptedToken(encrypted);
-      console.log('encrypted', encrypted);
     } catch (error) {
       console.error(error);
     }
