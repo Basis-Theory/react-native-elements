@@ -12,7 +12,3 @@ global.crypto = {
   subtle: {},
   randomUUID: () => crypto.randomUUID()
 };
-
-jest.mock('react-native-quick-crypto', () => ({
-  install: jest.fn(),
-}));
