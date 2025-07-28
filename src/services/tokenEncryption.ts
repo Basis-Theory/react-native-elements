@@ -11,6 +11,12 @@ import { replaceElementRefs } from '../utils/dataManipulationUtils';
 import { JWE } from '../utils/jwe';
 import { isNilOrEmpty } from '../utils/shared';
 
+// Define minimal crypto interface for our polyfill
+interface MinimalCrypto {
+  getRandomValues: (array: Uint8Array) => Uint8Array;
+  subtle?: undefined;
+}
+
 export class EncryptValidationError extends Error {
   public constructor(message: string) {
     super(message);
@@ -25,11 +31,12 @@ export const setupEncryption = () => {
       const { getRandomValues } = require('react-native-get-random-values');
       
       // Create minimal crypto object - @noble libraries only need getRandomValues
-      globalThis.crypto = {
+      const minimalCrypto: MinimalCrypto = {
         getRandomValues: getRandomValues,
-        // Add other minimal properties that might be checked
         subtle: undefined,
-      } as any;
+      };
+      
+      globalThis.crypto = minimalCrypto as typeof globalThis.crypto;
     } catch (error) {
       throw new Error('Failed to setup crypto polyfill. Make sure react-native-get-random-values is installed.');
     }
