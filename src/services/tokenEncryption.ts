@@ -1,7 +1,6 @@
 // This MUST be imported before any @noble libraries
 
 import 'react-native-get-random-values';
-import { install } from 'react-native-quick-crypto';
 
 import {
   EncryptedToken,
@@ -20,15 +19,19 @@ export class EncryptValidationError extends Error {
 }
 
 export const setupEncryption = () => {
-  install();
-
   if (!globalThis.crypto) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { webcrypto } = require('react-native-quick-crypto');
-    if (webcrypto) {
-      globalThis.crypto = webcrypto;
-    } else {
-      throw new Error('Failed to setup crypto polyfill for React Native');
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { getRandomValues } = require('react-native-get-random-values');
+      
+      // Create minimal crypto object - @noble libraries only need getRandomValues
+      globalThis.crypto = {
+        getRandomValues: getRandomValues,
+        // Add other minimal properties that might be checked
+        subtle: undefined,
+      } as any;
+    } catch (error) {
+      throw new Error('Failed to setup crypto polyfill. Make sure react-native-get-random-values is installed.');
     }
   }
 
