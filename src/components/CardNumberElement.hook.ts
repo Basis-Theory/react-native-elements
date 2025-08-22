@@ -12,12 +12,16 @@ import { useBtRefUnmount } from './shared/useBtRefUnmount';
 import { useMask } from './shared/useMask';
 import { useUserEventHandlers } from './shared/useUserEventHandlers';
 import { useCustomBin } from './useCustomBin.hook';
+import { useBinLookup } from './useBinLookup';
 import { useCleanupStateBeforeUnmount } from './shared/useCleanStateOnUnmount';
+import { CardBrand, CoBadgedSupport } from '../CardElementTypes';
 
 type UseCardNumberElementProps = {
   btRef?: ForwardedRef<BTRef>;
   cardTypes?: CreditCardType[];
   skipLuhnValidation?: boolean;
+  binLookup?: boolean;
+  coBadgedSupport?: CoBadgedSupport[];
 } & EventConsumers;
 
 export const useCardNumberElement = ({
@@ -27,12 +31,33 @@ export const useCardNumberElement = ({
   onFocus,
   cardTypes,
   skipLuhnValidation,
+  binLookup,
+  coBadgedSupport,
 }: UseCardNumberElementProps) => {
+
+  const hasCoBadgedSupport = (coBadgedSupport?.length ?? 0) > 0;
+
+  if (hasCoBadgedSupport && coBadgedSupport) {
+    const validValues = Object.values(CoBadgedSupport);
+    const invalidValues = coBadgedSupport.filter(value => !validValues.includes(value));
+    
+    if (invalidValues.length > 0) {
+      throw new Error(
+        `Invalid coBadgedSupport values: ${invalidValues.join(', ')}. ` +
+        `Valid values are: ${validValues.join(', ')}`
+      );
+    }
+  }
+
   const id = useId();
 
   const type = ElementType.CARD_NUMBER;
   const elementRef = useRef<TextInput>(null);
   const [elementValue, setElementValue] = useState<string>('');
+  const [selectedNetwork, setSelectedNetwork] = useState<CardBrand | undefined>(undefined);
+
+  const binEnabled = binLookup || hasCoBadgedSupport;
+  const { binInfo } = useBinLookup(binEnabled, elementValue.replaceAll(' ', '').slice(0, 6));
 
   useCleanupStateBeforeUnmount(id);
 
@@ -57,8 +82,12 @@ export const useCardNumberElement = ({
     transform: [' ', ''],
     element: {
       id,
-      validatorOptions: { mask, skipLuhnValidation },
+      validatorOptions: { mask, skipLuhnValidation, coBadgedSupport },
       type,
+      binLookup,
+      coBadgedSupport,
+      binInfo,
+      selectedNetwork
     },
     onChange,
     onBlur,
@@ -68,6 +97,9 @@ export const useCardNumberElement = ({
   return {
     elementRef,
     elementValue,
+    selectedNetwork,
+    setSelectedNetwork,
+    binInfo,
     _onChange,
     _onBlur,
     _onFocus,

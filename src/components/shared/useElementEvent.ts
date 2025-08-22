@@ -7,17 +7,27 @@ import { useCardMetadata } from './useCardMetadata';
 import { extractDigits, isNilOrEmpty } from '../../utils/shared';
 import { _elementErrors } from '../../ElementValues';
 import { ValidatorOptions } from '../../utils/validation';
+import { BinInfo } from '../../CardElementTypes';
+import { CardBrand } from '../../CardElementTypes';
 
 type UseElementEventProps = {
   type: ElementType;
   id: string;
   validatorOptions?: ValidatorOptions;
+  binInfo?: BinInfo;
+  selectedNetwork?: CardBrand;
+  binLookup?: boolean;
+  coBadgedSupport?: CardBrand[];
 };
 
 export const useElementEvent = ({
   type,
   id,
   validatorOptions,
+  binInfo,
+  selectedNetwork,
+  binLookup,
+  coBadgedSupport,
 }: UseElementEventProps): CreateEvent => {
   const { getValidationStrategy } = useElementValidation();
   const { getMetadataFromCardNumber: _getMetadataFromCardNumber } =
@@ -80,6 +90,8 @@ export const useElementEvent = ({
       maskSatisfied,
       complete,
       ...metadata?.card,
+      ...(binLookup ? { binInfo } : {}),
+      ...(!isNilOrEmpty(coBadgedSupport) ? { selectedNetwork } : {}),
     };
   };
 };

@@ -28,11 +28,17 @@ const _BasisTheoryElements = async ({
 
   const tokenIntents = TokenIntents(bt);
 
+  const config = {
+    apiKey,
+    apiBaseUrl: apiBaseUrl || `https://api.basistheory.com`,
+  }
+
   return {
     proxy,
     sessions,
     tokenIntents,
     tokens,
+    config,
   };
 };
 
