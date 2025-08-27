@@ -19,9 +19,8 @@ import { CoBadgedSupport } from '../../src/CardElementTypes';
 import cardValidator from 'card-validator';
 import * as useBinLookupModule from '../../src/components/useBinLookup';
 
-// Mock axios for bin lookup tests
-jest.mock('axios');
-const mockedAxios = jest.mocked(require('axios'));
+// Mock fetch for bin lookup tests
+global.fetch = jest.fn();
 
 describe('CardNumberElement', () => {
   beforeEach(() => {
@@ -387,6 +386,23 @@ describe('CardNumberElement', () => {
         apiKey: 'test-api-key',
         apiBaseUrl: 'https://api.basistheory.com',
       },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
+      },
     };
 
     const mockBinInfo = {
@@ -562,6 +578,23 @@ describe('CardNumberElement', () => {
         apiKey: 'test-api-key',
         apiBaseUrl: 'https://api.basistheory.com',
       },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
+      },
     };
 
     const mockBinInfo = {
@@ -577,8 +610,9 @@ describe('CardNumberElement', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      mockedAxios.mockResolvedValue({
-        data: mockBinInfo,
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => mockBinInfo,
       });
     });
 
@@ -665,13 +699,15 @@ describe('CardNumberElement', () => {
       fireEvent.changeText(el, '424242424242424242'); // Full card number
 
       await waitFor(() => {
-        expect(mockedAxios).toHaveBeenCalledWith({
-          url: 'https://api.basistheory.com/enrichments/card-details?bin=424242',
-          method: 'get',
-          headers: {
-            'BT-API-KEY': 'test-api-key',
-          },
-        });
+        expect(global.fetch).toHaveBeenCalledWith(
+          'https://api.basistheory.com/enrichments/card-details?bin=424242',
+          {
+            method: 'GET',
+            headers: {
+              'BT-API-KEY': 'test-api-key',
+            },
+          }
+        );
       });
     });
 
@@ -679,7 +715,7 @@ describe('CardNumberElement', () => {
       const onChange = jest.fn();
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       
-      mockedAxios.mockRejectedValue(new Error('API Error'));
+      (global.fetch as jest.Mock).mockRejectedValue(new Error('API Error'));
 
       render(
         <BasisTheoryProvider bt={mockBt}>
@@ -723,7 +759,7 @@ describe('CardNumberElement', () => {
       // First call
       fireEvent.changeText(el, '424242424242424242');
       await waitFor(() => {
-        expect(mockedAxios).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
       });
 
       // Clear and enter same BIN again
@@ -732,7 +768,7 @@ describe('CardNumberElement', () => {
       
       // Should not make another API call due to caching
       await waitFor(() => {
-        expect(mockedAxios).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -755,12 +791,12 @@ describe('CardNumberElement', () => {
       
       // Less than 6 digits - should not trigger lookup
       fireEvent.changeText(el, '42424');
-      expect(mockedAxios).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalled();
 
       // Exactly 6 digits - should trigger lookup
       fireEvent.changeText(el, '424242');
       await waitFor(() => {
-        expect(mockedAxios).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -770,6 +806,23 @@ describe('CardNumberElement', () => {
       config: {
         apiKey: 'test-api-key',
         apiBaseUrl: 'https://api.basistheory.com',
+      },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
       },
     };
 

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useBasisTheoryFromContext } from '../BasisTheoryProvider';
-import axios from 'axios';
 import type { BasisTheoryElements } from '../useBasisTheory';
 import type { BinInfo } from '../CardElementTypes';
 
@@ -10,18 +9,20 @@ export const getBinInfo = async (
   ): Promise<BinInfo | undefined> => {
     const { apiKey, apiBaseUrl } = bt.config;
     const url = `${apiBaseUrl}/enrichments/card-details?bin=${bin}`;
-
-    const response = await axios(
-      {
-        url,
-        method: 'get',
-        headers: {
-          'BT-API-KEY': apiKey,
-        },
-      }
-    );
   
-    return (response.data as BinInfo) || undefined;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'BT-API-KEY': apiKey,
+      },
+    });
+  
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  
+    const data = await response.json();
+    return (data as BinInfo) || undefined;
 };
   
 export const useBinLookup = (enabled: boolean, bin: string) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Text, View, TouchableOpacity, Modal, ScrollView, ViewStyle, TextStyle } from 'react-native';
 import { CardBrand } from '../CardElementTypes';
 import { labelizeCardBrand } from '../utils/shared';
@@ -63,6 +63,10 @@ const defaultStyles = {
   },
 };
 
+const isTextStyle = (style: any): style is TextStyle => {
+  return style && typeof style === 'object' && 'color' in style;
+};
+
 export const BrandPicker: React.FC<BrandPickerProps> = ({
   brands,
   selectedBrand,
@@ -71,18 +75,45 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
 
-  if (brands.length <= 1) {
+  const buttonTextStyle = useMemo(() => {
+    if (isTextStyle(style) && style.color) {
+      return { color: style.color };
+    }
+    return defaultStyles.buttonText;
+  }, [style]);
+
+  const displayText = useMemo(() => {
+    return selectedBrand ? labelizeCardBrand(selectedBrand as CardBrand) : 'Select card brand';
+  }, [selectedBrand]);
+
+  const shouldRender = useMemo(() => brands.length > 0, [brands]);
+
+  const handleShowPicker = useCallback(() => {
+    setPickerVisible(true);
+  }, []);
+
+  const handleHidePicker = useCallback(() => {
+    setPickerVisible(false);
+  }, []);
+
+  const handleBrandSelect = useCallback((brand: any) => {
+    onBrandSelect(brand);
+    setPickerVisible(false);
+  }, [onBrandSelect]);
+
+
+  if (!shouldRender) {
     return null;
   }
 
   return (
     <View style={defaultStyles.container}>
       <TouchableOpacity
-        onPress={() => setPickerVisible(true)}
+        onPress={handleShowPicker}
         style={[style]}
       >
-        <Text style={(style as TextStyle)?.color ? { color: (style as TextStyle)?.color } : defaultStyles.buttonText}>
-          {selectedBrand ? labelizeCardBrand(selectedBrand as CardBrand) : 'Select card brand'}
+        <Text style={buttonTextStyle}>
+          {displayText}
         </Text>
       </TouchableOpacity>
 
@@ -90,11 +121,11 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
         visible={pickerVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPickerVisible(false)}
+        onRequestClose={handleHidePicker}
       >
         <TouchableOpacity
           style={defaultStyles.modalOverlay}
-          onPress={() => setPickerVisible(false)}
+          onPress={handleHidePicker}
         >
           <View style={defaultStyles.modalContainer}>
             <Text style={defaultStyles.modalTitle}>
@@ -104,10 +135,7 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
               {brands.map((brand, index) => (
                 <TouchableOpacity
                   key={brand}
-                  onPress={() => {
-                    onBrandSelect(brand);
-                    setPickerVisible(false);
-                  }}
+                  onPress={() => handleBrandSelect(brand)}
                   style={[
                     defaultStyles.optionButton,
                     {

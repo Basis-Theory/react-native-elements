@@ -1,12 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import { View, type TextInputProps, type ViewStyle } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import type { UseCardNumberElementProps } from './CardNumberElement.hook';
 import { useCardNumberElement } from './CardNumberElement.hook';
-import { CardBrand, CoBadgedSupport } from '../CardElementTypes';
-import { convertApiBrandToBrand } from '../CardElementTypes/../utils/shared';
+import { useBrandSelector } from './shared/useBrandSelector';
 import { BrandPicker } from './BrandPicker';
-import { isNilOrEmpty } from '../utils/shared';
 
 type TextInputSupportedProps =
   | 'editable'
@@ -43,47 +41,27 @@ export const CardNumberElement = ({
     binInfo,
     selectedNetwork,
     setSelectedNetwork
-  } =
-    useCardNumberElement({
-      btRef,
-      onBlur,
-      onChange,
-      onFocus,
-      cardTypes,
-      skipLuhnValidation,
-      binLookup,
-      coBadgedSupport,
-    });
+  } = useCardNumberElement({
+    btRef,
+    onBlur,
+    onChange,
+    onFocus,
+    cardTypes,
+    skipLuhnValidation,
+    binLookup,
+    coBadgedSupport,
+  });
 
-  const hasCoBadgedSupport = !isNilOrEmpty(coBadgedSupport);
-
-  const brandSelectorOptions = useMemo<CardBrand[]>(() => {
-    if (!binInfo) return [];
-
-    const { brand, additional } = binInfo;
-
-    const brandOptions = new Set<CardBrand>();
-
-    brandOptions.add(convertApiBrandToBrand(brand));
-    additional?.forEach((a) => {
-      if (!a.brand) return;
-      const brand = convertApiBrandToBrand(a.brand);
-      if (coBadgedSupport?.includes(brand as CoBadgedSupport)) {
-        brandOptions.add(brand);
-      }
-    });
-    return Array.from(brandOptions);
-  }, [binInfo, coBadgedSupport]);
-
-  useEffect(() => {
-    if (!binInfo && selectedNetwork) {
-      setSelectedNetwork(undefined);
-    }
-  }, [binInfo, selectedNetwork]);
+  const { brandSelectorOptions } = useBrandSelector({
+    binInfo,
+    coBadgedSupport,
+    selectedNetwork,
+    setSelectedNetwork,
+  });
 
   return (
     <View>
-      {hasCoBadgedSupport && (
+      {brandSelectorOptions.length > 1 && (
         <BrandPicker
           brands={brandSelectorOptions}
           selectedBrand={selectedNetwork}

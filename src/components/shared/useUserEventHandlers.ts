@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef } from 'react';
-import { _elementValues } from '../../ElementValues';
+import { _elementValues, _elementMetadata, _elementRawValues } from '../../ElementValues';
 import { useElementEvent } from './useElementEvent';
 import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
@@ -35,38 +35,34 @@ export const useUserEventHandlers = ({
   const createEvent = useElementEvent(element);
 
   const transformation = useTransform(transform);
-  const prevBinInfoRef = useRef<BinInfo | undefined>(element.binInfo);
-  const prevValueRef = useRef<string>('');
-  const prevSelectedNetworkRef = useRef<CardBrand | undefined>(element.selectedNetwork);
-
 
   useEffect(() => {
     const currentBinInfo = element.binInfo;
-    const prevBinInfo = prevBinInfoRef.current;
+    const prevBinInfo = _elementMetadata[element.id]?.binInfo;
 
     if (currentBinInfo !== prevBinInfo && onChange) {
-      const event = createEvent(prevValueRef.current);
+      const event = createEvent(_elementRawValues[element.id]?.toString() || '');
       onChange(event);
     }
 
-    prevBinInfoRef.current = currentBinInfo;
+    _elementMetadata[element.id] = { ..._elementMetadata[element.id], binInfo: currentBinInfo };
   }, [element.binInfo, onChange, createEvent, element.id]);
 
   useEffect(() => {
     const currentSelectedNetwork = element.selectedNetwork;
-    const prevSelectedNetwork = prevSelectedNetworkRef.current;
+    const prevSelectedNetwork = _elementMetadata[element.id]?.selectedNetwork;
 
     if (currentSelectedNetwork !== prevSelectedNetwork && onChange) {
-      const event = createEvent(prevValueRef.current);
+      const event = createEvent(_elementRawValues[element.id]?.toString() || '');
       onChange(event);
     }
 
-    prevSelectedNetworkRef.current = currentSelectedNetwork;
+    _elementMetadata[element.id] = { ..._elementMetadata[element.id], selectedNetwork: currentSelectedNetwork };
   }, [element.selectedNetwork, onChange, createEvent, element.id]);
 
   return {
     _onChange: (_elementValue: string) => {
-      prevValueRef.current = _elementValue;
+      _elementRawValues[element.id] = _elementValue;
       _elementValues[element.id] = transformation.apply(_elementValue);
 
       setElementValue(() => {
