@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { _elementValues, _elementMetadata, _elementRawValues } from '../../ElementValues';
 import { useElementEvent } from './useElementEvent';
 import type { ElementType, EventConsumers } from '../../BaseElementTypes';

@@ -63,8 +63,10 @@ const defaultStyles = {
   },
 };
 
-const isTextStyle = (style: any): style is TextStyle => {
-  return style && typeof style === 'object' && 'color' in style;
+const isTextStyle = (style: ViewStyle | undefined): style is TextStyle & ViewStyle => {
+  return style !== undefined && 
+         typeof style === 'object' && 
+         'color' in style;
 };
 
 export const BrandPicker: React.FC<BrandPickerProps> = ({
@@ -96,7 +98,7 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
     setPickerVisible(false);
   }, []);
 
-  const handleBrandSelect = useCallback((brand: any) => {
+  const handleBrandSelect = useCallback((brand: CardBrand) => {
     onBrandSelect(brand);
     setPickerVisible(false);
   }, [onBrandSelect]);
