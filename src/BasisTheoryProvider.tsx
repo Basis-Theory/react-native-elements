@@ -2,11 +2,48 @@ import type { PropsWithChildren } from 'react';
 import React, { createContext, useContext, useMemo } from 'react';
 import type { BasisTheoryElements } from './useBasisTheory';
 
+type BasisTheoryConfig = {
+  apiKey?: string;
+  baseUrl?: string;
+};
+
 type BasisTheoryProviderType = {
   bt?: BasisTheoryElements;
+  config?: BasisTheoryConfig;
 };
 
 const BasisTheoryContext = createContext<BasisTheoryProviderType>({});
+
+const ConfigManager = (() => {
+  let internalConfig: BasisTheoryConfig = {};
+
+  const updateConfig = (updates: Partial<BasisTheoryConfig>): void => {
+    internalConfig = { ...internalConfig, ...updates };
+  };
+
+  const setConfig = (config: BasisTheoryConfig): void => {
+    console.log(config);
+    internalConfig = config;
+  };
+
+  const getConfig = (): BasisTheoryConfig => internalConfig;
+
+  const updateApiKey = (apiKey: string): void => {
+    internalConfig = { ...internalConfig, apiKey };
+  };
+
+  const updateBaseUrl = (baseUrl: string): void => {
+    internalConfig = { ...internalConfig, baseUrl };
+  };
+
+  return {
+    updateConfig,
+    setConfig,
+    getConfig,
+    updateApiKey,
+    updateBaseUrl,
+  };
+})();
 
 const BasisTheoryProvider = ({
   bt,
@@ -15,6 +52,7 @@ const BasisTheoryProvider = ({
   const value = useMemo(
     () => ({
       bt,
+      config: ConfigManager.getConfig(),
     }),
     [bt]
   );
@@ -29,4 +67,12 @@ const BasisTheoryProvider = ({
 const useBasisTheoryFromContext = (): BasisTheoryProviderType =>
   useContext(BasisTheoryContext);
 
-export { BasisTheoryProvider, useBasisTheoryFromContext };
+const useBasisTheoryConfig = () => useContext(BasisTheoryContext).config;
+
+// Internal hook for surgical config updates (not exported - private)
+const useConfigManager = () => ConfigManager;
+
+export { BasisTheoryProvider, useBasisTheoryFromContext, useBasisTheoryConfig };
+
+// Export for internal use only (not part of public API)
+export { useConfigManager as _useConfigManager };
