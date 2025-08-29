@@ -5,7 +5,10 @@ import type {
 } from '@basis-theory/basis-theory-js/types/sdk';
 import { useEffect, useState } from 'react';
 
-import { useBasisTheoryFromContext } from './BasisTheoryProvider';
+import {
+  _useConfigManager,
+  useBasisTheoryFromContext,
+} from './BasisTheoryProvider';
 import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { TokenIntents } from './modules/tokenIntents';
@@ -19,6 +22,9 @@ const _BasisTheoryElements = async ({
     apiKey,
     apiBaseUrl ? { apiBaseUrl } : undefined
   );
+  const { setConfig } = _useConfigManager();
+
+  setConfig({ apiKey, baseUrl: apiBaseUrl ?? 'https://api.basistheory.com' });
 
   const proxy = Proxy(bt);
 
@@ -28,17 +34,11 @@ const _BasisTheoryElements = async ({
 
   const tokenIntents = TokenIntents(bt);
 
-  const config = {
-    apiKey,
-    apiBaseUrl: apiBaseUrl || `https://api.basistheory.com`,
-  }
-
   return {
     proxy,
     sessions,
     tokenIntents,
     tokens,
-    config,
   };
 };
 
