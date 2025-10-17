@@ -2,7 +2,7 @@
  * @format
  */
 
-import { VISA, MASTERCARD } from '@basis-theory/basis-theory-js/types/elements';
+import { VISA, MASTERCARD } from '../../src/types';
 import 'react-native';
 import React from 'react';
 

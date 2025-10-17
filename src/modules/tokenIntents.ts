@@ -1,11 +1,9 @@
 import type {
   CreateTokenIntent,
   TokenIntent,
-} from '@basis-theory/basis-theory-js/types/models';
-import type {
-  BasisTheory as BasisTheoryType,
   RequestOptions,
-} from '@basis-theory/basis-theory-js/types/sdk';
+  BasisTheoryInstance,
+} from '../types';
 import type {
   BTRef,
   InputBTRefWithDatepart,
@@ -23,7 +21,7 @@ export type TokenIntentData = TokenIntent<
   BTRef | InputBTRefWithDatepart | PrimitiveType
 >;
 
-export const TokenIntents = (bt: BasisTheoryType) => {
+export const TokenIntents = (bt: BasisTheoryInstance) => {
   const create = async (
     tokenIntentWithRef: CreateTokenIntentWithBtRef,
     requestOptions?: RequestOptions

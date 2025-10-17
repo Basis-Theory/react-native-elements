@@ -3,7 +3,7 @@ import {
   CreateTokenWithBtRef,
   Tokens,
 } from '../../src/modules/tokens';
-import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
+import type { BasisTheoryInstance as BasisTheoryType } from '../../src/types';
 import { EncryptValidationError } from '../../src/services/tokenEncryption';
 
 jest.mock('../../src/ElementValues', () => ({
