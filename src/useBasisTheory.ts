@@ -1,8 +1,3 @@
-import { BasisTheory } from '@basis-theory/basis-theory-js';
-import type {
-  BasisTheoryInitOptionsWithoutElements,
-  BasisTheory as BasisTheoryType,
-} from '@basis-theory/basis-theory-js/types/sdk';
 import { useEffect, useState } from 'react';
 
 import { useBasisTheoryFromContext } from './BasisTheoryProvider';
@@ -10,15 +5,26 @@ import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { TokenIntents } from './modules/tokenIntents';
 import { Tokens } from './modules/tokens';
+import { loadBasisTheoryInstance, getBasisTheoryInstance } from './services/basis-theory-js';
+import type { BasisTheoryInstance } from './types';
+
+interface BasisTheoryInitOptions {
+  apiBaseUrl?: string;
+  useNgApi?: boolean;
+  debug?: boolean;
+  useUat?: boolean;
+}
 
 const _BasisTheoryElements = async ({
   apiKey,
   apiBaseUrl,
-}: BasisTheoryInitOptionsWithoutElements & { apiKey: string }) => {
-  const bt: BasisTheoryType = await new BasisTheory().init(
-    apiKey,
-    apiBaseUrl ? { apiBaseUrl } : undefined
-  );
+  useNgApi,
+  debug,
+  useUat,
+}: BasisTheoryInitOptions & { apiKey: string }) => {
+  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, useUat);
+  
+  const bt: BasisTheoryInstance = getBasisTheoryInstance();
 
   const proxy = Proxy(bt);
 
@@ -45,7 +51,7 @@ type UseBasisTheory = {
 
 const useBasisTheory = (
   apiKey: string,
-  options?: BasisTheoryInitOptionsWithoutElements
+  options?: BasisTheoryInitOptions
 ): UseBasisTheory => {
   const [state, setState] = useState<UseBasisTheory>({});
 

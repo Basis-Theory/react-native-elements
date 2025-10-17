@@ -1,19 +1,17 @@
-// TODO: Migrate to web-elements when we completely drop basis-theory-js
-import {
-  CreateToken,
-  Primitive,
-  TokenBase,
-} from '@basis-theory/basis-theory-js/types/models';
+import type { CreateToken } from '../types';
 import { BTRef, InputBTRefWithDatepart } from '../BaseElementTypes';
 
 /**
  * Represents token data with element references for secure input handling.
  * Used when creating tokens that contain form element references instead of raw values.
  */
+// Primitive types
+type Primitive = string | number | boolean | null | undefined;
+
 type TokenDataWithRef = {
   /** Key-value pairs where values are element references or date part references */
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined | Primitive>;
-  type: TokenBase['type'];
+  type: string;
 };
 
 type TokenData = Pick<CreateToken, 'type' | 'data'>;
@@ -44,7 +42,7 @@ type EncryptedSingleToken = {
   encrypted: string;
 
   /** Original token type before encryption */
-  type: TokenBase['type'];
+  type: string;
 };
 
 type EncryptedToken = EncryptedSingleToken | Record<string, EncryptedSingleToken>;

@@ -3,11 +3,9 @@ import type {
   UpdateToken,
   Token,
   TokenizeData as _TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
-import type {
-  BasisTheory as BasisTheoryType,
   RequestOptions,
-} from '@basis-theory/basis-theory-js/types/sdk';
+  BasisTheoryInstance,
+} from '../types';
 import type {
   BTRef,
   InputBTRefWithDatepart,
@@ -37,7 +35,7 @@ export type TokenizeData = _TokenizeData<
   BTRef | InputBTRefWithDatepart | PrimitiveType
 >;
 
-export const Tokens = (bt: BasisTheoryType) => {
+export const Tokens = (bt: BasisTheoryInstance) => {
   setupEncryption();
 
   const getTokenById = async <T>(id: string, apiKey?: string) => {

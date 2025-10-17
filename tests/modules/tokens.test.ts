@@ -4,7 +4,7 @@ import {
   TokenizeData,
   Tokens,
 } from '../../src/modules/tokens';
-import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
+import type { BasisTheoryInstance as BasisTheoryType } from '../../src/types';
 
 jest.mock('../../src/ElementValues', () => ({
   _elementValues: {},
