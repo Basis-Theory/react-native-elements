@@ -24,6 +24,8 @@ import type {
 import { styles } from './styles';
 import type { ElementEvents } from '../App';
 import { EncryptedToken, EncryptToken } from '../src/model/EncryptTokenData';
+import { BasisTheoryProvider } from '../src/BasisTheoryProvider';
+import { CoBadgedSupport } from '../src/CardElementTypes';
 
 const Divider = () => <View style={styles.divider} />;
 
@@ -60,6 +62,7 @@ export const Collect = () => {
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
       queueMicrotask(() => {
+        console.log(event);
         if (event.cvcLength) {
           setCvcLength(event.cvcLength);
         }
@@ -184,126 +187,130 @@ export const Collect = () => {
      <View>
       <StatusBar />
       <ScrollView contentInsetAdjustmentBehavior="automatic">
-        <View style={styles.viewContainer}>
-          <TextInput
-            placeholder="Token ID*"
-            style={styles.elements}
-            onChangeText={setTokenId}
-            placeholderTextColor="#99a0bf"
-            value={tokenId}
-          />
+        <BasisTheoryProvider bt={bt}>
+          <View style={styles.viewContainer}>
+            <TextInput
+              placeholder="Token ID*"
+              style={styles.elements}
+              onChangeText={setTokenId}
+              placeholderTextColor="#99a0bf"
+              value={tokenId}
+            />
 
-          <CardNumberElement
-            btRef={cardNumberRef}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cardNumber')}
-            placeholder="Card Number"
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
-          <CardExpirationDateElement
-            btRef={cardExpirationDateRef}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cardExpirationDate')}
-            placeholder="Card Expiration Date"
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
-          <CardVerificationCodeElement
-            btRef={cardVerificationCodeRef}
-            cvcLength={cvcLength}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cvc')}
-            placeholder={'Security code'}
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
+            <CardNumberElement
+              btRef={cardNumberRef}
+              coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+              binLookup={true}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cardNumber')}
+              placeholder="Card Number"
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
+            <CardExpirationDateElement
+              btRef={cardExpirationDateRef}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cardExpirationDate')}
+              placeholder="Card Expiration Date"
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
+            <CardVerificationCodeElement
+              btRef={cardVerificationCodeRef}
+              cvcLength={cvcLength}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cvc')}
+              placeholder={'Security code'}
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
 
-          <Pressable
-            onPress={createToken}
-            style={{
-              marginTop: 24,
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Create token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={createToken}
+              style={{
+                marginTop: 24,
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Create token'}</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={updateToken}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Update Token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={updateToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Update Token'}</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={deleteToken}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Delete Token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={deleteToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Delete Token'}</Text>
+            </Pressable>
 
-          <Divider />
+            <Divider />
 
-          <Pressable
-            onPress={createTokenWithTokenize}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={createTokenWithTokenize}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={encryptToken}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={encryptToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
+            </Pressable>
 
-          <Divider />
+            <Divider />
 
-          <Pressable onPress={clearToken} style={styles.button}>
-            <Text style={styles.buttonText}>{'Clear'}</Text>
-          </Pressable>
+            <Pressable onPress={clearToken} style={styles.button}>
+              <Text style={styles.buttonText}>{'Clear'}</Text>
+            </Pressable>
 
-          {token && (
-            <>
-              <Divider />
-              <Text style={styles.text}>TOKEN: </Text>
+            {token && (
+              <>
+                <Divider />
+                <Text style={styles.text}>TOKEN: </Text>
 
-              <Text style={styles.text}>
-                {JSON.stringify(token, undefined, 2)}
-              </Text>
-            </>
-          )}
+                <Text style={styles.text}>
+                  {JSON.stringify(token, undefined, 2)}
+                </Text>
+              </>
+            )}
 
-          {tokenizedData && (
-            <>
-              <Divider />
-              <Text style={styles.text}>TOKENIZED DATA: </Text>
-              <Text style={styles.text}>
-                {JSON.stringify(tokenizedData, undefined, 2)}
-              </Text>
-            </>
-          )}
+            {tokenizedData && (
+              <>
+                <Divider />
+                <Text style={styles.text}>TOKENIZED DATA: </Text>
+                <Text style={styles.text}>
+                  {JSON.stringify(tokenizedData, undefined, 2)}
+                </Text>
+              </>
+            )}
 
-          {encryptedToken && (
-            <>
-              <Divider />
-              <Text style={styles.text}>ENCRYPTED TOKEN: </Text>
-              <Text style={styles.text}>
-                {JSON.stringify(encryptedToken, undefined, 2)}
-              </Text>
-            </>
-          )}
-        </View>
+            {encryptedToken && (
+              <>
+                <Divider />
+                <Text style={styles.text}>ENCRYPTED TOKEN: </Text>
+                <Text style={styles.text}>
+                  {JSON.stringify(encryptedToken, undefined, 2)}
+                </Text>
+              </>
+            )}
+          </View>
+        </BasisTheoryProvider>
       </ScrollView>
     </View>
   );

@@ -2,6 +2,7 @@ import { cvv, expirationDate, number } from 'card-validator';
 import { isEmpty, partial, split } from 'ramda';
 import type { Mask, ValidationResult } from '../BaseElementTypes';
 import { ElementType } from '../BaseElementTypes';
+import { CoBadgedSupport } from '../CardElementTypes';
 import {
   extractDigits,
   filterOutMaxOccurrences,
@@ -21,6 +22,7 @@ const _cardCvvValidator = (length = [3, 4], value: string) =>
 
 interface CardNumberValidatorOptions {
   skipLuhnValidation?: boolean;
+  coBadgedSupport?: CoBadgedSupport[];
 }
 
 interface TextValidatorOptions {

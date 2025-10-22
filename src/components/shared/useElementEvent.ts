@@ -7,17 +7,29 @@ import { useCardMetadata } from './useCardMetadata';
 import { extractDigits, isNilOrEmpty } from '../../utils/shared';
 import { _elementErrors } from '../../ElementValues';
 import { ValidatorOptions } from '../../utils/validation';
+import { BinInfo } from '../../CardElementTypes';
+import { CardBrand } from '../../CardElementTypes';
 
 type UseElementEventProps = {
   type: ElementType;
   id: string;
   validatorOptions?: ValidatorOptions;
+  binInfo?: BinInfo;
+  selectedNetwork?: CardBrand;
+  binLookup?: boolean;
+  coBadgedSupport?: CardBrand[];
+  brandOptionsCount?: number;
 };
 
 export const useElementEvent = ({
   type,
   id,
   validatorOptions,
+  binInfo,
+  selectedNetwork,
+  binLookup,
+  coBadgedSupport,
+  brandOptionsCount,
 }: UseElementEventProps): CreateEvent => {
   const { getValidationStrategy } = useElementValidation();
   const { getMetadataFromCardNumber: _getMetadataFromCardNumber } =
@@ -62,8 +74,22 @@ export const useElementEvent = ({
   return (value: string) => {
     const metadata = getMetadataFromCardNumber(value);
     const empty = isEmpty(value);
-    const errors = validate(value);
-    const valid = !empty && !errors;
+    let errors = validate(value);
+    
+    // Check if selectedNetwork is required but not set
+    const requiresNetworkSelection = !isNilOrEmpty(coBadgedSupport) && (brandOptionsCount ?? 0) > 1;
+    const networkNotSelected = requiresNetworkSelection && !selectedNetwork;
+    
+    // Add network selection error if required but not selected
+    if (networkNotSelected && !empty) {
+      const networkError = {
+        targetId: type,
+        type: 'network_not_selected' as const,
+      };
+      errors = errors ? [...errors, networkError] : [networkError];
+    }
+    
+    const valid = !empty && !errors && !networkNotSelected;
 
     const mask = validatorOptions?.mask ?? [];
     const maskSatisfied = mask
@@ -71,7 +97,7 @@ export const useElementEvent = ({
         mask.length === value.length)
       : true;
 
-    const complete = !errors && maskSatisfied;
+    const complete = !errors && maskSatisfied && !networkNotSelected;
 
     return {
       empty,
@@ -80,6 +106,8 @@ export const useElementEvent = ({
       maskSatisfied,
       complete,
       ...metadata?.card,
+      ...(binLookup ? { binInfo } : {}),
+      ...(requiresNetworkSelection ? { selectedNetwork } : {}),
     };
   };
 };
