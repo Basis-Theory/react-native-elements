@@ -4,6 +4,10 @@ on:
   push:
     branches: [master, release]
 
+permissions:
+  id-token: write # Required for OIDC trusted publishing
+  contents: read
+
 jobs:
   request_approval:
     runs-on: ubuntu-latest
@@ -14,18 +18,17 @@ jobs:
           slack-api-token: ${{ secrets.SLACK_DUCKBOT_API_KEY }}
           channel: ${{ vars.SLACK_DUCKBOT_PRODUCT_APPROVAL_CHANNEL }}
           mention-person: ${{ vars.SLACK_DUCKBOT_PRODUCT_APPROVER }}
-          status: 'request'
+          status: "request"
 
   build-release:
     runs-on: ${{ matrix.os }}
     environment: PROD
     strategy:
       matrix:
-        node: ['20.x']
+        node: ["20.x"]
         os: [ubuntu-latest]
     env:
       CI: 1
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -39,9 +42,13 @@ jobs:
           channel: ${{ vars.SLACK_DUCKBOT_RELEASE_CHANNEL_ID }}
 
       - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: Install deps (with cache)
         uses: bahmutov/npm-install@v1
@@ -64,4 +71,4 @@ jobs:
         with:
           slack-api-token: ${{ secrets.SLACK_DUCKBOT_API_KEY }}
           channel: ${{ vars.SLACK_DUCKBOT_RELEASE_CHANNEL_ID }}
-          status: 'done'
+          status: "done"
