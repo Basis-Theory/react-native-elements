@@ -16,13 +16,6 @@
     ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "npm version ${nextRelease.version} --no-git-tag-version --prefix ./dist",
-        "publishCmd": "npm publish --provenance --registry https://registry.npmjs.org ./dist"
-      }
-    ],
     "@semantic-release/github",
     [
       "@semantic-release/git",

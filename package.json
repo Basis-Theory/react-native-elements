@@ -4,6 +4,7 @@
   "scripts": {
     "android": "react-native run-android",
     "build": "bob build && node prepare.js",
+    "clean": "rimraf dist",
     "ios": "react-native run-ios",
     "lint:fix": "eslint src --fix",
     "lint": "eslint src --quiet",
