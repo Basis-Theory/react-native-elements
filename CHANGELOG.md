@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/Basis-Theory/react-native-elements/compare/v2.1.1...v2.1.2) (2025-10-23)
+
+
+### Bug Fixes
+
+* deployment to npm ([#30](https://github.com/Basis-Theory/react-native-elements/issues/30)) ([b6d3540](https://github.com/Basis-Theory/react-native-elements/commit/b6d35406f63e58cffbb790689e76adfe4af34262))
+
 ## [2.1.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.1.0...v2.1.1) (2025-10-23)
 
 
