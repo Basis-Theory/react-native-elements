@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.1.0...v2.1.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* export bt provider from index ([#29](https://github.com/Basis-Theory/react-native-elements/issues/29)) ([f9098da](https://github.com/Basis-Theory/react-native-elements/commit/f9098da3957d53458ce23c3c8ae57e8133cf01d1))
+
 # [2.1.0](https://github.com/Basis-Theory/react-native-elements/compare/v2.0.0...v2.1.0) (2025-07-28)
 
 
