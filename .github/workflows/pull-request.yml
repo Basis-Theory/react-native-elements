@@ -35,11 +35,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['20.x']
+        node: ["20.x"]
         os: [ubuntu-latest]
     env:
       CI: 1
-      NPM_TOKEN: ${{ secrets.NPM_RO_TOKEN }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
