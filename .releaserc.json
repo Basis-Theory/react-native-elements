@@ -17,9 +17,10 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
-      "@semantic-release/npm",
+      "@semantic-release/exec",
       {
-        "pkgRoot": "dist"
+        "prepareCmd": "cd dist && npm version ${nextRelease.version} --no-git-tag-version",
+        "publishCmd": "cd dist && npm publish --provenance"
       }
     ],
     "@semantic-release/github",
