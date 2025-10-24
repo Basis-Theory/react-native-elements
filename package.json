@@ -1,6 +1,10 @@
 {
   "name": "@basis-theory/react-native-elements",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Basis-Theory/react-native-elements"
+  },
   "scripts": {
     "android": "react-native run-android",
     "build": "bob build && node prepare.js",
