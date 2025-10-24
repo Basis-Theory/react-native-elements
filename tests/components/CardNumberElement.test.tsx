@@ -11,9 +11,16 @@ import {
   userEvent,
   fireEvent,
   screen,
+  waitFor,
 } from '@testing-library/react-native';
 import { CardNumberElement } from '../../src';
+import { BasisTheoryProvider } from '../../src/BasisTheoryProvider';
+import { CoBadgedSupport } from '../../src/CardElementTypes';
 import cardValidator from 'card-validator';
+import * as useBinLookupModule from '../../src/components/useBinLookup';
+
+// Mock fetch for bin lookup tests
+global.fetch = jest.fn();
 
 describe('CardNumberElement', () => {
   beforeEach(() => {
@@ -369,6 +376,544 @@ describe('CardNumberElement', () => {
         errors: undefined,
         maskSatisfied: false,
         valid: false,
+      });
+    });
+  });
+
+  describe('Co-badge Support', () => {
+    const mockBt = {
+      config: {
+        apiKey: 'test-api-key',
+        apiBaseUrl: 'https://api.basistheory.com',
+      },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
+      },
+    };
+
+    const mockBinInfo = {
+      brand: 'visa',
+      funding: 'debit',
+      issuer: {
+        country: 'US',
+        name: 'Test Bank',
+      },
+      segment: 'consumer',
+      additional: [
+        {
+          brand: 'cartes-bancaires',
+          funding: 'debit',
+          issuer: {
+            country: 'US',
+            name: 'Test Bank',
+          },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Initialize ConfigManager with test config
+      const { _useConfigManager } = require('../../src/BasisTheoryProvider');
+      const configManager = _useConfigManager();
+      configManager.setConfig({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.basistheory.com',
+      });
+      
+      // Mock the useBinLookup hook
+      jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
+        binInfo: mockBinInfo,
+      });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test('renders BrandPicker when coBadgedSupport is provided', () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      // BrandPicker should be rendered (it shows "Select card brand" when no brand is selected)
+      expect(screen.getByText('Select card brand')).toBeTruthy();
+    });
+
+    test('does not render BrandPicker when coBadgedSupport is not provided', () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      // BrandPicker should not be rendered
+      expect(screen.queryByText('Select card brand')).toBeNull();
+    });
+
+    test('includes selectedNetwork in onChange event when coBadgedSupport is enabled', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            selectedNetwork: undefined, // Initially undefined
+          })
+        );
+      });
+    });
+
+    test('does not include selectedNetwork in onChange event when coBadgedSupport is not enabled', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.not.objectContaining({
+            selectedNetwork: expect.anything(),
+          })
+        );
+      });
+    });
+
+    test('resets selectedNetwork when binInfo is cleared', async () => {
+      const onChange = jest.fn();
+      
+      // Start with binInfo, then clear it
+      const mockUseBinLookup = jest.spyOn(useBinLookupModule, 'useBinLookup');
+      mockUseBinLookup.mockReturnValueOnce({ binInfo: mockBinInfo });
+
+      const { rerender } = render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      // Clear binInfo
+      mockUseBinLookup.mockReturnValue({ binInfo: undefined });
+
+      rerender(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      // Should trigger onChange with selectedNetwork reset
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            selectedNetwork: undefined,
+          })
+        );
+      });
+    });
+  });
+
+  describe('Bin Lookup', () => {
+    const mockBt = {
+      config: {
+        apiKey: 'test-api-key',
+        apiBaseUrl: 'https://api.basistheory.com',
+      },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
+      },
+    };
+
+    const mockBinInfo = {
+      brand: 'visa',
+      funding: 'debit',
+      issuer: {
+        country: 'US',
+        name: 'Test Bank',
+      },
+      segment: 'consumer',
+      additional: [],
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Initialize ConfigManager with test config
+      const { _useConfigManager } = require('../../src/BasisTheoryProvider');
+      const configManager = _useConfigManager();
+      configManager.setConfig({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.basistheory.com',
+      });
+      
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => mockBinInfo,
+      });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test('includes binInfo in onChange event when binLookup is enabled', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242'); // 6 digits to trigger bin lookup
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            binInfo: expect.objectContaining({
+              brand: 'visa',
+              funding: 'debit',
+              issuer: expect.objectContaining({
+                name: 'Test Bank',
+              }),
+            }),
+          })
+        );
+      });
+    });
+
+    test('does not include binInfo in onChange event when binLookup is disabled', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={false}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242');
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.not.objectContaining({
+            binInfo: expect.anything(),
+          })
+        );
+      });
+    });
+
+    test('makes API call to correct endpoint for bin lookup', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242424242424242'); // Full card number
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'https://api.basistheory.com/enrichments/card-details?bin=424242',
+          {
+            method: 'GET',
+            headers: {
+              'BT-API-KEY': 'test-api-key',
+            },
+          }
+        );
+      });
+    });
+
+    test('handles bin lookup API errors gracefully', async () => {
+      const onChange = jest.fn();
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      (global.fetch as jest.Mock).mockRejectedValue(new Error('API Error'));
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242424242424242');
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('BIN lookup failed:', expect.any(Error));
+      });
+
+      consoleSpy.mockRestore();
+    });
+
+    test('caches bin lookup results to avoid duplicate API calls', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      
+      // First call
+      fireEvent.changeText(el, '424242424242424242');
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+
+      // Clear and enter same BIN again
+      fireEvent.changeText(el, '');
+      fireEvent.changeText(el, '424242424242424242');
+      
+      // Should not make another API call due to caching
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    test('only triggers bin lookup for 6-digit BINs', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      
+      // Less than 6 digits - should not trigger lookup
+      fireEvent.changeText(el, '42424');
+      expect(global.fetch).not.toHaveBeenCalled();
+
+      // Exactly 6 digits - should trigger lookup
+      fireEvent.changeText(el, '424242');
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('Combined Co-badge Support and Bin Lookup', () => {
+    const mockBt = {
+      config: {
+        apiKey: 'test-api-key',
+        apiBaseUrl: 'https://api.basistheory.com',
+      },
+      proxy: jest.fn(),
+      sessions: {
+        create: jest.fn(),
+      },
+      tokenIntents: {
+        create: jest.fn(),
+        delete: jest.fn(),
+      },
+      tokens: {
+        getById: jest.fn(),
+        retrieve: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        tokenize: jest.fn(),
+        encrypt: jest.fn(),
+      },
+    };
+
+    const mockBinInfoWithCoBadge = {
+      brand: 'visa',
+      funding: 'debit',
+      issuer: {
+        country: 'US',
+        name: 'Test Bank',
+      },
+      segment: 'consumer',
+      additional: [
+        {
+          brand: 'cartes-bancaires',
+          funding: 'debit',
+          issuer: {
+            country: 'US',
+            name: 'Test Bank',
+          },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Initialize ConfigManager with test config
+      const { _useConfigManager } = require('../../src/BasisTheoryProvider');
+      const configManager = _useConfigManager();
+      configManager.setConfig({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://api.basistheory.com',
+      });
+      
+      jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
+        binInfo: mockBinInfoWithCoBadge,
+      });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test('includes both binInfo and selectedNetwork when both features are enabled', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            binInfo: expect.objectContaining({
+              brand: 'visa',
+              additional: expect.arrayContaining([
+                expect.objectContaining({
+                  brand: 'cartes-bancaires',
+                }),
+              ]),
+            }),
+            selectedNetwork: undefined, // Initially undefined
+          })
+        );
       });
     });
   });
