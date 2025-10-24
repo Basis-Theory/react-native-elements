@@ -1,4 +1,4 @@
-import { Token } from '@basis-theory/basis-theory-js/types/models';
+import { Token } from '../../src/types';
 import { BTRef } from '../../src';
 import * as state from '../../src/ElementValues';
 import {
