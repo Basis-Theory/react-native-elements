@@ -62,7 +62,6 @@ export const Collect = () => {
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
       queueMicrotask(() => {
-        console.log(event);
         if (event.cvcLength) {
           setCvcLength(event.cvcLength);
         }
