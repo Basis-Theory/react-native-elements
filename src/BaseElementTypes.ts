@@ -41,11 +41,11 @@ enum ElementType {
 
 type PrimitiveType = boolean | number | string | null | undefined;
 
-type ValidationResult = 'incomplete' | 'invalid' | undefined;
+type ValidationResult = 'incomplete' | 'invalid' | 'network_not_selected' | undefined;
 
 type FieldError = {
   targetId: string;
-  type: 'incomplete' | 'invalid';
+  type: 'incomplete' | 'invalid' | 'network_not_selected';
 };
 
 type ElementEvent = {
