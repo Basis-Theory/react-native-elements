@@ -1,4 +1,4 @@
-import type { Token } from '@basis-theory/basis-theory-js/types/models';
+import type { Token } from '../types';
 import { anyPass, equals, is, isEmpty, isNil, replace, type } from 'ramda';
 import type { BTRef, InputBTRefWithDatepart } from '../BaseElementTypes';
 import type { CardBrand } from '../CardElementTypes';

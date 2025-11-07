@@ -10,17 +10,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { BTRef, BTDateRef, ElementEvent } from '../src';
+import type { BTRef, BTDateRef, ElementEvent, Token, TokenizeData } from '../src';
 import {
   CardExpirationDateElement,
   CardNumberElement,
   CardVerificationCodeElement,
   useBasisTheory,
 } from '../src';
-import type {
-  Token,
-  TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
 import { styles } from './styles';
 import type { ElementEvents } from '../App';
 import { EncryptedToken, EncryptToken } from '../src/model/EncryptTokenData';
@@ -314,3 +310,4 @@ export const Collect = () => {
     </View>
   );
 };
+
