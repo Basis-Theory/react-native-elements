@@ -30,7 +30,7 @@ const isDevEnvironment = (apiBaseUrl?: string): boolean =>
 const getDefaultApiBaseUrl = (
   apiBaseUrl?: string,
   useNgApi?: boolean,
-  useUat?: boolean
+  environment?: string
 ): string => {
   // If custom URL provided, use it
   if (apiBaseUrl) {
@@ -38,7 +38,7 @@ const getDefaultApiBaseUrl = (
   }
 
   // UAT environment
-  if (useUat) {
+  if (environment === 'test') {
     return API_URLS.UAT;
   }
 
@@ -56,13 +56,13 @@ const loadBasisTheoryInstance = async (
   apiBaseUrl?: string,
   useNgApi?: boolean,
   debug?: boolean,
-  useUat?: boolean
+  environment?: string
 ): Promise<void> => {
   if (basisTheoryApi && proxyClient) {
     return;
   }
 
-  const baseUrl = getDefaultApiBaseUrl(apiBaseUrl, useNgApi, useUat);
+  const baseUrl = getDefaultApiBaseUrl(apiBaseUrl, useNgApi, environment);
 
   basisTheoryConfig = {
     apiKey,
