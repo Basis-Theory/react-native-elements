@@ -412,6 +412,12 @@ describe('CardNumberElement', () => {
         country: 'US',
         name: 'Test Bank',
       },
+      binRange: [
+        {
+          binMin: '424242',
+          binMax: '424242',
+        },
+      ],
       segment: 'consumer',
       additional: [
         {
@@ -421,6 +427,12 @@ describe('CardNumberElement', () => {
             country: 'US',
             name: 'Test Bank',
           },
+          binRange: [
+            {
+              binMin: '424242',
+              binMax: '424242',
+            },
+          ],
         },
       ],
     };
@@ -612,6 +624,9 @@ describe('CardNumberElement', () => {
         country: 'US',
         name: 'Test Bank',
       },
+      binRange: [
+        { binMin: '424242', binMax: '424242' },
+      ],
       segment: 'consumer',
       additional: [],
     };

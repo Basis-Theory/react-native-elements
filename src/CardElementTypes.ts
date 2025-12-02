@@ -32,24 +32,29 @@ export const CARD_BRANDS = [
 export type CardBrand = (typeof CARD_BRANDS)[number];
 
 export enum CoBadgedSupport {
-    CartesBancaires = 'cartes-bancaires',
+  CartesBancaires = 'cartes-bancaires',
 }
 
+interface BinRange {
+  binMin: string;
+  binMax: string;
+}
 interface CardIssuerDetails {
-    country: string;
-    name: string;
-  }
-  interface CardInfo {
-    brand: string;
-    funding: string;
-    issuer: CardIssuerDetails;
-  }
-  
-  export interface BinInfo {
-    brand: string;
-    funding: string;
-    issuer: CardIssuerDetails;
-    segment: string;
-    additional?: CardInfo[];
-  }
+  country: string;
+  name: string;
+}
+interface CardInfo {
+  brand: string;
+  funding: string;
+  issuer: CardIssuerDetails;
+  binRange?: BinRange[];
+}
+export interface BinInfo {
+  brand?: string;
+  funding?: string;
+  issuer?: CardIssuerDetails;
+  segment?: string;
+  additional?: CardInfo[];
+  binRange?: BinRange[];
+}
   
