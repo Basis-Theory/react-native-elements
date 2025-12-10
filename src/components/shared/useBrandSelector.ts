@@ -32,7 +32,9 @@ export const useBrandSelector = ({
     const { brand, additional } = binInfo;
     const brandOptions = new Set<CardBrand>();
 
-    brandOptions.add(convertApiBrandToBrand(brand));
+    if (brand) {
+      brandOptions.add(convertApiBrandToBrand(brand));
+    }
     
     additional?.forEach((a) => {
       if (!a.brand) return;

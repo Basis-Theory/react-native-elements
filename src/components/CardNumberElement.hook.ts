@@ -58,7 +58,7 @@ export const useCardNumberElement = ({
   const [selectedNetwork, setSelectedNetwork] = useState<CardBrand | undefined>(undefined);
 
   const binEnabled = binLookup || hasCoBadgedSupport;
-  const { binInfo } = useBinLookup(binEnabled, elementValue.replaceAll(' ', '').slice(0, 6));
+  const { binInfo } = useBinLookup(binEnabled, elementValue.replaceAll(' ', ''));
 
   // Get brand options from useBrandSelector hook
   const { brandSelectorOptions } = useBrandSelector({
