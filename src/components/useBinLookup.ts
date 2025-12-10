@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import {
   _useConfigManager,
 } from '../BasisTheoryProvider';
-import type { BinInfo } from '../CardElementTypes';
+import type { BinInfo, BinRange } from '../CardElementTypes';
 
 export const getBinInfo = async (
   bin: string
@@ -25,6 +25,14 @@ export const getBinInfo = async (
   const data = await response.json();
   return (data as BinInfo) || undefined;
 };
+
+const isCardInBinRange = (range: BinRange, cardValue: string) => {
+  const binLength = Math.min(range.binMin.length, cardValue.length);
+  const cardBin = Number.parseInt(cardValue?.slice(0, binLength));
+  const binMin = Number.parseInt(range.binMin?.slice(0, binLength));
+  const binMax = Number.parseInt(range.binMax?.slice(0, binLength));
+  return binMin <= cardBin && cardBin <= binMax;
+};
   
 export const useBinLookup = (enabled: boolean, cardValue: string) => {
   const [rawBinInfo, setRawBinInfo] = useState<BinInfo | undefined>(undefined);
@@ -38,33 +46,22 @@ export const useBinLookup = (enabled: boolean, cardValue: string) => {
 
     const primaryRanges = rawBinInfo.binRange || [];
 
-    const isValidPrimaryRange = primaryRanges?.some((range) => {
-      const binLength = Math.min(range.binMin.length, cardValue.length);
-      const cardBin = parseInt(cardValue?.slice(0, binLength));
-      const binMin = parseInt(range.binMin?.slice(0, binLength));
-      const binMax = parseInt(range.binMax?.slice(0, binLength));
-      return binMin <= cardBin && cardBin <= binMax;
-    });
+    const isValidPrimaryRange = primaryRanges?.some((range) =>
+      isCardInBinRange(range, cardValue)
+    );
 
     const additionals = rawBinInfo.additional?.filter((additional) => {
       const ranges = additional.binRange;
-      return ranges?.some((range) => {
-        const binLength = Math.min(range.binMin.length, cardValue.length);
-        const cardBin = parseInt(cardValue?.slice(0, binLength));
-        const binMin = parseInt(range.binMin?.slice(0, binLength));
-        const binMax = parseInt(range.binMax?.slice(0, binLength));
-        return binMin <= cardBin && cardBin <= binMax;
-      });
-    }) || [];
+      return ranges?.some((range) => isCardInBinRange(range, cardValue));
+    });
 
-
-    if (!isValidPrimaryRange && !additionals.length) {
+    if (!isValidPrimaryRange && !additionals?.length) {
       return undefined;
     }
 
     return {
       ...(isValidPrimaryRange ? { ...rawBinInfo, binRange: undefined } : {}),
-      additional: additionals.map((additional) => ({
+      additional: additionals?.map((additional) => ({
         ...additional,
         binRange: undefined,
       })),

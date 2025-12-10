@@ -35,7 +35,7 @@ export enum CoBadgedSupport {
   CartesBancaires = 'cartes-bancaires',
 }
 
-interface BinRange {
+export interface BinRange {
   binMin: string;
   binMax: string;
 }
