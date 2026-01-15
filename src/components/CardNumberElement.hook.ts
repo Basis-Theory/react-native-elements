@@ -81,13 +81,6 @@ export const useCardNumberElement = ({
     id,
   });
 
-  useBtRef({
-    btRef,
-    elementRef,
-    id,
-    setElementValue,
-  });
-
   const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
     setElementValue,
     transform: [' ', ''],
@@ -104,6 +97,14 @@ export const useCardNumberElement = ({
     onChange,
     onBlur,
     onFocus,
+  });
+
+  useBtRef({
+    btRef,
+    elementRef,
+    id,
+    setElementValue,
+    onChange: _onChange,
   });
 
   return {

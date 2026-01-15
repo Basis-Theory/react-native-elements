@@ -36,13 +36,6 @@ export const useTextElement = ({
 
   useCleanupStateBeforeUnmount(id);
 
-  useBtRef({
-    btRef,
-    elementRef,
-    id,
-    setElementValue,
-  });
-
   const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
     setElementValue,
     element: {
@@ -54,6 +47,14 @@ export const useTextElement = ({
     onBlur,
     onFocus,
     transform,
+  });
+
+  useBtRef({
+    btRef,
+    elementRef,
+    id,
+    setElementValue,
+    onChange: _onChange,
   });
 
   return {
