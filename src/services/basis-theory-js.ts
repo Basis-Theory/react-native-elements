@@ -8,7 +8,7 @@ let basisTheoryConfig: BasisTheoryConfig;
 // API URL Constants
 const API_URLS = {
   LOCALHOST: 'http://localhost:3333',
-  UAT: 'https://api.btsandbox.com',
+  UAT: 'https://api.test.basistheory.com',
 
   DEV: {
     STANDARD: 'https://api.flock-dev.com',
