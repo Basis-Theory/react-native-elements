@@ -36,14 +36,6 @@ const useCardExpirationDateElement = ({
 
   const mask = useMask({ type });
 
-  useBtRef({
-    btRef,
-    elementRef,
-    id,
-    setElementValue,
-    type,
-  });
-
   const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
     setElementValue,
     element: {
@@ -54,6 +46,15 @@ const useCardExpirationDateElement = ({
     onChange,
     onBlur,
     onFocus,
+  });
+
+  useBtRef({
+    btRef,
+    elementRef,
+    id,
+    setElementValue,
+    type,
+    onChange: _onChange,
   });
 
   return {

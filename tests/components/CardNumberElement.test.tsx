@@ -932,4 +932,257 @@ describe('CardNumberElement', () => {
       });
     });
   });
+
+  describe('setValue behavior', () => {
+    test('setValue triggers onChange with valid card number', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      render(
+        <CardNumberElement
+          btRef={ref}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      onChange.mockClear();
+
+      const validCardRef = {
+        id: ref.current.id,
+        format: () => '4242424242424242',
+      };
+
+      ref.current.setValue(validCardRef);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            brand: 'visa',
+            cardBin: '42424242',
+            cardLast4: '4242',
+            complete: true,
+            cvcLength: 3,
+            empty: false,
+            maskSatisfied: true,
+            valid: true,
+          })
+        );
+      });
+    });
+
+    test('setValue triggers onChange with invalid card number', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      render(
+        <CardNumberElement
+          btRef={ref}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      onChange.mockClear();
+
+      const invalidCardRef = {
+        id: ref.current.id,
+        format: () => '4242424242424241',
+      };
+
+      ref.current.setValue(invalidCardRef);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            brand: 'visa',
+            complete: false,
+            empty: false,
+            errors: [{ targetId: 'cardNumber', type: 'invalid' }],
+            maskSatisfied: true,
+            valid: false,
+          })
+        );
+      });
+    });
+
+    test('setValue triggers onChange with incomplete card number', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      render(
+        <CardNumberElement
+          btRef={ref}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      onChange.mockClear();
+
+      const incompleteCardRef = {
+        id: ref.current.id,
+        format: () => '4242',
+      };
+
+      ref.current.setValue(incompleteCardRef);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            brand: 'visa',
+            cardBin: undefined,
+            cardLast4: undefined,
+            cvcLength: 3,
+            complete: false,
+            empty: false,
+            errors: [{ targetId: 'cardNumber', type: 'incomplete' }],
+            maskSatisfied: false,
+            valid: false,
+          })
+        );
+      });
+    });
+
+    test('setValue triggers onChange with empty value', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      render(
+        <CardNumberElement
+          btRef={ref}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      onChange.mockClear();
+
+      const emptyCardRef = {
+        id: ref.current.id,
+        format: () => '',
+      };
+
+      ref.current.setValue(emptyCardRef);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            brand: 'unknown',
+            complete: false,
+            empty: true,
+            maskSatisfied: false,
+            valid: false,
+          })
+        );
+      });
+    });
+
+    test('setValue does not trigger onChange when onChange is not provided', async () => {
+      const ref = {
+        current: null as any,
+      };
+
+      const { getByPlaceholderText } = render(
+        <CardNumberElement
+          btRef={ref}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      const validCardRef = {
+        id: ref.current.id,
+        format: () => '4242424242424242',
+      };
+
+      // Should not throw error even without onChange
+      expect(() => {
+        ref.current.setValue(validCardRef);
+      }).not.toThrow();
+
+      const el = getByPlaceholderText('Card Number');
+      await waitFor(() => {
+        expect(el.props.value).toBe('4242 4242 4242 4242');
+      });
+    });
+
+    test('setValue updates element value correctly', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      const { getByPlaceholderText } = render(
+        <CardNumberElement
+          btRef={ref}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      const validCardRef = {
+        id: ref.current.id,
+        format: () => '4242424242424242',
+      };
+
+      ref.current.setValue(validCardRef);
+
+      const el = getByPlaceholderText('Card Number');
+      await waitFor(() => {
+        expect(el.props.value).toBe('4242 4242 4242 4242');
+      });
+    });
+
+    test('setValue with skipLuhnValidation validates correctly', async () => {
+      const onChange = jest.fn();
+      const ref = {
+        current: null as any,
+      };
+
+      render(
+        <CardNumberElement
+          btRef={ref}
+          skipLuhnValidation
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      onChange.mockClear();
+
+      const invalidLuhnCardRef = {
+        id: ref.current.id,
+        format: () => '4242424242424241',
+      };
+
+      ref.current.setValue(invalidLuhnCardRef);
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            brand: 'visa',
+            complete: true,
+            empty: false,
+            valid: true,
+            errors: undefined,
+          })
+        );
+      });
+    });
+  });
 });

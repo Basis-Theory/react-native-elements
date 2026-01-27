@@ -40,13 +40,6 @@ export const useCardVerificationCodeElement = ({
     type,
   });
 
-  useBtRef({
-    btRef,
-    elementRef,
-    id,
-    setElementValue,
-  });
-
   const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
     setElementValue,
     element: {
@@ -57,6 +50,14 @@ export const useCardVerificationCodeElement = ({
     onBlur,
     onChange,
     onFocus,
+  });
+
+  useBtRef({
+    btRef,
+    elementRef,
+    id,
+    setElementValue,
+    onChange: _onChange,
   });
 
   return {
