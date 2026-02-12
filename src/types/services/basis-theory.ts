@@ -31,7 +31,6 @@ export interface BasisTheoryTokenIntentsService {
     payload: CreateTokenIntent,
     options?: RequestOptions
   ): Promise<TokenIntent>;
-  delete(id: string, options?: RequestOptions): Promise<void>;
 }
 
 export interface BasisTheoryProxyService {
