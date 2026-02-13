@@ -43,18 +43,7 @@ export const TokenIntents = (bt: BasisTheoryInstance) => {
     }
   };
 
-  const deleteTokenIntent = async (id: string) => {
-    try {
-      if (id) {
-        await bt.tokenIntents.delete(id);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return {
     create,
-    delete: deleteTokenIntent,
   };
 };
