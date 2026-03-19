@@ -1,35 +1,42 @@
 # React Native Elements
 
-React Native SDK for Basis Theory Elements — provides React Native components for secure data collection on mobile.
+React Native SDK for secure data collection on mobile (iOS + Android).
 
-## Development Workflow
+## Build & Test
 
 ```bash
 yarn install
-yarn build            # Build the package (uses bob + prepare script)
+yarn build                              # bob build + prepare.js (creates dist/)
+yarn test                               # Jest unit tests
+yarn lint                               # ESLint
+npx jest --testPathPattern="<pattern>"  # Targeted test
 ```
 
-## Testing
+Always verify fixes with targeted tests before considering done.
 
-```bash
-yarn lint             # ESLint
-yarn lint:fix         # Auto-fix
-yarn test             # Unit tests (Jest)
-npx jest --testPathPattern="<pattern>"   # Targeted test
-```
+## Project Structure
 
-## Feedback Loops
+- `src/` — Library source (TypeScript)
+- `tests/` — Unit tests (Jest + @testing-library/react-native)
+- `demo/` — Demo app
+- `dist/` — Build output (published to npm)
+- `prepare.js` — Post-build script that creates `dist/package.json` (strips devDeps, rewrites paths)
 
-Run `npx jest --testPathPattern="<pattern>"` for targeted test feedback.
+## Gotchas
 
-When a failing test is discovered, always verify it passes using the appropriate feedback loop before considering the fix complete.
+- **`yarn` not `npm`**: Package manager is yarn. Uses `yarn.lock`.
+- **react-native-builder-bob**: Build tool (`bob build`), outputs to `dist/{commonjs,module,typescript}`. Configured in `package.json` under `"react-native-builder-bob"`.
+- **`prepare.js` is critical**: Runs after `bob build` to create the publishable `dist/package.json`. It strips devDependencies and rewrites `main`/`module`/`types` paths. Breaking this breaks npm publish.
+- **Publishing from `dist/`**: `cd dist && npm publish` — the dist directory is a self-contained package.
+- **Version `0.0.0` in source**: `package.json` version is always `0.0.0`. CI bumps it via `make update-version` before publish.
+- **Release triggered by GitHub Release**: Not on push to master — release workflow fires on `release: [released]` event.
+- **Peer deps**: `react` and `react-native` are peer dependencies. Tests use specific pinned versions in devDeps.
+- **Resolution overrides**: Several `resolutions` in package.json for transitive dependency issues — check before upgrading deps.
 
-## Standards & Conventions
+## Release
 
-- TypeScript, React Native, Jest for testing
-- `yarn` for package management
-- Uses `react-native-builder-bob` for building
+Triggered by creating a GitHub Release. CI runs `make update-version`, `make build`, then `cd dist && npm publish`. Published as `@basis-theory/react-native-elements`.
 
-## Links
+## Docs
 
-- [React Native Elements docs](https://developers.basistheory.com/docs/sdks/mobile/react-native/)
+- [React Native Elements SDK](https://developers.basistheory.com/docs/sdks/mobile/react-native/)
