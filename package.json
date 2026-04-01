@@ -12,7 +12,7 @@
     "ios": "react-native run-ios",
     "lint:fix": "eslint src --fix",
     "lint": "eslint src --quiet",
-    "changelog:release": "conventional-changelog -i CHANGELOG.md -p angular -r 1 -t v --skip-unstable",
+    "changelog:release": "conventional-changelog -i CHANGELOG.md -s -p angular -r 1 -t v --skip-unstable",
     "release": "semantic-release",
     "start": "react-native start",
     "test": "jest"
