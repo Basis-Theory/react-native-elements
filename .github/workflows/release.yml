@@ -44,7 +44,10 @@ jobs:
         run: yarn --immutable --no-progress --ignore-scripts
 
       - name: Bump Version
-        run: make update-version NEW_VERSION=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          make update-version NEW_VERSION="${TAG_NAME#v}"
 
       - name: Fetch tags
         run: git fetch --tags --force
