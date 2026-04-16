@@ -12,6 +12,7 @@
     "ios": "react-native run-ios",
     "lint:fix": "eslint src --fix",
     "lint": "eslint src --quiet",
+    "changelog:release": "conventional-changelog -i CHANGELOG.md -s -p angular -r 1 -t v --skip-unstable",
     "release": "semantic-release",
     "start": "react-native start",
     "test": "jest"
@@ -63,6 +64,7 @@
     "@types/react-test-renderer": "^18.3.0",
     "@typescript-eslint/parser": "^8.15.0",
     "babel-jest": "^29.7.0",
+    "conventional-changelog": "^7.2.0",
     "eslint": "^9.15.0",
     "eslint-plugin-ft-flow": "^3.0.11",
     "eslint-plugin-prettier": "5.2.1",
