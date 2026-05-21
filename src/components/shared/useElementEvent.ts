@@ -75,20 +75,24 @@ export const useElementEvent = ({
     const metadata = getMetadataFromCardNumber(value);
     const empty = isEmpty(value);
     let errors = validate(value);
-    
+
     // Check if selectedNetwork is required but not set
     const requiresNetworkSelection = !isNilOrEmpty(coBadgedSupport) && (brandOptionsCount ?? 0) > 1;
     const networkNotSelected = requiresNetworkSelection && !selectedNetwork;
-    
-    // Add network selection error if required but not selected
+
+    // Track network selection error in _elementErrors to block tokenization
+    const networkErrorKey = `${id}_network`;
     if (networkNotSelected && !empty) {
+      _elementErrors[networkErrorKey] = 'network_not_selected';
       const networkError = {
         targetId: type,
         type: 'network_not_selected' as const,
       };
       errors = errors ? [...errors, networkError] : [networkError];
+    } else if (has(networkErrorKey, _elementErrors)) {
+      delete _elementErrors[networkErrorKey];
     }
-    
+
     const valid = !empty && !errors && !networkNotSelected;
 
     const mask = validatorOptions?.mask ?? [];

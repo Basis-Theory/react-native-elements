@@ -457,7 +457,7 @@ describe('CardNumberElement', () => {
       jest.restoreAllMocks();
     });
 
-    test('renders BrandPicker when coBadgedSupport is provided', () => {
+    test('renders BrandPicker when coBadgedSupport is provided and value is entered', async () => {
       const onChange = jest.fn();
 
       render(
@@ -472,8 +472,14 @@ describe('CardNumberElement', () => {
         </BasisTheoryProvider>
       );
 
+      // Enter a card number to trigger showing the BrandPicker
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
       // BrandPicker should be rendered (it shows "Select card brand" when no brand is selected)
-      expect(screen.getByText('Select card brand')).toBeTruthy();
+      await waitFor(() => {
+        expect(screen.getByText('Select card brand')).toBeTruthy();
+      });
     });
 
     test('does not render BrandPicker when coBadgedSupport is not provided', () => {
@@ -589,6 +595,164 @@ describe('CardNumberElement', () => {
           })
         );
       });
+    });
+
+    test('auto-selects network from preSelectedNetworks when available', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            preSelectedNetworks={['cartes-bancaires' as const]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // Should auto-select cartes-bancaires from preSelectedNetworks
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            selectedNetwork: 'cartes-bancaires',
+          })
+        );
+      });
+    });
+
+    test('supports Bancontact in coBadgedSupport', async () => {
+      const onChange = jest.fn();
+
+      const mockBinInfoWithBancontact = {
+        brand: 'visa',
+        funding: 'debit',
+        issuer: { country: 'BE', name: 'Test Bank' },
+        binRange: [{ binMin: '424242', binMax: '424242' }],
+        segment: 'consumer',
+        additional: [
+          { brand: 'bancontact', funding: 'debit', issuer: { country: 'BE', name: 'Test Bank' } },
+        ],
+      };
+
+      jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
+        binInfo: mockBinInfoWithBancontact,
+      });
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.Bancontact]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // BrandPicker should show with Bancontact option
+      await waitFor(() => {
+        expect(screen.getByText('Select card brand')).toBeTruthy();
+      });
+    });
+
+    test('supports Dankort in coBadgedSupport', async () => {
+      const onChange = jest.fn();
+
+      const mockBinInfoWithDankort = {
+        brand: 'visa',
+        funding: 'debit',
+        issuer: { country: 'DK', name: 'Test Bank' },
+        binRange: [{ binMin: '424242', binMax: '424242' }],
+        segment: 'consumer',
+        additional: [
+          { brand: 'dankort', funding: 'debit', issuer: { country: 'DK', name: 'Test Bank' } },
+        ],
+      };
+
+      jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
+        binInfo: mockBinInfoWithDankort,
+      });
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.Dankort]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // BrandPicker should show with Dankort option
+      await waitFor(() => {
+        expect(screen.getByText('Select card brand')).toBeTruthy();
+      });
+    });
+
+    test('emits network_not_selected error when network selection is required but not selected', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // Should emit error when network not selected
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'network_not_selected',
+              }),
+            ]),
+          })
+        );
+      });
+    });
+
+    test('does not show BrandPicker when value is empty even with coBadgedSupport', () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      // BrandPicker should not be rendered when value is empty
+      expect(screen.queryByText('Select card brand')).toBeNull();
     });
   });
 

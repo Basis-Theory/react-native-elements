@@ -188,4 +188,28 @@ describe('tokens - Validation', () => {
       'Unable to create token. Payload contains invalid values. Review elements events for more details.'
     );
   });
+
+  test('throws if network_not_selected error exists (co-badge)', () => {
+    Object.assign(_elementErrors, {
+      '123_network': 'network_not_selected',
+    });
+
+    const tokens = Tokens({} as BasisTheoryType);
+
+    const tokenWithRef = {
+      id: 'tokenID',
+      type: 'card',
+      data: {
+        number: { id: '123', format: jest.fn() },
+      },
+    } as unknown as CreateTokenWithBtRef;
+
+    const action = async () => {
+      await tokens.create(tokenWithRef);
+    };
+
+    expect(() => action()).rejects.toThrow(
+      'Unable to create token. Payload contains invalid values. Review elements events for more details.'
+    );
+  });
 });
