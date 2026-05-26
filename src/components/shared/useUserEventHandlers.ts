@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect } from 'react';
-import { _elementValues, _elementMetadata, _elementRawValues } from '../../ElementValues';
+import { _elementValues, _elementMetadata, _elementRawValues, _elementErrors, binLookupPendingKey } from '../../ElementValues';
 import { useElementEvent } from './useElementEvent';
 import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
@@ -36,6 +36,23 @@ export const useUserEventHandlers = ({
   const createEvent = useElementEvent(element);
 
   const transformation = useTransform(transform);
+
+  // Track BIN lookup pending state to prevent race condition with setValue + tokenize
+  useEffect(() => {
+    const pendingKey = binLookupPendingKey(element.id);
+    const rawValue = _elementRawValues[element.id]?.toString() || '';
+    const digitsOnly = rawValue.replace(/\s/g, '');
+    const hasSixDigits = digitsOnly.length >= 6;
+    const hasCoBadgedSupport = element.coBadgedSupport && element.coBadgedSupport.length > 0;
+
+    // If co-badge is configured, value has 6+ digits, but binInfo is still undefined,
+    // BIN lookup is in progress - block tokenization
+    if (hasCoBadgedSupport && hasSixDigits && !element.binInfo) {
+      _elementErrors[pendingKey] = 'bin_lookup_pending';
+    } else {
+      delete _elementErrors[pendingKey];
+    }
+  }, [element.binInfo, element.coBadgedSupport, element.id]);
 
   useEffect(() => {
     const currentState = _elementMetadata[element.id];

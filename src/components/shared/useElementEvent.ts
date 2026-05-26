@@ -5,7 +5,7 @@ import { has, isEmpty } from 'ramda';
 import { useMemo } from 'react';
 import { useCardMetadata } from './useCardMetadata';
 import { extractDigits, isNilOrEmpty } from '../../utils/shared';
-import { _elementErrors } from '../../ElementValues';
+import { _elementErrors, networkErrorKey } from '../../ElementValues';
 import { ValidatorOptions } from '../../utils/validation';
 import { BinInfo } from '../../CardElementTypes';
 import { CardBrand } from '../../CardElementTypes';
@@ -81,16 +81,16 @@ export const useElementEvent = ({
     const networkNotSelected = requiresNetworkSelection && !selectedNetwork;
 
     // Track network selection error in _elementErrors to block tokenization
-    const networkErrorKey = `${id}_network`;
+    const netErrorKey = networkErrorKey(id);
     if (networkNotSelected && !empty) {
-      _elementErrors[networkErrorKey] = 'network_not_selected';
+      _elementErrors[netErrorKey] = 'network_not_selected';
       const networkError = {
         targetId: type,
         type: 'network_not_selected' as const,
       };
       errors = errors ? [...errors, networkError] : [networkError];
-    } else if (has(networkErrorKey, _elementErrors)) {
-      delete _elementErrors[networkErrorKey];
+    } else if (has(netErrorKey, _elementErrors)) {
+      delete _elementErrors[netErrorKey];
     }
 
     const valid = !empty && !errors && !networkNotSelected;

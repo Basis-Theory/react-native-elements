@@ -212,4 +212,116 @@ describe('tokens - Validation', () => {
       'Unable to create token. Payload contains invalid values. Review elements events for more details.'
     );
   });
+
+  test('throws if bin_lookup_pending error exists (race condition protection)', () => {
+    Object.assign(_elementErrors, {
+      '123_binLookupPending': 'bin_lookup_pending',
+    });
+
+    const tokens = Tokens({} as BasisTheoryType);
+
+    const tokenWithRef = {
+      id: 'tokenID',
+      type: 'card',
+      data: {
+        number: { id: '123', format: jest.fn() },
+      },
+    } as unknown as CreateTokenWithBtRef;
+
+    const action = async () => {
+      await tokens.create(tokenWithRef);
+    };
+
+    expect(() => action()).rejects.toThrow(
+      'Unable to create token. Payload contains invalid values. Review elements events for more details.'
+    );
+  });
+});
+
+describe('tokens - Tokenize Validation', () => {
+  beforeEach(() => {
+    Object.assign(_elementValues, {
+      '123': 'my very sensitive value',
+    });
+    Object.assign(_elementErrors, {});
+  });
+
+  afterAll(() => {
+    Object.keys(_elementValues).forEach((key) => delete _elementValues[key]);
+    Object.keys(_elementErrors).forEach((key) => delete _elementErrors[key]);
+  });
+
+  test('tokenize throws if there are any validation errors', () => {
+    Object.assign(_elementErrors, {
+      '123': 'incomplete',
+    });
+
+    const tokens = Tokens({} as BasisTheoryType);
+
+    const tokenizeData = {
+      card: {
+        id: 'tokenID',
+        type: 'card',
+        data: {
+          number: { id: '123', format: jest.fn() },
+        },
+      },
+    } as unknown as TokenizeData;
+
+    const action = async () => {
+      await tokens.tokenize(tokenizeData);
+    };
+
+    expect(() => action()).rejects.toThrow(
+      'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+    );
+  });
+
+  test('tokenize throws if network_not_selected error exists (co-badge)', () => {
+    Object.assign(_elementErrors, {
+      '123_network': 'network_not_selected',
+    });
+
+    const tokens = Tokens({} as BasisTheoryType);
+
+    const tokenizeData = {
+      card: {
+        data: {
+          number: { id: '123', format: jest.fn() },
+        },
+      },
+    } as unknown as TokenizeData;
+
+    const action = async () => {
+      await tokens.tokenize(tokenizeData);
+    };
+
+    expect(() => action()).rejects.toThrow(
+      'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+    );
+  });
+
+  test('tokenize throws if bin_lookup_pending error exists (race condition protection)', () => {
+    Object.assign(_elementErrors, {
+      '123_binLookupPending': 'bin_lookup_pending',
+    });
+
+    const tokens = Tokens({} as BasisTheoryType);
+
+    const tokenizeData = {
+      card: {
+        data: {
+          number: { id: '123', format: jest.fn() },
+        },
+      },
+    } as unknown as TokenizeData;
+
+    const action = async () => {
+      await tokens.tokenize(tokenizeData);
+    };
+
+    expect(() => action()).rejects.toThrow(
+      'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+    );
+  });
 });

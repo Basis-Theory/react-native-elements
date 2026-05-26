@@ -59,7 +59,6 @@ export const useBrandSelector = ({
   const showBrandSelector = useMemo(() =>
     hasCoBadgedSupport &&
     brandSelectorOptions.length > 1 &&
-    value !== undefined &&
     !isNilOrEmpty(value),
     [hasCoBadgedSupport, brandSelectorOptions.length, value]
   );

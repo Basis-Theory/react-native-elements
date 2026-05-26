@@ -754,6 +754,77 @@ describe('CardNumberElement', () => {
       // BrandPicker should not be rendered when value is empty
       expect(screen.queryByText('Select card brand')).toBeNull();
     });
+
+    test('clears network_not_selected error and emits complete:true when network is selected', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            preSelectedNetworks={['cartes-bancaires' as const]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // After auto-select happens, error should be cleared and complete should be true
+      await waitFor(() => {
+        const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+        expect(lastCall.selectedNetwork).toBe('cartes-bancaires');
+        expect(lastCall.complete).toBe(true);
+        expect(lastCall.errors).toBeUndefined();
+      });
+    });
+
+    test('does not require network selection for single-brand BIN', async () => {
+      const onChange = jest.fn();
+
+      // Mock binInfo with only primary brand, no additional brands
+      const singleBrandBinInfo = {
+        brand: 'visa',
+        funding: 'debit',
+        issuer: { country: 'US', name: 'Test Bank' },
+        binRange: [{ binMin: '424242', binMax: '424242' }],
+        segment: 'consumer',
+        additional: [], // No additional brands
+      };
+
+      jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
+        binInfo: singleBrandBinInfo,
+      });
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      // Should not emit network_not_selected error when only one brand is available
+      await waitFor(() => {
+        const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+        // No network_not_selected error since there's only one brand option
+        const hasNetworkError = lastCall.errors?.some(
+          (e: { type: string }) => e.type === 'network_not_selected'
+        );
+        expect(hasNetworkError).toBeFalsy();
+      });
+    });
   });
 
   describe('Bin Lookup', () => {
