@@ -881,6 +881,61 @@ describe('CardNumberElement', () => {
         expect(_elementErrors[pendingKey]).toBeUndefined();
       });
     });
+
+    test('does not set bin_lookup_pending when binLookup=true but coBadgedSupport is not set', async () => {
+      const { _elementErrors, binLookupPendingKey } = require('../../src/ElementValues');
+
+      let resolveFetch!: (value: unknown) => void;
+
+      // Use real useBinLookup (not mocked) to test the full pending flow
+      jest.restoreAllMocks();
+
+      (global.fetch as jest.Mock).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          })
+      );
+
+      const onChange = jest.fn();
+      const ref = { current: null as any };
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={ref}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242');
+
+      const pendingKey = binLookupPendingKey(ref.current.id);
+
+      // Wait for fetch to be called
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+
+      // While fetch is in flight, pending error should NOT be set (regression guard)
+      expect(_elementErrors[pendingKey]).toBeUndefined();
+
+      // Resolve the fetch
+      resolveFetch({
+        ok: true,
+        json: async () => mockBinInfo,
+      });
+
+      // After resolve, pending error should remain absent
+      await waitFor(() => {
+        expect(_elementErrors[pendingKey]).toBeUndefined();
+      });
+    });
   });
 
   describe('Bin Lookup', () => {
