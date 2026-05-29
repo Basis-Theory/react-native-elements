@@ -39,15 +39,17 @@ export const useUserEventHandlers = ({
   const transformation = useTransform(transform);
 
   // Sync BIN lookup pending state with the actual request lifecycle
+  // Only block tokenization for co-badge scenarios where network selection depends on binInfo
   useEffect(() => {
     const pendingKey = binLookupPendingKey(element.id);
+    const hasCoBadgedSupport = element.coBadgedSupport && element.coBadgedSupport.length > 0;
 
-    if (element.binLookupPending) {
+    if (hasCoBadgedSupport && element.binLookupPending) {
       _elementErrors[pendingKey] = 'bin_lookup_pending';
     } else {
       delete _elementErrors[pendingKey];
     }
-  }, [element.binLookupPending, element.id]);
+  }, [element.binLookupPending, element.coBadgedSupport, element.id]);
 
   useEffect(() => {
     const currentState = _elementMetadata[element.id];
