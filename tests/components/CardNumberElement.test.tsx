@@ -450,6 +450,7 @@ describe('CardNumberElement', () => {
       // Mock the useBinLookup hook
       jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
         binInfo: mockBinInfo,
+        pending: false,
       });
     });
 
@@ -558,7 +559,7 @@ describe('CardNumberElement', () => {
       
       // Start with binInfo, then clear it
       const mockUseBinLookup = jest.spyOn(useBinLookupModule, 'useBinLookup');
-      mockUseBinLookup.mockReturnValueOnce({ binInfo: mockBinInfo });
+      mockUseBinLookup.mockReturnValueOnce({ binInfo: mockBinInfo, pending: false });
 
       const { rerender } = render(
         <BasisTheoryProvider bt={mockBt}>
@@ -573,7 +574,7 @@ describe('CardNumberElement', () => {
       );
 
       // Clear binInfo
-      mockUseBinLookup.mockReturnValue({ binInfo: undefined });
+      mockUseBinLookup.mockReturnValue({ binInfo: undefined, pending: false });
 
       rerender(
         <BasisTheoryProvider bt={mockBt}>
@@ -642,6 +643,7 @@ describe('CardNumberElement', () => {
 
       jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
         binInfo: mockBinInfoWithBancontact,
+        pending: false,
       });
 
       render(
@@ -681,6 +683,7 @@ describe('CardNumberElement', () => {
 
       jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
         binInfo: mockBinInfoWithDankort,
+        pending: false,
       });
 
       render(
@@ -798,6 +801,7 @@ describe('CardNumberElement', () => {
 
       jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
         binInfo: singleBrandBinInfo,
+        pending: false,
       });
 
       render(
@@ -823,6 +827,58 @@ describe('CardNumberElement', () => {
           (e: { type: string }) => e.type === 'network_not_selected'
         );
         expect(hasNetworkError).toBeFalsy();
+      });
+    });
+
+    test('sets bin_lookup_pending in _elementErrors while BIN request is in flight', async () => {
+      const { _elementErrors, binLookupPendingKey } = require('../../src/ElementValues');
+
+      let resolveFetch!: (value: unknown) => void;
+
+      // Use real useBinLookup (not mocked) to test the full pending flow
+      jest.restoreAllMocks();
+
+      (global.fetch as jest.Mock).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          })
+      );
+
+      const onChange = jest.fn();
+      const ref = { current: null as any };
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={ref}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242');
+
+      const pendingKey = binLookupPendingKey(ref.current.id);
+
+      // While fetch is unresolved, pending error should be set
+      await waitFor(() => {
+        expect(_elementErrors[pendingKey]).toBe('bin_lookup_pending');
+      });
+
+      // Resolve the fetch
+      resolveFetch({
+        ok: true,
+        json: async () => mockBinInfo,
+      });
+
+      // After resolve, pending error should be cleared
+      await waitFor(() => {
+        expect(_elementErrors[pendingKey]).toBeUndefined();
       });
     });
   });
@@ -1065,6 +1121,114 @@ describe('CardNumberElement', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
       });
     });
+
+    test('sets pending true while fetch is in flight and false when resolved', async () => {
+      let resolveFetch!: (value: unknown) => void;
+      (global.fetch as jest.Mock).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          })
+      );
+
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242');
+
+      // fetch was called but not resolved — pending should be true
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+
+      // Resolve the fetch
+      resolveFetch({
+        ok: true,
+        json: async () => mockBinInfo,
+      });
+
+      // After resolve, binInfo should appear in onChange
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            binInfo: expect.objectContaining({ brand: 'visa' }),
+          })
+        );
+      });
+    });
+
+    test('sets pending false when fetch rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '424242');
+
+      // After rejection, pending should be cleared (no binInfo in event)
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('BIN lookup failed:', expect.any(Error));
+      });
+
+      consoleSpy.mockRestore();
+    });
+
+    test('does not set pending for cached BIN lookups', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            binLookup={true}
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      // First call - hits network
+      fireEvent.changeText(el, '424242');
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+
+      // Clear and re-enter same BIN - should use cache, no new fetch
+      fireEvent.changeText(el, '');
+      fireEvent.changeText(el, '424242');
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(1); // Still only 1 call
+      });
+    });
   });
 
   describe('Combined Co-badge Support and Bin Lookup', () => {
@@ -1124,6 +1288,7 @@ describe('CardNumberElement', () => {
       
       jest.spyOn(useBinLookupModule, 'useBinLookup').mockReturnValue({
         binInfo: mockBinInfoWithCoBadge,
+        pending: false,
       });
     });
 

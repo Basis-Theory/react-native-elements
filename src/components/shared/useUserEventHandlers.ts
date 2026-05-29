@@ -19,6 +19,7 @@ type UseUserEventHandlers = {
     binLookup?: boolean;
     coBadgedSupport?: CardBrand[];
     binInfo?: BinInfo;
+    binLookupPending?: boolean;
     selectedNetwork?: CardBrand;
     brandOptionsCount?: number;
   };
@@ -37,22 +38,16 @@ export const useUserEventHandlers = ({
 
   const transformation = useTransform(transform);
 
-  // Track BIN lookup pending state to prevent race condition with setValue + tokenize
+  // Sync BIN lookup pending state with the actual request lifecycle
   useEffect(() => {
     const pendingKey = binLookupPendingKey(element.id);
-    const rawValue = _elementRawValues[element.id]?.toString() || '';
-    const digitsOnly = rawValue.replace(/\s/g, '');
-    const hasSixDigits = digitsOnly.length >= 6;
-    const hasCoBadgedSupport = element.coBadgedSupport && element.coBadgedSupport.length > 0;
 
-    // If co-badge is configured, value has 6+ digits, but binInfo is still undefined,
-    // BIN lookup is in progress - block tokenization
-    if (hasCoBadgedSupport && hasSixDigits && !element.binInfo) {
+    if (element.binLookupPending) {
       _elementErrors[pendingKey] = 'bin_lookup_pending';
     } else {
       delete _elementErrors[pendingKey];
     }
-  }, [element.binInfo, element.coBadgedSupport, element.id]);
+  }, [element.binLookupPending, element.id]);
 
   useEffect(() => {
     const currentState = _elementMetadata[element.id];
