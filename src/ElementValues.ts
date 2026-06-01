@@ -108,4 +108,16 @@ const _elementMetadata: Record<string, {
   },
 });
 
+/**
+ * Helper to generate the network error key for a given element ID.
+ * Used to track network_not_selected errors for co-badge support.
+ */
+export const networkErrorKey = (id: string): string => `${id}_network`;
+
+/**
+ * Helper to generate the BIN lookup pending key for a given element ID.
+ * Used to block tokenization while BIN lookup is in progress for co-badge support.
+ */
+export const binLookupPendingKey = (id: string): string => `${id}_binLookupPending`;
+
 export { _elementErrors, _elementValues, _elementMetadata, _elementRawValues, _elementState };

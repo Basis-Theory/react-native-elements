@@ -33,6 +33,8 @@ export type CardBrand = (typeof CARD_BRANDS)[number];
 
 export enum CoBadgedSupport {
   CartesBancaires = 'cartes-bancaires',
+  Bancontact = 'bancontact',
+  Dankort = 'dankort',
 }
 
 export interface BinRange {
