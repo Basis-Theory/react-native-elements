@@ -36,6 +36,7 @@ const isCardInBinRange = (range: BinRange, cardValue: string) => {
   
 export const useBinLookup = (enabled: boolean, cardValue: string) => {
   const [rawBinInfo, setRawBinInfo] = useState<BinInfo | undefined>(undefined);
+  const [pending, setPending] = useState(false);
   const lastBinRef = useRef<string | undefined>(undefined);
   const cache = useRef<Map<string, BinInfo | undefined>>(new Map());
 
@@ -87,6 +88,7 @@ export const useBinLookup = (enabled: boolean, cardValue: string) => {
         return;
       }
 
+      setPending(true);
       try {
         const result = await getBinInfo(bin);
         setRawBinInfo(result);
@@ -96,11 +98,13 @@ export const useBinLookup = (enabled: boolean, cardValue: string) => {
         if (err instanceof Error) {
           console.error('BIN lookup failed:', err);
         }
+      } finally {
+        setPending(false);
       }
     };
 
     fetchBinInfo();
   }, [cardValue, enabled]);
 
-  return { binInfo };
+  return { binInfo, pending };
 };

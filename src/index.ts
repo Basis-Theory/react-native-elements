@@ -7,6 +7,8 @@ export { TextElement } from './components/TextElement';
 export { BasisTheoryProvider } from './BasisTheoryProvider';
 export { useBasisTheory } from './useBasisTheory';
 export type { BTRef, BTDateRef, ElementEvent } from './BaseElementTypes';
+export { CoBadgedSupport } from './CardElementTypes';
+export type { CardBrand } from './CardElementTypes';
 export type {
   Token,
   CreateToken,

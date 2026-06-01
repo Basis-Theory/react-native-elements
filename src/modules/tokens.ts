@@ -106,6 +106,12 @@ export const Tokens = (bt: BasisTheoryInstance) => {
   };
 
   const tokenize = async (data: TokenizeData) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
     try {
       if (data) {
         const _token = replaceElementRefs<_TokenizeData>(data);

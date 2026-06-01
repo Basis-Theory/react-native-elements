@@ -1,3 +1,5 @@
+import type { BinInfo, CardBrand } from './CardElementTypes';
+
 type CommonBTRefFunctions = {
   clear: () => void;
   focus: () => void;
@@ -108,6 +110,16 @@ type ElementEvent = {
    * Only present for card number elements
    */
   cardBin?: string;
+  /**
+   * BIN lookup information from the card network
+   * Only present for card number elements when binLookup is enabled
+   */
+  binInfo?: BinInfo;
+  /**
+   * The selected card network for co-badged cards
+   * Only present for card number elements when coBadgedSupport is configured
+   */
+  selectedNetwork?: CardBrand;
 };
 
 type EventConsumer = (event: ElementEvent) => void;

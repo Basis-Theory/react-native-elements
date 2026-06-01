@@ -5,7 +5,7 @@ import { has, isEmpty } from 'ramda';
 import { useMemo } from 'react';
 import { useCardMetadata } from './useCardMetadata';
 import { extractDigits, isNilOrEmpty } from '../../utils/shared';
-import { _elementErrors } from '../../ElementValues';
+import { _elementErrors, networkErrorKey } from '../../ElementValues';
 import { ValidatorOptions } from '../../utils/validation';
 import { BinInfo } from '../../CardElementTypes';
 import { CardBrand } from '../../CardElementTypes';
@@ -75,20 +75,24 @@ export const useElementEvent = ({
     const metadata = getMetadataFromCardNumber(value);
     const empty = isEmpty(value);
     let errors = validate(value);
-    
+
     // Check if selectedNetwork is required but not set
     const requiresNetworkSelection = !isNilOrEmpty(coBadgedSupport) && (brandOptionsCount ?? 0) > 1;
     const networkNotSelected = requiresNetworkSelection && !selectedNetwork;
-    
-    // Add network selection error if required but not selected
+
+    // Track network selection error in _elementErrors to block tokenization
+    const netErrorKey = networkErrorKey(id);
     if (networkNotSelected && !empty) {
+      _elementErrors[netErrorKey] = 'network_not_selected';
       const networkError = {
         targetId: type,
         type: 'network_not_selected' as const,
       };
       errors = errors ? [...errors, networkError] : [networkError];
+    } else if (has(netErrorKey, _elementErrors)) {
+      delete _elementErrors[netErrorKey];
     }
-    
+
     const valid = !empty && !errors && !networkNotSelected;
 
     const mask = validatorOptions?.mask ?? [];

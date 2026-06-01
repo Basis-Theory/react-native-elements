@@ -28,9 +28,10 @@ export const CardNumberElement = ({
   skipLuhnValidation,
   binLookup,
   coBadgedSupport,
+  preSelectedNetworks,
   style,
 }: CardNumberProps) => {
-  const { 
+  const {
     elementRef,
     _onChange,
     _onBlur,
@@ -38,8 +39,9 @@ export const CardNumberElement = ({
     elementValue,
     mask,
     selectedNetwork,
-    setSelectedNetwork,
-    brandSelectorOptions
+    onNetworkSelect,
+    brandSelectorOptions,
+    showBrandSelector,
   } = useCardNumberElement({
     btRef,
     onBlur,
@@ -49,15 +51,16 @@ export const CardNumberElement = ({
     skipLuhnValidation,
     binLookup,
     coBadgedSupport,
+    preSelectedNetworks,
   });
 
   return (
     <View>
-      {brandSelectorOptions.length > 1 && (
+      {showBrandSelector && (
         <BrandPicker
           brands={brandSelectorOptions}
           selectedBrand={selectedNetwork}
-          onBrandSelect={setSelectedNetwork}
+          onBrandSelect={onNetworkSelect}
           style={style as ViewStyle}
         />
       )}
