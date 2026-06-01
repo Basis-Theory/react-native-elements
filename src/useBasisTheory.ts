@@ -1,24 +1,37 @@
-import type {
-  BasisTheoryInitOptionsWithoutElements,
-  BasisTheory as BasisTheoryType,
-} from '@basis-theory/basis-theory-js/types/sdk';
 import { useEffect, useState } from 'react';
-import { BasisTheory } from '@basis-theory/basis-theory-js';
 
+import {
+  _useConfigManager,
+  useBasisTheoryFromContext,
+} from './BasisTheoryProvider';
 import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
+import { TokenIntents } from './modules/tokenIntents';
 import { Tokens } from './modules/tokens';
-import { useBasisTheoryFromContext } from './BasisTheoryProvider';
-import { logger } from './utils/logging';
+import { loadBasisTheoryInstance, getBasisTheoryInstance } from './services/basis-theory-js';
+import type { BasisTheoryInstance } from './types';
+
+interface BasisTheoryInitOptions {
+  apiBaseUrl?: string;
+  useNgApi?: boolean;
+  debug?: boolean;
+  environment?: string;
+}
 
 const _BasisTheoryElements = async ({
   apiKey,
   apiBaseUrl,
-}: BasisTheoryInitOptionsWithoutElements & { apiKey: string }) => {
-  const bt: BasisTheoryType = await new BasisTheory().init(
-    apiKey,
-    apiBaseUrl ? { apiBaseUrl } : undefined
-  );
+  useNgApi,
+  debug,
+  environment,
+}: BasisTheoryInitOptions & { apiKey: string }) => {
+  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, environment);
+
+  const bt: BasisTheoryInstance = getBasisTheoryInstance();
+
+  const { setConfig } = _useConfigManager();
+
+  setConfig({ apiKey, baseUrl: apiBaseUrl ?? 'https://api.basistheory.com' });
 
   const proxy = Proxy(bt);
 
@@ -26,10 +39,13 @@ const _BasisTheoryElements = async ({
 
   const tokens = Tokens(bt);
 
+  const tokenIntents = TokenIntents(bt);
+
   return {
-    sessions,
-    tokens,
     proxy,
+    sessions,
+    tokenIntents,
+    tokens,
   };
 };
 
@@ -42,7 +58,7 @@ type UseBasisTheory = {
 
 const useBasisTheory = (
   apiKey: string,
-  options?: BasisTheoryInitOptionsWithoutElements
+  options?: BasisTheoryInitOptions
 ): UseBasisTheory => {
   const [state, setState] = useState<UseBasisTheory>({});
 
@@ -59,17 +75,10 @@ const useBasisTheory = (
         try {
           const bt = await _BasisTheoryElements({ apiKey, ...options });
 
-          await logger.log.info('Succesfully initialized Elements');
-
           setState({
             bt,
           });
         } catch (error) {
-          await logger.log.error(
-            'Error while initializing Elements',
-            error as Error
-          );
-
           setState({
             error: error as Error,
           });

@@ -1,37 +1,78 @@
-import type { CreditCardType } from '@basis-theory/basis-theory-js/types/elements';
+import type { CreditCardType } from '../types';
 import type { ForwardedRef } from 'react';
 import { useId, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import {
   ElementType,
   type BTRef,
-  type EventConsumer,
+  type EventConsumers,
 } from '../BaseElementTypes';
 import { useBtRef } from './shared/useBtRef';
 import { useBtRefUnmount } from './shared/useBtRefUnmount';
 import { useMask } from './shared/useMask';
 import { useUserEventHandlers } from './shared/useUserEventHandlers';
 import { useCustomBin } from './useCustomBin.hook';
+import { useBinLookup } from './useBinLookup';
 import { useCleanupStateBeforeUnmount } from './shared/useCleanStateOnUnmount';
+import { CardBrand, CoBadgedSupport } from '../CardElementTypes';
+import { useBrandSelector } from './shared/useBrandSelector';
 
 type UseCardNumberElementProps = {
   btRef?: ForwardedRef<BTRef>;
-  onChange?: EventConsumer;
   cardTypes?: CreditCardType[];
   skipLuhnValidation?: boolean;
-};
+  binLookup?: boolean;
+  coBadgedSupport?: CoBadgedSupport[];
+  preSelectedNetworks?: CardBrand[];
+} & EventConsumers;
 
 export const useCardNumberElement = ({
   btRef,
+  onBlur,
   onChange,
+  onFocus,
   cardTypes,
   skipLuhnValidation,
+  binLookup,
+  coBadgedSupport,
+  preSelectedNetworks,
 }: UseCardNumberElementProps) => {
+
+  const hasCoBadgedSupport = (coBadgedSupport?.length ?? 0) > 0;
+
+  if (hasCoBadgedSupport && coBadgedSupport) {
+    const validValues = Object.values(CoBadgedSupport);
+    const invalidValues = coBadgedSupport.filter(value => !validValues.includes(value));
+    
+    if (invalidValues.length > 0) {
+      throw new Error(
+        `Invalid coBadgedSupport values: ${invalidValues.join(', ')}. ` +
+        `Valid values are: ${validValues.join(', ')}`
+      );
+    }
+  }
+
   const id = useId();
 
   const type = ElementType.CARD_NUMBER;
   const elementRef = useRef<TextInput>(null);
   const [elementValue, setElementValue] = useState<string>('');
+  const [selectedNetwork, setSelectedNetwork] = useState<CardBrand | undefined>(undefined);
+
+  const binEnabled = binLookup || hasCoBadgedSupport;
+  const { binInfo, pending: binLookupPending } = useBinLookup(binEnabled, elementValue.replaceAll(' ', ''));
+
+  // Get brand options from useBrandSelector hook
+  const { brandSelectorOptions, showBrandSelector, onNetworkSelect } = useBrandSelector({
+    binInfo,
+    coBadgedSupport,
+    selectedNetwork,
+    setSelectedNetwork,
+    preSelectedNetworks,
+    value: elementValue,
+  });
+
+  const brandOptionsCount = brandSelectorOptions.length;
 
   useCleanupStateBeforeUnmount(id);
 
@@ -44,28 +85,44 @@ export const useCardNumberElement = ({
     id,
   });
 
+  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
+    setElementValue,
+    transform: [' ', ''],
+    element: {
+      id,
+      validatorOptions: { mask, skipLuhnValidation, coBadgedSupport },
+      type,
+      binLookup,
+      coBadgedSupport,
+      binInfo,
+      binLookupPending,
+      selectedNetwork,
+      brandOptionsCount
+    },
+    onChange,
+    onBlur,
+    onFocus,
+  });
+
   useBtRef({
     btRef,
     elementRef,
     id,
     setElementValue,
-  });
-
-  const { _onChange } = useUserEventHandlers({
-    setElementValue,
-    transform: [' ', ''],
-    element: {
-      id,
-      validatorOptions: { mask, skipLuhnValidation },
-      type,
-    },
-    onChange,
+    onChange: _onChange,
   });
 
   return {
     elementRef,
     elementValue,
+    selectedNetwork,
+    onNetworkSelect,
+    binInfo,
+    brandSelectorOptions,
+    showBrandSelector,
     _onChange,
+    _onBlur,
+    _onFocus,
     mask,
   };
 };

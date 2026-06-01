@@ -1,4 +1,4 @@
-import type { CreditCardType } from '@basis-theory/basis-theory-js/types/elements';
+import type { CreditCardType } from '../types';
 import { creditCardType } from 'card-validator';
 import { always, compose, groupBy, ifElse, isEmpty } from 'ramda';
 import { useEffect, useState } from 'react';
@@ -9,7 +9,6 @@ const throwIfDuppedCardConfig = ifElse(
   () => {
     const msg = `Detected multiple cardType objects with the same type in the element configuration.`;
 
-    //    telemetryLogger.logger.info(msg);
     throw new Error(msg);
   },
   always(false)

@@ -4,7 +4,7 @@ import type { TextInput } from 'react-native';
 import {
   ElementType,
   type BTRef,
-  type EventConsumer,
+  type EventConsumers,
 } from '../BaseElementTypes';
 import { useBtRefUnmount } from './shared/useBtRefUnmount';
 import { useBtRef } from './shared/useBtRef';
@@ -15,13 +15,14 @@ import { useCleanupStateBeforeUnmount } from './shared/useCleanStateOnUnmount';
 type UseCardVerificationCodeElementProps = {
   btRef?: ForwardedRef<BTRef>;
   cvcLength?: number;
-  onChange?: EventConsumer;
-};
+} & EventConsumers;
 
 export const useCardVerificationCodeElement = ({
   btRef,
   cvcLength = 3,
+  onBlur,
   onChange,
+  onFocus,
 }: UseCardVerificationCodeElementProps) => {
   const id = useId();
 
@@ -39,21 +40,24 @@ export const useCardVerificationCodeElement = ({
     type,
   });
 
+  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
+    setElementValue,
+    element: {
+      id,
+      validatorOptions: { mask, cvcLength: [cvcLength] },
+      type,
+    },
+    onBlur,
+    onChange,
+    onFocus,
+  });
+
   useBtRef({
     btRef,
     elementRef,
     id,
     setElementValue,
-  });
-
-  const { _onChange } = useUserEventHandlers({
-    setElementValue,
-    element: {
-      id,
-      validatorOptions: { mask },
-      type,
-    },
-    onChange,
+    onChange: _onChange,
   });
 
   return {
@@ -61,6 +65,8 @@ export const useCardVerificationCodeElement = ({
     elementValue,
     mask,
     _onChange,
+    _onBlur,
+    _onFocus,
   };
 };
 

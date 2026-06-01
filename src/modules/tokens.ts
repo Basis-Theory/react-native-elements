@@ -3,11 +3,9 @@ import type {
   UpdateToken,
   Token,
   TokenizeData as _TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
-import type {
-  BasisTheory as BasisTheoryType,
   RequestOptions,
-} from '@basis-theory/basis-theory-js/types/sdk';
+  BasisTheoryInstance,
+} from '../types';
 import type {
   BTRef,
   InputBTRefWithDatepart,
@@ -18,8 +16,9 @@ import {
   replaceElementRefs,
   replaceSensitiveData,
 } from '../utils/dataManipulationUtils';
-import { logger } from '../utils/logging';
 import { isNilOrEmpty } from '../utils/shared';
+import { EncryptToken } from '../model/EncryptTokenData';
+import { encryptToken, setupEncryption } from '../services/tokenEncryption';
 
 export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
@@ -36,7 +35,9 @@ export type TokenizeData = _TokenizeData<
   BTRef | InputBTRefWithDatepart | PrimitiveType
 >;
 
-export const Tokens = (bt: BasisTheoryType) => {
+export const Tokens = (bt: BasisTheoryInstance) => {
+  setupEncryption();
+
   const getTokenById = async <T>(id: string, apiKey?: string) => {
     try {
       const _token = await bt.tokens.retrieve(id, {
@@ -45,14 +46,9 @@ export const Tokens = (bt: BasisTheoryType) => {
 
       const token = replaceSensitiveData(_token) as Token<T>;
 
-      await logger.log.info(`Token retrieved ${id}`);
-
       return token;
     } catch (error) {
-      await logger.log.error(
-        `Error while retrieving Token ${id}`,
-        error as Error
-      );
+      console.error(error);
     }
   };
 
@@ -71,11 +67,9 @@ export const Tokens = (bt: BasisTheoryType) => {
 
       const token = await bt.tokens.create(_token, requestOptions);
 
-      await logger.log.info(`Token created: ${token.id}`);
-
       return token;
     } catch (error) {
-      await logger.log.error('Error while creating Token', error as Error);
+      console.error(error);
     }
   };
 
@@ -95,11 +89,9 @@ export const Tokens = (bt: BasisTheoryType) => {
 
       const token = await bt.tokens.update(tokenId, _token, requestOptions);
 
-      await logger.log.info(`Token updated: ${tokenId}`);
-
       return token;
     } catch (error) {
-      await logger.log.error('Error while updating Token', error as Error);
+      console.error(error);
     }
   };
 
@@ -107,15 +99,19 @@ export const Tokens = (bt: BasisTheoryType) => {
     try {
       if (id) {
         await bt.tokens.delete(id);
-
-        await logger.log.info(`Token deleted: ${id}`);
       }
     } catch (error) {
-      await logger.log.error('Error while deleting Token', error as Error);
+      console.error(error);
     }
   };
 
   const tokenize = async (data: TokenizeData) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
     try {
       if (data) {
         const _token = replaceElementRefs<_TokenizeData>(data);
@@ -123,7 +119,21 @@ export const Tokens = (bt: BasisTheoryType) => {
         return await bt.tokenize(_token);
       }
     } catch (error) {
-      await logger.log.error('Error while running tokenize', error as Error);
+      console.error(error);
+    }
+  };
+
+  const encrypt = async (encryptRequest: EncryptToken) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to encrypt token. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
+    try {
+      return await encryptToken(encryptRequest);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -135,5 +145,6 @@ export const Tokens = (bt: BasisTheoryType) => {
     update,
     delete: deleteToken,
     tokenize,
+    encrypt,
   };
 };
