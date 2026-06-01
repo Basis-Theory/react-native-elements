@@ -69,16 +69,6 @@ describe('tokens', () => {
     expect(mockCreate).toHaveBeenCalledWith(expectedResult, undefined);
   });
 
-  test('calls bt tokens delete', async () => {
-    const mockDelete = jest.fn();
-    const tokenIntents = TokenIntents({
-      tokenIntents: { delete: mockDelete },
-    } as unknown as BasisTheoryType);
-
-    await tokenIntents.delete('tokenID');
-
-    expect(mockDelete).toHaveBeenCalledWith('tokenID');
-  });
 });
 
 describe('tokens - Validation', () => {

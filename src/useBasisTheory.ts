@@ -15,7 +15,7 @@ interface BasisTheoryInitOptions {
   apiBaseUrl?: string;
   useNgApi?: boolean;
   debug?: boolean;
-  useUat?: boolean;
+  environment?: string;
 }
 
 const _BasisTheoryElements = async ({
@@ -23,10 +23,10 @@ const _BasisTheoryElements = async ({
   apiBaseUrl,
   useNgApi,
   debug,
-  useUat,
+  environment,
 }: BasisTheoryInitOptions & { apiKey: string }) => {
-  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, useUat);
-  
+  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, environment);
+
   const bt: BasisTheoryInstance = getBasisTheoryInstance();
 
   const { setConfig } = _useConfigManager();

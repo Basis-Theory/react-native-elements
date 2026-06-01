@@ -279,18 +279,6 @@ const createTokenIntent =
     return tokenIntent;
   };
 
-const deleteTokenIntent =
-  (config: BasisTheoryConfig) =>
-  async (id: string, options?: RequestOptions): Promise<void> => {
-    await makeRequest(
-      config,
-      `/token-intents/${id}`,
-      'DELETE',
-      undefined,
-      options
-    );
-  };
-
 // Create API service functions bound to config
 const createBasisTheoryApi = (config: BasisTheoryConfig) => ({
   tokens: {
@@ -305,7 +293,6 @@ const createBasisTheoryApi = (config: BasisTheoryConfig) => ({
   },
   tokenIntents: {
     create: createTokenIntent(config),
-    delete: deleteTokenIntent(config),
   },
 });
 

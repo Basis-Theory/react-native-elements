@@ -34,21 +34,6 @@ const filterOutMaxOccurrences = (numbers: number[]) =>
 
 
 const convertApiBrandToBrand = (apiBrandName: string): CardBrand => {
-  const exceptions: Record<string, CardBrand> = {
-    AMEX: 'american-express',
-    'DINERS CLUB': 'diners-club',
-    'CARTES BANCAIRES': 'cartes-bancaires',
-    EFTPOS_AUSTRALIA: 'eftpos-australia',
-    'KOREAN LOCAL': 'korean-local',
-    'PRIVATE LABEL': 'private-label',
-  };
-
-  const upperCaseName = apiBrandName.toUpperCase();
-
-  if (exceptions[upperCaseName]) {
-    return exceptions[upperCaseName];
-  }
-
   const converted = apiBrandName.toLowerCase().replace(/[\s_]+/g, '-') as CardBrand;
   return converted || 'unknown';
 };

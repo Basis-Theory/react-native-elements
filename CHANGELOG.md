@@ -1,3 +1,48 @@
+
+## [2.5.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.5.0...v2.5.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* update uat url ([#40](https://github.com/Basis-Theory/react-native-elements/issues/40))
+
+# [2.5.0](https://github.com/Basis-Theory/react-native-elements/compare/v2.4.0...v2.5.0) (2026-01-21)
+
+
+### Features
+
+* add a new parameter to trigger validation on setValue ([#38](https://github.com/Basis-Theory/react-native-elements/issues/38))
+
+
+### Chores
+
+* skip-ci update to use public bt actions ([#39](https://github.com/Basis-Theory/react-native-elements/issues/39))
+
+# [2.4.0](https://github.com/Basis-Theory/react-native-elements/compare/v2.2.1...v2.4.0) (2025-12-10)
+
+
+### Features
+
+* update useUat flag to environment ([#36](https://github.com/Basis-Theory/react-native-elements/issues/36))
+* filter bin info based on user input ([#37](https://github.com/Basis-Theory/react-native-elements/issues/37))
+
+# [2.2.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.1.2...v2.2.1) (2025-11-14)
+
+
+### Features
+
+* Add Bin Lookup and Brand Selector ([#24](https://github.com/Basis-Theory/react-native-elements/issues/24))
+
+
+### BREAKING CHANGES
+
+* removes btjs and adds device info header ([#26](https://github.com/Basis-Theory/react-native-elements/issues/26))
+
+
+### Bug Fixes
+
+* fix types issues ([#35](https://github.com/Basis-Theory/react-native-elements/issues/35))
+
 ## [2.1.2](https://github.com/Basis-Theory/react-native-elements/compare/v2.1.1...v2.1.2) (2025-10-23)
 
 

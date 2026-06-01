@@ -33,3 +33,5 @@ export const isPaginatedList = <T>(arg: unknown): arg is PaginatedList<T> =>
   (arg as PaginatedList<T>)?.data !== undefined;
 
 export type TokenResponse = DeepTransformKeysCase<Token, 'snake'>;
+
+export type UpdateTokenResponse = DeepTransformKeysCase<UpdateToken, 'snake'>;

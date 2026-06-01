@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       id-token: write # Required for OIDC trusted publishing to npm
-      contents: read
+      contents: write
       actions: read
     environment: PROD # Must match npm trusted publisher config exactly (case-sensitive)
     strategy:
@@ -23,9 +23,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_SEMANTIC_RELEASE_PAT }}
+          fetch-depth: 0
 
       - name: Start Deploy Message
-        uses: Basis-Theory/github-actions/deploy-slack-action@master
+        uses: Basis-Theory/public-github-actions/deploy-slack-action@master
         with:
           slack-api-token: ${{ secrets.SLACK_DUCKBOT_API_KEY }}
           channel: ${{ vars.SLACK_DUCKBOT_RELEASE_CHANNEL_ID }}
@@ -43,7 +44,25 @@ jobs:
         run: yarn --immutable --no-progress --ignore-scripts
 
       - name: Bump Version
-        run: make update-version NEW_VERSION=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          make update-version NEW_VERSION="${TAG_NAME#v}"
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Update CHANGELOG (conventional-changelog)
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          VER="${TAG_NAME#v}"
+          if grep -qF "[$VER](" CHANGELOG.md; then
+            echo "CHANGELOG already lists ${VER}; skipping."
+            exit 0
+          fi
+          yarn changelog:release
 
       - name: Build
         run: make build
@@ -53,9 +72,23 @@ jobs:
       - name: Publish Package to NPM
         run: cd dist && npm publish --access public
 
+      - name: Commit Version to Repo
+        run: |
+          set -euo pipefail
+          git config --local user.email "platform@basistheory.com"
+          git config --local user.name "github-actions[bot]"
+          VERSION=$(jq -r '.version' package.json)
+          git add package.json CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(release): ${VERSION} [skip ci]"
+          git push origin HEAD:master
+
       - name: Stop Deploy Message
         if: always()
-        uses: Basis-Theory/github-actions/deploy-slack-action@master
+        uses: Basis-Theory/public-github-actions/deploy-slack-action@master
         with:
           slack-api-token: ${{ secrets.SLACK_DUCKBOT_API_KEY }}
           channel: ${{ vars.SLACK_DUCKBOT_RELEASE_CHANNEL_ID }}

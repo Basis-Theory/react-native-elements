@@ -23,6 +23,7 @@ type UseCardNumberElementProps = {
   skipLuhnValidation?: boolean;
   binLookup?: boolean;
   coBadgedSupport?: CoBadgedSupport[];
+  preSelectedNetworks?: CardBrand[];
 } & EventConsumers;
 
 export const useCardNumberElement = ({
@@ -34,6 +35,7 @@ export const useCardNumberElement = ({
   skipLuhnValidation,
   binLookup,
   coBadgedSupport,
+  preSelectedNetworks,
 }: UseCardNumberElementProps) => {
 
   const hasCoBadgedSupport = (coBadgedSupport?.length ?? 0) > 0;
@@ -58,14 +60,16 @@ export const useCardNumberElement = ({
   const [selectedNetwork, setSelectedNetwork] = useState<CardBrand | undefined>(undefined);
 
   const binEnabled = binLookup || hasCoBadgedSupport;
-  const { binInfo } = useBinLookup(binEnabled, elementValue.replaceAll(' ', '').slice(0, 6));
+  const { binInfo, pending: binLookupPending } = useBinLookup(binEnabled, elementValue.replaceAll(' ', ''));
 
   // Get brand options from useBrandSelector hook
-  const { brandSelectorOptions } = useBrandSelector({
+  const { brandSelectorOptions, showBrandSelector, onNetworkSelect } = useBrandSelector({
     binInfo,
     coBadgedSupport,
     selectedNetwork,
     setSelectedNetwork,
+    preSelectedNetworks,
+    value: elementValue,
   });
 
   const brandOptionsCount = brandSelectorOptions.length;
@@ -81,13 +85,6 @@ export const useCardNumberElement = ({
     id,
   });
 
-  useBtRef({
-    btRef,
-    elementRef,
-    id,
-    setElementValue,
-  });
-
   const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
     setElementValue,
     transform: [' ', ''],
@@ -98,6 +95,7 @@ export const useCardNumberElement = ({
       binLookup,
       coBadgedSupport,
       binInfo,
+      binLookupPending,
       selectedNetwork,
       brandOptionsCount
     },
@@ -106,13 +104,22 @@ export const useCardNumberElement = ({
     onFocus,
   });
 
+  useBtRef({
+    btRef,
+    elementRef,
+    id,
+    setElementValue,
+    onChange: _onChange,
+  });
+
   return {
     elementRef,
     elementValue,
     selectedNetwork,
-    setSelectedNetwork,
+    onNetworkSelect,
     binInfo,
     brandSelectorOptions,
+    showBrandSelector,
     _onChange,
     _onBlur,
     _onFocus,

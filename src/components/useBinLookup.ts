@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import {
   _useConfigManager,
 } from '../BasisTheoryProvider';
-import type { BinInfo } from '../CardElementTypes';
+import type { BinInfo, BinRange } from '../CardElementTypes';
 
 export const getBinInfo = async (
   bin: string
@@ -25,15 +25,54 @@ export const getBinInfo = async (
   const data = await response.json();
   return (data as BinInfo) || undefined;
 };
+
+const isCardInBinRange = (range: BinRange, cardValue: string) => {
+  const binLength = Math.min(range.binMin.length, cardValue.length);
+  const cardBin = Number.parseInt(cardValue?.slice(0, binLength));
+  const binMin = Number.parseInt(range.binMin?.slice(0, binLength));
+  const binMax = Number.parseInt(range.binMax?.slice(0, binLength));
+  return binMin <= cardBin && cardBin <= binMax;
+};
   
-export const useBinLookup = (enabled: boolean, bin: string) => {
-  const [binInfo, setBinInfo] = useState<BinInfo | undefined>(undefined);
+export const useBinLookup = (enabled: boolean, cardValue: string) => {
+  const [rawBinInfo, setRawBinInfo] = useState<BinInfo | undefined>(undefined);
+  const [pending, setPending] = useState(false);
   const lastBinRef = useRef<string | undefined>(undefined);
   const cache = useRef<Map<string, BinInfo | undefined>>(new Map());
 
+  const binInfo = useMemo<BinInfo | undefined>(() => {
+    if (!rawBinInfo || !cardValue) {
+      return undefined;
+    }
+
+    const primaryRanges = rawBinInfo.binRange || [];
+
+    const isValidPrimaryRange = primaryRanges?.some((range) =>
+      isCardInBinRange(range, cardValue)
+    );
+
+    const additionals = rawBinInfo.additional?.filter((additional) => {
+      const ranges = additional.binRange;
+      return ranges?.some((range) => isCardInBinRange(range, cardValue));
+    });
+
+    if (!isValidPrimaryRange && !additionals?.length) {
+      return undefined;
+    }
+
+    return {
+      ...(isValidPrimaryRange ? { ...rawBinInfo, binRange: undefined } : {}),
+      additional: additionals?.map((additional) => ({
+        ...additional,
+        binRange: undefined,
+      })),
+    };
+  }, [rawBinInfo, cardValue]);
+
   useEffect(() => {
+    const bin = cardValue?.slice(0, 6);
     if (!enabled || !bin || bin.length !== 6) {
-      setBinInfo(undefined);
+      setRawBinInfo(undefined);
       lastBinRef.current = undefined;
       return;
     }
@@ -44,25 +83,28 @@ export const useBinLookup = (enabled: boolean, bin: string) => {
 
     const fetchBinInfo = async () => {
       if (cache.current.has(bin)) {
-        setBinInfo(cache.current.get(bin));
+        setRawBinInfo(cache.current.get(bin));
         lastBinRef.current = bin;
         return;
       }
 
+      setPending(true);
       try {
         const result = await getBinInfo(bin);
-        setBinInfo(result);
+        setRawBinInfo(result);
         cache.current.set(bin, result);
         lastBinRef.current = bin;
       } catch (err: unknown) {
         if (err instanceof Error) {
           console.error('BIN lookup failed:', err);
         }
+      } finally {
+        setPending(false);
       }
     };
 
     fetchBinInfo();
-  }, [bin, enabled]);
+  }, [cardValue, enabled]);
 
-  return { binInfo };
+  return { binInfo, pending };
 };
