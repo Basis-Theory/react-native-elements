@@ -1,3 +1,5 @@
+import type { BinInfo, CardBrand } from './CardElementTypes';
+
 type CommonBTRefFunctions = {
   clear: () => void;
   focus: () => void;
@@ -41,11 +43,11 @@ enum ElementType {
 
 type PrimitiveType = boolean | number | string | null | undefined;
 
-type ValidationResult = 'incomplete' | 'invalid' | undefined;
+type ValidationResult = 'incomplete' | 'invalid' | 'network_not_selected' | undefined;
 
 type FieldError = {
   targetId: string;
-  type: 'incomplete' | 'invalid';
+  type: 'incomplete' | 'invalid' | 'network_not_selected';
 };
 
 type ElementEvent = {
@@ -71,6 +73,53 @@ type ElementEvent = {
    * Array of objects that indicates if an element is invalid or incomplete.
    */
   errors?: FieldError[];
+
+  /**
+   * Card brand identifier
+   * Only present for card number elements
+   */
+  brand?:
+    | string
+    | 'american-express'
+    | 'diners-club'
+    | 'discover'
+    | 'ebt'
+    | 'elo'
+    | 'hiper'
+    | 'hipercard'
+    | 'jcb'
+    | 'maestro'
+    | 'mastercard'
+    | 'mir'
+    | 'private-label'
+    | 'proprietary'
+    | 'unionpay'
+    | 'visa';
+  /**
+   * Last 4 digits of the card number
+   * Only present for card number elements
+   */
+  cardLast4?: string;
+  /**
+   * Required length of the CVC for the detected card brand
+   * Only present for card number elements
+   */
+  cvcLength?: number;
+  /**
+   * Bank Identification Number (first 6-8 digits of card number)
+   * Only present for card number elements
+   */
+  cardBin?: string;
+  /**
+   * BIN lookup information from the card network
+   * Only present for card number elements when binLookup is enabled
+   */
+  binInfo?: BinInfo;
+  /**
+   * The selected card network for co-badged cards
+   * Only present for card number elements when coBadgedSupport is configured
+   */
+  selectedNetwork?: CardBrand;
 };
 
 type EventConsumer = (event: ElementEvent) => void;

@@ -4,26 +4,24 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import type { BTRef, BTDateRef, ElementEvent } from '../src';
+import type { BTRef, BTDateRef, ElementEvent, Token, TokenizeData } from '../src';
 import {
   CardExpirationDateElement,
   CardNumberElement,
   CardVerificationCodeElement,
   useBasisTheory,
 } from '../src';
-import type {
-  Token,
-  TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
 import { styles } from './styles';
 import type { ElementEvents } from '../App';
+import { EncryptedToken, EncryptToken } from '../src/model/EncryptTokenData';
+import { BasisTheoryProvider } from '../src/BasisTheoryProvider';
+import { CoBadgedSupport } from '../src/CardElementTypes';
 
 const Divider = () => <View style={styles.divider} />;
 
@@ -32,6 +30,7 @@ export const Collect = () => {
   const [tokenizedData, setTokenizedData] = useState<
     TokenizeData | undefined
   >();
+  const [encryptedToken, setEncryptedToken] = useState<EncryptedToken | undefined>();
 
   const [tokenId, setTokenId] = useState('');
 
@@ -47,6 +46,8 @@ export const Collect = () => {
 
   const { bt, error } = useBasisTheory('<API_KEY>');
 
+  const [cvcLength, setCvcLength] = useState<number>();
+
   useEffect(() => {
     if (error) {
       console.log(error);
@@ -56,10 +57,16 @@ export const Collect = () => {
   const updateElementsEvents =
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
-      setElementsEvents({
-        ...elementsEvents,
-        [eventSource]: event,
-      });
+      queueMicrotask(() => {
+        if (event.cvcLength) {
+          setCvcLength(event.cvcLength);
+        }
+
+        setElementsEvents({
+          ...elementsEvents,
+          [eventSource]: event,
+        });
+      })
     };
 
   const createTokenWithTokenize = async () => {
@@ -136,6 +143,30 @@ export const Collect = () => {
     }
   };
 
+  const encryptToken = async () => {
+    try {
+      const encryptRequest: EncryptToken = {
+        tokenRequests: {
+          type: 'card',
+          data: {
+            number: cardNumberRef.current,
+            expiration_month: cardExpirationDateRef.current?.month(),
+            expiration_year: cardExpirationDateRef.current?.year(),
+            cvc: cardVerificationCodeRef.current,
+          },
+        },
+        // public key from dev environment
+        publicKeyPEM: '-----BEGIN PUBLIC KEY-----\noCXqWBAnKV24Xt1/lCVzN3fg1w8INuCRcp8B0EwmbxA=\n-----END PUBLIC KEY-----',
+        keyId: '1c6e6249-9c55-47a1-a8c4-73c0b3d60a64'
+      };
+
+      const encrypted = await bt?.tokens.encrypt(encryptRequest);
+      setEncryptedToken(encrypted);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const clearToken = () => {
     cardExpirationDateRef.current?.clear();
     cardNumberRef.current?.clear();
@@ -144,114 +175,139 @@ export const Collect = () => {
     setTokenId('');
     setToken(undefined);
     setTokenizedData(undefined);
+    setEncryptedToken(undefined);
   };
 
   return (
-    <SafeAreaView>
+     <View>
       <StatusBar />
       <ScrollView contentInsetAdjustmentBehavior="automatic">
-        <View style={styles.viewContainer}>
-          <TextInput
-            placeholder="Token ID*"
-            style={styles.elements}
-            onChangeText={setTokenId}
-            placeholderTextColor="#99a0bf"
-            value={tokenId}
-          />
+        <BasisTheoryProvider bt={bt}>
+          <View style={styles.viewContainer}>
+            <TextInput
+              placeholder="Token ID*"
+              style={styles.elements}
+              onChangeText={setTokenId}
+              placeholderTextColor="#99a0bf"
+              value={tokenId}
+            />
 
-          <CardNumberElement
-            btRef={cardNumberRef}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cardNumber')}
-            placeholder="Card Number"
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
-          <CardExpirationDateElement
-            btRef={cardExpirationDateRef}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cardExpirationDate')}
-            placeholder="Card Expiration Date"
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
-          <CardVerificationCodeElement
-            btRef={cardVerificationCodeRef}
-            cvcLength={3}
-            keyboardType="numeric"
-            onChange={updateElementsEvents('cvc')}
-            placeholder="CVC"
-            placeholderTextColor="#99a0bf"
-            style={styles.elements}
-          />
+            <CardNumberElement
+              btRef={cardNumberRef}
+              coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+              binLookup={true}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cardNumber')}
+              placeholder="Card Number"
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
+            <CardExpirationDateElement
+              btRef={cardExpirationDateRef}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cardExpirationDate')}
+              placeholder="Card Expiration Date"
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
+            <CardVerificationCodeElement
+              btRef={cardVerificationCodeRef}
+              cvcLength={cvcLength}
+              keyboardType="numeric"
+              onChange={updateElementsEvents('cvc')}
+              placeholder={'Security code'}
+              placeholderTextColor="#99a0bf"
+              style={styles.elements}
+            />
 
-          <Pressable
-            onPress={createToken}
-            style={{
-              marginTop: 24,
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Create token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={createToken}
+              style={{
+                marginTop: 24,
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Create token'}</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={updateToken}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Update Token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={updateToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Update Token'}</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={deleteToken}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Delete Token'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={deleteToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Delete Token'}</Text>
+            </Pressable>
 
-          <Divider />
+            <Divider />
 
-          <Pressable
-            onPress={createTokenWithTokenize}
-            style={{
-              ...styles.button,
-            }}
-          >
-            <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
-          </Pressable>
+            <Pressable
+              onPress={createTokenWithTokenize}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
+            </Pressable>
 
-          <Divider />
+            <Pressable
+              onPress={encryptToken}
+              style={{
+                ...styles.button,
+              }}
+            >
+              <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
+            </Pressable>
 
-          <Pressable onPress={clearToken} style={styles.button}>
-            <Text style={styles.buttonText}>{'Clear'}</Text>
-          </Pressable>
+            <Divider />
 
-          {token && (
-            <>
-              <Divider />
-              <Text style={styles.text}>TOKEN: </Text>
+            <Pressable onPress={clearToken} style={styles.button}>
+              <Text style={styles.buttonText}>{'Clear'}</Text>
+            </Pressable>
 
-              <Text style={styles.text}>
-                {JSON.stringify(token, undefined, 2)}
-              </Text>
-            </>
-          )}
+            {token && (
+              <>
+                <Divider />
+                <Text style={styles.text}>TOKEN: </Text>
 
-          {tokenizedData && (
-            <>
-              <Divider />
-              <Text style={styles.text}>TOKENIZED DATA: </Text>
-              <Text style={styles.text}>
-                {JSON.stringify(tokenizedData, undefined, 2)}
-              </Text>
-            </>
-          )}
-        </View>
+                <Text style={styles.text}>
+                  {JSON.stringify(token, undefined, 2)}
+                </Text>
+              </>
+            )}
+
+            {tokenizedData && (
+              <>
+                <Divider />
+                <Text style={styles.text}>TOKENIZED DATA: </Text>
+                <Text style={styles.text}>
+                  {JSON.stringify(tokenizedData, undefined, 2)}
+                </Text>
+              </>
+            )}
+
+            {encryptedToken && (
+              <>
+                <Divider />
+                <Text style={styles.text}>ENCRYPTED TOKEN: </Text>
+                <Text style={styles.text}>
+                  {JSON.stringify(encryptedToken, undefined, 2)}
+                </Text>
+              </>
+            )}
+          </View>
+        </BasisTheoryProvider>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
+
