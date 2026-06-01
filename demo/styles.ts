@@ -23,6 +23,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     color: '#00d2ef',
     width: 150,
+    paddingHorizontal: '5%',
     ...buttonSpacing,
   },
   buttonDisabled: {

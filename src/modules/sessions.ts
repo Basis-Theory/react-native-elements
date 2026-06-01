@@ -1,6 +1,6 @@
-import type { BasisTheory as BasisTheoryType } from '@basis-theory/basis-theory-js/types/sdk';
+import type { BasisTheoryInstance } from '../types';
 
-export const Sessions = (bt: BasisTheoryType) => {
+export const Sessions = (bt: BasisTheoryInstance) => {
   const create = async () => {
     try {
       const session = await bt.sessions.create();
