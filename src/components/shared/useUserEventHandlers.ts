@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect } from 'react';
-import { _elementValues, _elementMetadata, _elementRawValues } from '../../ElementValues';
+import { _elementValues, _elementMetadata, _elementRawValues, _elementErrors, binLookupPendingKey } from '../../ElementValues';
 import { useElementEvent } from './useElementEvent';
 import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
@@ -19,6 +19,7 @@ type UseUserEventHandlers = {
     binLookup?: boolean;
     coBadgedSupport?: CardBrand[];
     binInfo?: BinInfo;
+    binLookupPending?: boolean;
     selectedNetwork?: CardBrand;
     brandOptionsCount?: number;
   };
@@ -36,6 +37,19 @@ export const useUserEventHandlers = ({
   const createEvent = useElementEvent(element);
 
   const transformation = useTransform(transform);
+
+  // Sync BIN lookup pending state with the actual request lifecycle
+  // Only block tokenization for co-badge scenarios where network selection depends on binInfo
+  useEffect(() => {
+    const pendingKey = binLookupPendingKey(element.id);
+    const hasCoBadgedSupport = element.coBadgedSupport && element.coBadgedSupport.length > 0;
+
+    if (hasCoBadgedSupport && element.binLookupPending) {
+      _elementErrors[pendingKey] = 'bin_lookup_pending';
+    } else {
+      delete _elementErrors[pendingKey];
+    }
+  }, [element.binLookupPending, element.coBadgedSupport, element.id]);
 
   useEffect(() => {
     const currentState = _elementMetadata[element.id];
