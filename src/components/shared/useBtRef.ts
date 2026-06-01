@@ -1,4 +1,3 @@
-import { compose } from 'ramda';
 import type { Dispatch, ForwardedRef, RefObject, SetStateAction } from 'react';
 import { useEffect } from 'react';
 import type { TextInput } from 'react-native';
@@ -18,6 +17,7 @@ type UseBtRefProps = {
   id: string;
   setElementValue: Dispatch<SetStateAction<string>>;
   type?: ElementType;
+  onChange?: (value: string) => void;
 };
 
 type CreateBtRefArgs = Omit<UseBtRefProps, 'btRef' | 'setElementValue'> & {
@@ -99,9 +99,18 @@ export const useBtRef = ({
   id,
   type,
   setElementValue,
+  onChange,
 }: UseBtRefProps) => {
   useEffect(() => {
-    const valueSetter = compose(setElementValue, valueFormatter);
+    const valueSetter: ValueSetter = (val) => {
+      const formattedValue = valueFormatter(val);
+
+      setElementValue(formattedValue);
+      
+      if (onChange) {
+        onChange(formattedValue);
+      }
+    };
 
     const newBtRef = createBtRef({
       id,

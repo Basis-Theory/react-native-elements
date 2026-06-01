@@ -3,11 +3,9 @@ import type {
   UpdateToken,
   Token,
   TokenizeData as _TokenizeData,
-} from '@basis-theory/basis-theory-js/types/models';
-import type {
-  BasisTheory as BasisTheoryType,
   RequestOptions,
-} from '@basis-theory/basis-theory-js/types/sdk';
+  BasisTheoryInstance,
+} from '../types';
 import type {
   BTRef,
   InputBTRefWithDatepart,
@@ -19,6 +17,8 @@ import {
   replaceSensitiveData,
 } from '../utils/dataManipulationUtils';
 import { isNilOrEmpty } from '../utils/shared';
+import { EncryptToken } from '../model/EncryptTokenData';
+import { encryptToken, setupEncryption } from '../services/tokenEncryption';
 
 export type CreateTokenWithBtRef = Omit<CreateToken, 'data'> & {
   data: Record<string, BTRef | InputBTRefWithDatepart | null | undefined>;
@@ -35,7 +35,9 @@ export type TokenizeData = _TokenizeData<
   BTRef | InputBTRefWithDatepart | PrimitiveType
 >;
 
-export const Tokens = (bt: BasisTheoryType) => {
+export const Tokens = (bt: BasisTheoryInstance) => {
+  setupEncryption();
+
   const getTokenById = async <T>(id: string, apiKey?: string) => {
     try {
       const _token = await bt.tokens.retrieve(id, {
@@ -104,12 +106,32 @@ export const Tokens = (bt: BasisTheoryType) => {
   };
 
   const tokenize = async (data: TokenizeData) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to tokenize. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
     try {
       if (data) {
         const _token = replaceElementRefs<_TokenizeData>(data);
 
         return await bt.tokenize(_token);
       }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const encrypt = async (encryptRequest: EncryptToken) => {
+    if (!isNilOrEmpty(_elementErrors)) {
+      throw new Error(
+        'Unable to encrypt token. Payload contains invalid values. Review elements events for more details.'
+      );
+    }
+
+    try {
+      return await encryptToken(encryptRequest);
     } catch (error) {
       console.error(error);
     }
@@ -123,5 +145,6 @@ export const Tokens = (bt: BasisTheoryType) => {
     update,
     delete: deleteToken,
     tokenize,
+    encrypt,
   };
 };
