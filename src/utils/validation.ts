@@ -1,7 +1,8 @@
 import { cvv, expirationDate, number } from 'card-validator';
-import { flip, isEmpty, partial, split } from 'ramda';
+import { isEmpty, partial, split } from 'ramda';
 import type { Mask, ValidationResult } from '../BaseElementTypes';
 import { ElementType } from '../BaseElementTypes';
+import { CoBadgedSupport } from '../CardElementTypes';
 import {
   extractDigits,
   filterOutMaxOccurrences,
@@ -16,18 +17,25 @@ type ValidatorResult = {
 
 type ValidatorFunction = (value: string) => ValidatorResult;
 
-const _cardCvvValidator = partial(flip(cvv), [[3, 4]]);
+const _cardCvvValidator = (length = [3, 4], value: string) =>
+  cvv(value, length);
 
 interface CardNumberValidatorOptions {
   skipLuhnValidation?: boolean;
+  coBadgedSupport?: CoBadgedSupport[];
 }
 
 interface TextValidatorOptions {
   mask?: Mask;
 }
 
+interface CvcValidatorOptions {
+  cvcLength?: number[];
+}
+
 export type ValidatorOptions = CardNumberValidatorOptions &
-  TextValidatorOptions;
+  TextValidatorOptions &
+  CvcValidatorOptions;
 
 const _cardNumberValidator = (
   options: CardNumberValidatorOptions = {},
@@ -148,8 +156,11 @@ const cardExpirationDateValidator = (
   expirationDate: string
 ): ValidationResult => runValidator(expirationDate, _expirationDateValidator);
 
-const cardVerificationCodeValidator = (cvc: string): ValidationResult =>
-  runValidator(cvc, _cardCvvValidator);
+const cardVerificationCodeValidator = (
+  cvc: string,
+  validatorOptions?: ValidatorOptions
+): ValidationResult =>
+  runValidator(cvc, partial(_cardCvvValidator, [validatorOptions?.cvcLength]));
 
 const textMaskValidator = (
   value: string,
