@@ -96,8 +96,6 @@ const makeRequest = async <TResponse = unknown>(
     headers,
   };
 
-  console.log('requestInit', requestInit);
-
   if (body && method !== 'GET') {
     requestInit.body = JSON.stringify(body);
   }
