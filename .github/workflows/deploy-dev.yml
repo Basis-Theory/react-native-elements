@@ -22,8 +22,6 @@ jobs:
         steps:
             - name: Checkout Repo
               uses: actions/checkout@v4
-              with:
-                  token: ${{ secrets.GH_SEMANTIC_RELEASE_PAT }}
 
             - name: Use Node ${{ matrix.node }}
               uses: actions/setup-node@v4
@@ -53,17 +51,25 @@ jobs:
 
     create-pre-release:
         runs-on: ubuntu-latest
+        environment: TAG
         needs:
             - build-release
         strategy:
             matrix:
                 node: ["20.x"]
         steps:
+            - name: Mint tag-app token
+              id: tag-token
+              uses: actions/create-github-app-token@v3
+              with:
+                  app-id: ${{ vars.GH_TAG_APP_ID }}
+                  private-key: ${{ secrets.GH_APP_TAG_KEY }}
+
             - name: Version and Tag
               id: version-and-tag
               uses: mathieudutour/github-tag-action@v5.2
               with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  github_token: ${{ steps.tag-token.outputs.token }}
 
             - name: Generate Release Notes
               id: release-notes
@@ -94,7 +100,7 @@ jobs:
                   body: ${{ steps.release-notes.outputs.result }}
                   tag_name: ${{ steps.version-and-tag.outputs.new_tag }}
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ steps.tag-token.outputs.token }}
 
             - name: Stop Deploy Message
               if: always()
