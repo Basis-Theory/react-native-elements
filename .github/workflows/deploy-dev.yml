@@ -21,24 +21,22 @@ jobs:
             HUSKY: 0 # disables husky hooks
         steps:
             - name: Checkout Repo
-              uses: actions/checkout@v4
-              with:
-                  token: ${{ secrets.GH_SEMANTIC_RELEASE_PAT }}
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
             - name: Use Node ${{ matrix.node }}
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
               with:
                   node-version: ${{ matrix.node }}
                   # registry-url not needed - no npm publishing in dev workflow
 
             - name: Install Deps (with cache)
-              uses: bahmutov/npm-install@v1
+              uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1
               with:
                   install-command: yarn --immutable --no-progress --ignore-scripts
 
             - name: Get New Version
               id: get-new-version
-              uses: mathieudutour/github-tag-action@v5.2
+              uses: mathieudutour/github-tag-action@a2505118dd9b4797d9f8d45747f562db67e2aa6c # v5.2
               with:
                   dry_run: true
                   github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -53,21 +51,29 @@ jobs:
 
     create-pre-release:
         runs-on: ubuntu-latest
+        environment: TAG
         needs:
             - build-release
         strategy:
             matrix:
                 node: ["20.x"]
         steps:
+            - name: Mint tag-app token
+              id: tag-token
+              uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+              with:
+                  app-id: ${{ vars.GH_TAG_APP_ID }}
+                  private-key: ${{ secrets.GH_APP_TAG_KEY }}
+
             - name: Version and Tag
               id: version-and-tag
-              uses: mathieudutour/github-tag-action@v5.2
+              uses: mathieudutour/github-tag-action@a2505118dd9b4797d9f8d45747f562db67e2aa6c # v5.2
               with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  github_token: ${{ steps.tag-token.outputs.token }}
 
             - name: Generate Release Notes
               id: release-notes
-              uses: actions/github-script@v6
+              uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
               env:
                   NEW_RELEASE_TAG: ${{ steps.version-and-tag.outputs.new_tag }}
               with:
@@ -87,18 +93,18 @@ jobs:
                       return releaseNotes.data.body;
 
             - name: Create Pre-Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
               with:
                   prerelease: true
                   generate_release_notes: false
                   body: ${{ steps.release-notes.outputs.result }}
                   tag_name: ${{ steps.version-and-tag.outputs.new_tag }}
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ steps.tag-token.outputs.token }}
 
             - name: Stop Deploy Message
               if: always()
-              uses: Basis-Theory/public-github-actions/deploy-slack-action@master
+              uses: Basis-Theory/public-github-actions/deploy-slack-action@12362db6b1ad6b524d28c47a6489c3e73ecd656a # master
               with:
                   slack-api-token: ${{ secrets.SLACK_DUCKBOT_API_KEY }}
                   channel: ${{ vars.SLACK_DUCKBOT_DEV_DEPLOY_CHANNEL_ID }}
