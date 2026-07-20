@@ -6,7 +6,7 @@ import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
 import { useTransform } from './useTransform';
 import { ValidatorOptions } from '../../utils/validation';
-import { NativeSyntheticEvent, TextInputFocusEventData } from 'react-native';
+import { BlurEvent, FocusEvent } from 'react-native';
 import { isString } from '../../utils/shared';
 import { BinInfo, CardBrand } from '../../CardElementTypes';
 
@@ -88,7 +88,7 @@ export const useUserEventHandlers = ({
         return _elementValue;
       });
     },
-    _onFocus: (_event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    _onFocus: (_event: FocusEvent) => {
       const val = _elementValues[element.id] ?? '';
 
       if (onFocus && isString(val)) {
@@ -96,7 +96,7 @@ export const useUserEventHandlers = ({
         onFocus(event);
       }
     },
-    _onBlur: (_event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    _onBlur: (_event: BlurEvent) => {
       const val = _elementValues[element.id] ?? '';
 
       if (onBlur && isString(val)) {
