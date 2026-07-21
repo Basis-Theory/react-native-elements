@@ -13,7 +13,7 @@ import { _elementValues } from '../../ElementValues';
 
 type UseBtRefProps = {
   btRef?: ForwardedRef<BTDateRef | BTRef>;
-  elementRef: RefObject<TextInput>;
+  elementRef: RefObject<TextInput | null>;
   id: string;
   setElementValue: Dispatch<SetStateAction<string>>;
   type?: ElementType;
