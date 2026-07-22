@@ -69,7 +69,14 @@ jobs:
             echo "CHANGELOG already lists ${VER}; skipping."
             exit 0
           fi
+          # The release tag already exists (it triggered this run); drop it
+          # locally so conventional-changelog emits this version instead of an
+          # empty section. The remote tag is untouched.
+          git tag -d "$TAG_NAME" 2>/dev/null || true
           yarn changelog:release
+          if ! grep -qF "[$VER](" CHANGELOG.md; then
+            echo "::warning::conventional-changelog produced no ${VER} entry (no conventional commits since the previous tag)."
+          fi
 
       - name: Build
         run: make build

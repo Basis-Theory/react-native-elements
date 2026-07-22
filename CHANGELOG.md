@@ -1,4 +1,69 @@
 
+## [4.0.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.1...v4.0.1) (2026-07-22)
+
+
+### Features
+
+* upgrade react native ([#51](https://github.com/Basis-Theory/react-native-elements/issues/51))
+* bump release ([#52](https://github.com/Basis-Theory/react-native-elements/issues/52))
+
+
+### Bug Fixes
+
+* pin npm to 11.18.0 for Node 20 compatibility in release ([#53](https://github.com/Basis-Theory/react-native-elements/issues/53))
+
+
+### Chores
+
+* replace semantic-release PAT with GitHub App tokens ([#50](https://github.com/Basis-Theory/react-native-elements/issues/50))
+
+
+### BREAKING CHANGES
+
+* upgrade react native ([#51](https://github.com/Basis-Theory/react-native-elements/issues/51))
+
+## [3.0.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.0...v3.0.1) (2026-06-09)
+
+
+### Chores
+
+* remove debug log for requestInit ([#48](https://github.com/Basis-Theory/react-native-elements/issues/48))
+
+# [3.0.0](https://github.com/Basis-Theory/react-native-elements/compare/v2.5.3...v3.0.0) (2026-06-03)
+
+
+### Features
+
+* support additional networks, implement preSelectedNetworks ([#46](https://github.com/Basis-Theory/react-native-elements/issues/46))
+* bump version for breaking change release ([#47](https://github.com/Basis-Theory/react-native-elements/issues/47))
+
+
+### Chores
+
+* add AGENTS.md with developer essentials ([#44](https://github.com/Basis-Theory/react-native-elements/issues/44))
+
+
+### BREAKING CHANGES
+
+* support additional networks, implement preSelectedNetworks ([#46](https://github.com/Basis-Theory/react-native-elements/issues/46))
+
+## [2.5.3](https://github.com/Basis-Theory/react-native-elements/compare/v2.5.1...v2.5.3) (2026-04-16)
+
+
+### Features
+
+* remove token intent delete method from sdk ([#43](https://github.com/Basis-Theory/react-native-elements/issues/43))
+
+
+### Chores
+
+* update changelog and changelog generation ([#45](https://github.com/Basis-Theory/react-native-elements/issues/45))
+
+
+### BREAKING CHANGES
+
+* remove token intent delete method from sdk ([#43](https://github.com/Basis-Theory/react-native-elements/issues/43))
+
 ## [2.5.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.5.0...v2.5.1) (2026-01-27)
 
 
