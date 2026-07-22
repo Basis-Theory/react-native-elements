@@ -1,3 +1,4 @@
+## [4.0.2](https://github.com/Basis-Theory/react-native-elements/compare/v4.0.1...v4.0.2) (2026-07-22)
 
 ## [4.0.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.1...v4.0.1) (2026-07-22)
 
