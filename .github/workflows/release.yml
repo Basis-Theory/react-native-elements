@@ -84,7 +84,7 @@ jobs:
           SKIP_INSTALL: 1 # install with cache was done already
 
       - name: Publish Package to NPM
-        run: cd dist && npm publish --access public
+        run: ./scripts/publish-to-npm.sh
 
       - name: Commit Version to Repo
         run: |
