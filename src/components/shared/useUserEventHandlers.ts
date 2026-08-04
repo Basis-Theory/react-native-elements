@@ -78,15 +78,13 @@ export const useUserEventHandlers = ({
       _elementRawValues[element.id] = _elementValue;
       _elementValues[element.id] = transformation.apply(_elementValue);
 
-      setElementValue(() => {
-        if (onChange) {
-          const event = createEvent(_elementValue);
+      setElementValue(_elementValue);
 
-          onChange(event);
-        }
+      if (onChange) {
+        const event = createEvent(_elementValue);
 
-        return _elementValue;
-      });
+        onChange(event);
+      }
     },
     _onFocus: (_event: FocusEvent) => {
       const val = _elementValues[element.id] ?? '';
