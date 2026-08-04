@@ -56,6 +56,30 @@ describe('CardNumberElement', () => {
     });
   });
 
+  describe('onChange setState (ENG-11696)', () => {
+    test('fires onChange once per change in StrictMode', () => {
+      const onChange = jest.fn();
+
+      const Parent = () => (
+        <React.StrictMode>
+          <CardNumberElement
+            btRef={mockedRef}
+            placeholder="Card Number"
+            style={{}}
+            onChange={onChange}
+          />
+        </React.StrictMode>
+      );
+
+      render(<Parent />);
+
+      const el = screen.getByPlaceholderText('Card Number');
+      fireEvent.changeText(el, '4242424242424242');
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('CustomBin', () => {
     test('validates custom bin', async () => {
       const doStuff = jest.fn();
