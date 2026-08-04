@@ -57,17 +57,20 @@ export const Collect = () => {
   const updateElementsEvents =
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
-      queueMicrotask(() => {
-        if (event.cvcLength) {
-          setCvcLength(event.cvcLength);
-        }
+      if (event.cvcLength) {
+        setCvcLength(event.cvcLength);
+      }
 
-        setElementsEvents({
-          ...elementsEvents,
-          [eventSource]: event,
-        });
-      })
+      setElementsEvents((prev) => ({
+        ...prev,
+        [eventSource]: event,
+      }));
     };
+
+  const allFieldsComplete =
+    Boolean(elementsEvents.cardNumber?.complete) &&
+    Boolean(elementsEvents.cardExpirationDate?.complete) &&
+    Boolean(elementsEvents.cvc?.complete);
 
   const createTokenWithTokenize = async () => {
     try {
@@ -221,10 +224,12 @@ export const Collect = () => {
             />
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={createToken}
               style={{
                 marginTop: 24,
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Create token'}</Text>
@@ -251,18 +256,22 @@ export const Collect = () => {
             <Divider />
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={createTokenWithTokenize}
               style={{
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
             </Pressable>
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={encryptToken}
               style={{
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
