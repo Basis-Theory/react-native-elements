@@ -1,3 +1,10 @@
+## [4.0.3](https://github.com/Basis-Theory/react-native-elements/compare/v4.0.2...v4.0.3) (2026-08-10)
+
+
+### Bug Fixes
+
+* **ENG-11696:** call onChange outside setElementValue updater ([#56](https://github.com/Basis-Theory/react-native-elements/issues/56)) ([4000720](https://github.com/Basis-Theory/react-native-elements/commit/4000720961cf4763999ee0fc5300f6769aa1e910))
+
 ## [4.0.2](https://github.com/Basis-Theory/react-native-elements/compare/v4.0.1...v4.0.2) (2026-07-22)
 
 ## [4.0.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.1...v4.0.1) (2026-07-22)
