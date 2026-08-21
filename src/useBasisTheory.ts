@@ -8,7 +8,11 @@ import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { TokenIntents } from './modules/tokenIntents';
 import { Tokens } from './modules/tokens';
-import { loadBasisTheoryInstance, getBasisTheoryInstance } from './services/basis-theory-js';
+import {
+  loadBasisTheoryInstance,
+  getBasisTheoryInstance,
+  getBasisTheoryConfig,
+} from './services/basis-theory-js';
 import type { BasisTheoryInstance } from './types';
 
 interface BasisTheoryInitOptions {
@@ -31,7 +35,9 @@ const _BasisTheoryElements = async ({
 
   const { setConfig } = _useConfigManager();
 
-  setConfig({ apiKey, baseUrl: apiBaseUrl ?? 'https://api.basistheory.com' });
+  // Reuse the URL the instance actually resolved. Rebuilding it from the raw option here
+  // made secondary clients such as BIN lookup ignore `environment` and `useNgApi`.
+  setConfig({ apiKey, baseUrl: getBasisTheoryConfig().baseUrl });
 
   const proxy = Proxy(bt);
 

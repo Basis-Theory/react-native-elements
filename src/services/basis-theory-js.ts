@@ -18,6 +18,8 @@ const API_URLS = {
   PROD: {
     STANDARD: 'https://api.basistheory.com',
     NG: 'https://api-ng.basistheory.com',
+    US: 'https://api.us.basistheory.com',
+    EU: 'https://api.eu.basistheory.com',
   },
 } as const;
 
@@ -37,9 +39,24 @@ const getDefaultApiBaseUrl = (
     return apiBaseUrl;
   }
 
+  // Match environment names case-insensitively. A caller who writes 'EU' means the EU
+  // region, and silently handing them the compatibility host is the exact mis-routing
+  // an explicit region is meant to prevent.
+  const selectedEnvironment = environment?.toLowerCase();
+
   // UAT environment
-  if (environment === 'test') {
+  if (selectedEnvironment === 'test') {
     return API_URLS.UAT;
+  }
+
+  // An explicitly selected region outranks useNgApi: that flag picks a gateway, while a
+  // region names the only origin allowed to serve the tenant's data.
+  if (selectedEnvironment === 'us') {
+    return API_URLS.PROD.US;
+  }
+
+  if (selectedEnvironment === 'eu') {
+    return API_URLS.PROD.EU;
   }
 
   // Development environment
