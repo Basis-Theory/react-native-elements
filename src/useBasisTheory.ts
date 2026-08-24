@@ -20,6 +20,7 @@ interface BasisTheoryInitOptions {
   useNgApi?: boolean;
   debug?: boolean;
   environment?: string;
+  region?: string;
 }
 
 const _BasisTheoryElements = async ({
@@ -28,8 +29,16 @@ const _BasisTheoryElements = async ({
   useNgApi,
   debug,
   environment,
+  region,
 }: BasisTheoryInitOptions & { apiKey: string }) => {
-  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, environment);
+  await loadBasisTheoryInstance(
+    apiKey,
+    apiBaseUrl,
+    useNgApi,
+    debug,
+    environment,
+    region
+  );
 
   const bt: BasisTheoryInstance = getBasisTheoryInstance();
 
@@ -71,7 +80,7 @@ const useBasisTheory = (
   const { bt } = useBasisTheoryFromContext();
 
   if (!apiKey) {
-    // eslint-disable-next-line no-console
+     
     console.error('Please enter a valid API key');
   }
 

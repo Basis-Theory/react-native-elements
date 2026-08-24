@@ -24,61 +24,117 @@ describe('basis-theory-js service', () => {
       );
     });
 
-    it('should resolve the test environment to UAT', () => {
-      expect(getDefaultApiBaseUrl(undefined, false, 'test')).toBe(
-        'https://api.test.basistheory.com'
+    describe('stage environments', () => {
+      it.each([
+        ['test', 'https://api.test.basistheory.com'],
+        ['uat', 'https://api.btsandbox.com'],
+        ['dev', 'https://api.flock-dev.com'],
+      ])('should resolve the %s environment', (environment, expected) => {
+        expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
+          expected
+        );
+      });
+
+      it('should use the dev NG host for the dev environment', () => {
+        expect(getDefaultApiBaseUrl(undefined, true, 'dev')).toBe(
+          'https://api-ng.flock-dev.com'
+        );
+      });
+
+      it.each([
+        ['TEST', 'https://api.test.basistheory.com'],
+        ['Uat', 'https://api.btsandbox.com'],
+        ['DEV', 'https://api.flock-dev.com'],
+      ])(
+        'should match the environment name %s case-insensitively',
+        (environment, expected) => {
+          expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
+            expected
+          );
+        }
+      );
+
+      it.each(['production', 'PRODUCTION', 'unknown'])(
+        'should fall back to the compatibility default for the environment %s',
+        (environment) => {
+          expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
+            'https://api.basistheory.com'
+          );
+        }
       );
     });
 
-    it.each([
-      ['us', 'https://api.us.basistheory.com'],
-      ['eu', 'https://api.eu.basistheory.com'],
-    ])(
-      'should resolve the %s environment to its regional host',
-      (environment, expected) => {
-        expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
+    describe('regions', () => {
+      it.each([
+        ['us', 'https://api.us.basistheory.com'],
+        ['eu', 'https://api.eu.basistheory.com'],
+      ])('should resolve the %s region in production', (region, expected) => {
+        expect(getDefaultApiBaseUrl(undefined, false, undefined, region)).toBe(
           expected
         );
-      }
-    );
+      });
 
-    it.each([
-      ['US', 'https://api.us.basistheory.com'],
-      ['Eu', 'https://api.eu.basistheory.com'],
-      ['TEST', 'https://api.test.basistheory.com'],
-    ])(
-      'should match the environment name %s case-insensitively',
-      (environment, expected) => {
-        expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
-          expected
-        );
-      }
-    );
+      it.each([
+        ['us', 'https://api.us.flock-dev.com'],
+        ['eu', 'https://api.eu.flock-dev.com'],
+      ])(
+        'should resolve the %s region in the dev environment',
+        (region, expected) => {
+          expect(getDefaultApiBaseUrl(undefined, false, 'dev', region)).toBe(
+            expected
+          );
+        }
+      );
+
+      it.each([
+        ['US', 'https://api.us.basistheory.com'],
+        ['Eu', 'https://api.eu.basistheory.com'],
+      ])(
+        'should match the region name %s case-insensitively',
+        (region, expected) => {
+          expect(getDefaultApiBaseUrl(undefined, false, undefined, region)).toBe(
+            expected
+          );
+        }
+      );
+
+      it.each(['us', 'eu'])(
+        'should prioritize the %s region over useNgApi',
+        (region) => {
+          expect(getDefaultApiBaseUrl(undefined, true, undefined, region)).toBe(
+            `https://api.${region}.basistheory.com`
+          );
+        }
+      );
+
+      it.each(['us', 'eu'])(
+        'should ignore the %s region for single-region environments',
+        (region) => {
+          expect(getDefaultApiBaseUrl(undefined, false, 'test', region)).toBe(
+            'https://api.test.basistheory.com'
+          );
+          expect(getDefaultApiBaseUrl(undefined, false, 'uat', region)).toBe(
+            'https://api.btsandbox.com'
+          );
+        }
+      );
+
+      it.each(['apac', 'unknown'])(
+        'should fall back to the compatibility default for the region %s',
+        (region) => {
+          expect(getDefaultApiBaseUrl(undefined, false, undefined, region)).toBe(
+            'https://api.basistheory.com'
+          );
+        }
+      );
+    });
 
     it.each(['us', 'eu'])(
-      'should prioritize the %s region over useNgApi',
-      (environment) => {
-        expect(getDefaultApiBaseUrl(undefined, true, environment)).toBe(
-          `https://api.${environment}.basistheory.com`
-        );
-      }
-    );
-
-    it.each(['us', 'eu', 'test'])(
-      'should prioritize an explicit apiBaseUrl over the %s environment',
-      (environment) => {
+      'should prioritize an explicit apiBaseUrl over the %s region',
+      (region) => {
         expect(
-          getDefaultApiBaseUrl('https://api.customer.com', false, environment)
+          getDefaultApiBaseUrl('https://api.customer.com', false, 'dev', region)
         ).toBe('https://api.customer.com');
-      }
-    );
-
-    it.each(['production', 'PRODUCTION', 'unknown'])(
-      'should fall back to the compatibility default for the unrecognized environment %s',
-      (environment) => {
-        expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
-          'https://api.basistheory.com'
-        );
       }
     );
   });
@@ -87,7 +143,14 @@ describe('basis-theory-js service', () => {
     // Guards the wiring the ConfigManager bug broke: secondary clients read the resolved
     // baseUrl from here, so it has to reflect `environment` rather than the raw option.
     it('should expose the resolved regional baseUrl', async () => {
-      await loadBasisTheoryInstance('key', undefined, false, false, 'eu');
+      await loadBasisTheoryInstance(
+        'key',
+        undefined,
+        false,
+        false,
+        undefined,
+        'eu'
+      );
 
       expect(getBasisTheoryConfig().baseUrl).toBe(
         'https://api.eu.basistheory.com'
