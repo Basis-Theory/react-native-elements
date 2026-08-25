@@ -9,9 +9,8 @@ let basisTheoryConfig: BasisTheoryConfig;
 const API_URLS = {
   LOCALHOST: 'http://localhost:3333',
 
-  // Both `test` and `uat` resolve here. The internal UAT hosts (api.btsandbox.com,
-  // api.test.flock-dev.com) stage underlying changes before they reach this one and are
-  // deliberately not exposed by the SDK.
+  // Both `test` and `uat` resolve here. api.btsandbox.com and api.test.flock-dev.com
+  // stage changes before they reach this host and are intentionally not exposed.
   TEST: 'https://api.test.basistheory.com',
 
   DEV: {
@@ -30,9 +29,8 @@ const API_URLS = {
 } as const;
 
 /**
- * Picks the host within a stage. An explicitly selected region outranks useNgApi: that
- * flag picks a gateway, while a region names the only origin allowed to serve the
- * tenant's data.
+ * Picks the host within a stage. A region outranks useNgApi: that flag chooses a
+ * gateway, a region chooses the only origin allowed to serve the tenant's data.
  */
 const buildApiUrl = (
   isNg: boolean,
@@ -55,27 +53,22 @@ const getDefaultApiBaseUrl = (
     return apiBaseUrl;
   }
 
-  // Match both names case-insensitively. A caller who writes 'EU' means the EU region,
-  // and silently handing them the compatibility host is the exact mis-routing an
-  // explicit region is meant to prevent.
+  // Names are matched case-insensitively, and a region named in `environment` is taken
+  // as an alias for `region`: quietly sending an 'EU' caller to the compatibility host
+  // is the mis-route an explicit region exists to prevent.
   const stage = environment?.toLowerCase();
-
-  // A region named in `environment` is honoured as an alias for `region`. Handing an
-  // 'eu' caller the compatibility host instead would be the silent mis-route the
-  // explicit region exists to prevent.
   const selectedRegion =
     region?.toLowerCase() ??
     (stage === 'us' || stage === 'eu' ? stage : undefined);
 
-  // `test` and `uat` name the same single-region environment -- no api.us/api.eu
-  // variant of it resolves -- so a selected region is ignored here rather than pointed
-  // at a host that does not exist.
+  // `test` and `uat` are one single-region environment: no api.us/api.eu variant of it
+  // resolves, so a selected region is ignored rather than pointed at a dead host.
   if (stage === 'test' || stage === 'uat') {
     return API_URLS.TEST;
   }
 
-  // React Native has no page origin to infer the stage from, so `environment` is the
-  // only signal that selects the dev hosts.
+  // React Native has no page origin to infer a stage from, so `environment` is the only
+  // signal that can select the dev hosts.
   return buildApiUrl(
     Boolean(useNgApi),
     stage === 'dev' ? API_URLS.DEV : API_URLS.PROD,

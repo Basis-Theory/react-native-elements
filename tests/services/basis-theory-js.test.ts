@@ -159,8 +159,6 @@ describe('basis-theory-js service', () => {
   });
 
   describe('getBasisTheoryConfig', () => {
-    // Guards the wiring the ConfigManager bug broke: secondary clients read the resolved
-    // baseUrl from here, so it has to reflect `environment` rather than the raw option.
     it('should expose the resolved regional baseUrl', async () => {
       await loadBasisTheoryInstance(
         'key',

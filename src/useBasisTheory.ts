@@ -44,8 +44,8 @@ const _BasisTheoryElements = async ({
 
   const { setConfig } = _useConfigManager();
 
-  // Reuse the URL the instance actually resolved. Rebuilding it from the raw option here
-  // made secondary clients such as BIN lookup ignore `environment` and `useNgApi`.
+  // BIN lookup and other secondary clients read this config, so it has to carry the
+  // resolved URL rather than the raw option.
   setConfig({ apiKey, baseUrl: getBasisTheoryConfig().baseUrl });
 
   const proxy = Proxy(bt);
