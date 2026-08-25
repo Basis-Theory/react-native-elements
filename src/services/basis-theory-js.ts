@@ -60,7 +60,13 @@ const getDefaultApiBaseUrl = (
   // and silently handing them the compatibility host is the exact mis-routing an
   // explicit region is meant to prevent.
   const stage = environment?.toLowerCase();
-  const selectedRegion = region?.toLowerCase();
+
+  // A region named in `environment` is honoured as an alias for `region`. Handing an
+  // 'eu' caller the compatibility host instead would be the silent mis-route the
+  // explicit region exists to prevent.
+  const selectedRegion =
+    region?.toLowerCase() ??
+    (stage === 'us' || stage === 'eu' ? stage : undefined);
 
   // `test` and `uat` are single-region environments -- no api.us/api.eu variant of
   // either resolves -- so a selected region is ignored here rather than pointed at a

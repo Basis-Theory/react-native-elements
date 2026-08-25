@@ -129,6 +129,25 @@ describe('basis-theory-js service', () => {
       );
     });
 
+    it.each([
+      ['us', 'https://api.us.basistheory.com'],
+      ['eu', 'https://api.eu.basistheory.com'],
+      ['EU', 'https://api.eu.basistheory.com'],
+    ])(
+      'should honour the region %s named via environment as an alias',
+      (environment, expected) => {
+        expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
+          expected
+        );
+      }
+    );
+
+    it('should prefer an explicit region over one named via environment', () => {
+      expect(getDefaultApiBaseUrl(undefined, false, 'us', 'eu')).toBe(
+        'https://api.eu.basistheory.com'
+      );
+    });
+
     it.each(['us', 'eu'])(
       'should prioritize an explicit apiBaseUrl over the %s region',
       (region) => {
