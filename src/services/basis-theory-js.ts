@@ -9,10 +9,10 @@ let basisTheoryConfig: BasisTheoryConfig;
 const API_URLS = {
   LOCALHOST: 'http://localhost:3333',
 
-  // The UAT environment's own API host. The `test` environment deliberately does not
-  // point here: it targets the customer-facing api.test.basistheory.com, which the
-  // production edge routes to this origin.
-  SANDBOX: 'https://api.btsandbox.com',
+  // Both `test` and `uat` resolve here. The internal UAT hosts (api.btsandbox.com,
+  // api.test.flock-dev.com) stage underlying changes before they reach this one and are
+  // deliberately not exposed by the SDK.
+  TEST: 'https://api.test.basistheory.com',
 
   DEV: {
     STANDARD: 'https://api.flock-dev.com',
@@ -26,7 +26,6 @@ const API_URLS = {
     NG: 'https://api-ng.basistheory.com',
     US: 'https://api.us.basistheory.com',
     EU: 'https://api.eu.basistheory.com',
-    TEST: 'https://api.test.basistheory.com',
   },
 } as const;
 
@@ -68,15 +67,11 @@ const getDefaultApiBaseUrl = (
     region?.toLowerCase() ??
     (stage === 'us' || stage === 'eu' ? stage : undefined);
 
-  // `test` and `uat` are single-region environments -- no api.us/api.eu variant of
-  // either resolves -- so a selected region is ignored here rather than pointed at a
-  // host that does not exist.
-  if (stage === 'test') {
-    return API_URLS.PROD.TEST;
-  }
-
-  if (stage === 'uat') {
-    return API_URLS.SANDBOX;
+  // `test` and `uat` name the same single-region environment -- no api.us/api.eu
+  // variant of it resolves -- so a selected region is ignored here rather than pointed
+  // at a host that does not exist.
+  if (stage === 'test' || stage === 'uat') {
+    return API_URLS.TEST;
   }
 
   // React Native has no page origin to infer the stage from, so `environment` is the

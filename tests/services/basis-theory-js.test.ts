@@ -27,7 +27,7 @@ describe('basis-theory-js service', () => {
     describe('stage environments', () => {
       it.each([
         ['test', 'https://api.test.basistheory.com'],
-        ['uat', 'https://api.btsandbox.com'],
+        ['uat', 'https://api.test.basistheory.com'],
         ['dev', 'https://api.flock-dev.com'],
       ])('should resolve the %s environment', (environment, expected) => {
         expect(getDefaultApiBaseUrl(undefined, false, environment)).toBe(
@@ -43,7 +43,7 @@ describe('basis-theory-js service', () => {
 
       it.each([
         ['TEST', 'https://api.test.basistheory.com'],
-        ['Uat', 'https://api.btsandbox.com'],
+        ['Uat', 'https://api.test.basistheory.com'],
         ['DEV', 'https://api.flock-dev.com'],
       ])(
         'should match the environment name %s case-insensitively',
@@ -114,7 +114,7 @@ describe('basis-theory-js service', () => {
             'https://api.test.basistheory.com'
           );
           expect(getDefaultApiBaseUrl(undefined, false, 'uat', region)).toBe(
-            'https://api.btsandbox.com'
+            'https://api.test.basistheory.com'
           );
         }
       );
