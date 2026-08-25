@@ -80,7 +80,7 @@ const useBasisTheory = (
   const { bt } = useBasisTheoryFromContext();
 
   if (!apiKey) {
-     
+    // eslint-disable-next-line no-console
     console.error('Please enter a valid API key');
   }
 
