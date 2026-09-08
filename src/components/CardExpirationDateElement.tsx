@@ -29,19 +29,28 @@ export const CardExpirationDateElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
   placeholder,
   placeholderTextColor,
   returnKeyType,
   style,
   textContentType,
 }: CardExpirationDateProps) => {
-  const { elementRef, _onChange, _onBlur, _onFocus, elementValue, mask } =
-    useCardExpirationDateElement({
-      btRef,
-      onBlur,
-      onChange,
-      onFocus,
-    });
+  const {
+    elementRef,
+    _onChange,
+    _onBlur,
+    _onFocus,
+    _onSubmitEditing,
+    elementValue,
+    mask,
+  } = useCardExpirationDateElement({
+    btRef,
+    onBlur,
+    onChange,
+    onFocus,
+    onSubmitEditing,
+  });
 
   return (
     <MaskInput
@@ -54,6 +63,7 @@ export const CardExpirationDateElement = ({
       onBlur={_onBlur}
       onChangeText={_onChange}
       onFocus={_onFocus}
+      onSubmitEditing={_onSubmitEditing}
       placeholder={placeholder}
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}

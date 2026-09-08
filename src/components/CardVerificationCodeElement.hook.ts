@@ -23,6 +23,7 @@ export const useCardVerificationCodeElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
 }: UseCardVerificationCodeElementProps) => {
   const id = useId();
 
@@ -40,17 +41,19 @@ export const useCardVerificationCodeElement = ({
     type,
   });
 
-  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
-    setElementValue,
-    element: {
-      id,
-      validatorOptions: { mask, cvcLength: [cvcLength] },
-      type,
-    },
-    onBlur,
-    onChange,
-    onFocus,
-  });
+  const { _onChange, _onBlur, _onFocus, _onSubmitEditing } =
+    useUserEventHandlers({
+      setElementValue,
+      element: {
+        id,
+        validatorOptions: { mask, cvcLength: [cvcLength] },
+        type,
+      },
+      onBlur,
+      onChange,
+      onFocus,
+      onSubmitEditing,
+    });
 
   useBtRef({
     btRef,
@@ -67,6 +70,7 @@ export const useCardVerificationCodeElement = ({
     _onChange,
     _onBlur,
     _onFocus,
+    _onSubmitEditing,
   };
 };
 

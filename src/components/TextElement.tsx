@@ -33,6 +33,7 @@ export const TextElement = ({
   onChange,
   onBlur,
   onFocus,
+  onSubmitEditing,
   placeholder,
   placeholderTextColor,
   returnKeyType,
@@ -40,14 +41,21 @@ export const TextElement = ({
   style,
   textContentType,
 }: TextElementProps) => {
-  const { elementRef, elementValue, _onChange, _onBlur, _onFocus } =
-    useTextElement({
-      btRef,
-      onChange,
-      onBlur,
-      onFocus,
-      mask,
-    });
+  const {
+    elementRef,
+    elementValue,
+    _onChange,
+    _onBlur,
+    _onFocus,
+    _onSubmitEditing,
+  } = useTextElement({
+    btRef,
+    onChange,
+    onBlur,
+    onFocus,
+    onSubmitEditing,
+    mask,
+  });
 
   return (
     <MaskInput
@@ -61,6 +69,7 @@ export const TextElement = ({
       onBlur={_onBlur}
       onChangeText={_onChange}
       onFocus={_onFocus}
+      onSubmitEditing={_onSubmitEditing}
       placeholder={placeholder}
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}

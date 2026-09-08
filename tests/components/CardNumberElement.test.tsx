@@ -1700,4 +1700,61 @@ describe('CardNumberElement', () => {
       });
     });
   });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        brand: 'unknown',
+        cardBin: undefined,
+        cardLast4: undefined,
+        complete: false,
+        cvcLength: undefined,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: false,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent.changeText(el, '4242424242424242');
+      fireEvent(el, 'submitEditing', {
+        nativeEvent: { text: '4242424242424242' },
+      });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('4242424242424242');
+      expect(event).toMatchObject({ cardLast4: '4242', complete: true });
+    });
+  });
 });

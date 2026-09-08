@@ -22,6 +22,7 @@ const useCardExpirationDateElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
 }: UseCardExpirationDateElementProps) => {
   const id = useId();
 
@@ -36,17 +37,19 @@ const useCardExpirationDateElement = ({
 
   const mask = useMask({ type });
 
-  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
-    setElementValue,
-    element: {
-      id,
-      validatorOptions: { mask },
-      type,
-    },
-    onChange,
-    onBlur,
-    onFocus,
-  });
+  const { _onChange, _onBlur, _onFocus, _onSubmitEditing } =
+    useUserEventHandlers({
+      setElementValue,
+      element: {
+        id,
+        validatorOptions: { mask },
+        type,
+      },
+      onChange,
+      onBlur,
+      onFocus,
+      onSubmitEditing,
+    });
 
   useBtRef({
     btRef,
@@ -61,6 +64,7 @@ const useCardExpirationDateElement = ({
     _onBlur,
     _onChange,
     _onFocus,
+    _onSubmitEditing,
     elementRef,
     elementValue,
     mask,
