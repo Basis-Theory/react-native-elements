@@ -197,4 +197,54 @@ describe('TextElement', () => {
       });
     });
   });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <TextElement
+          btRef={mockedRef}
+          placeholder="Name"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Name');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        complete: true,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: true,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <TextElement
+          btRef={mockedRef}
+          placeholder="Name"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Name');
+
+      fireEvent.changeText(el, 'Jane Roe');
+      fireEvent(el, 'submitEditing', { nativeEvent: { text: 'Jane Roe' } });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('Jane Roe');
+    });
+  });
 });

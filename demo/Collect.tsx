@@ -203,6 +203,7 @@ export const Collect = () => {
               keyboardType="numeric"
               enterKeyHint="next"
               onChange={updateElementsEvents('cardNumber')}
+              onSubmitEditing={() => cardExpirationDateRef.current?.focus()}
               placeholder="Card Number"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
@@ -214,6 +215,7 @@ export const Collect = () => {
               enterKeyHint="next"
               keyboardType="numeric"
               onChange={updateElementsEvents('cardExpirationDate')}
+              onSubmitEditing={() => cardVerificationCodeRef.current?.focus()}
               placeholder="Card Expiration Date"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
@@ -226,6 +228,7 @@ export const Collect = () => {
               enterKeyHint="done"
               keyboardType="numeric"
               onChange={updateElementsEvents('cvc')}
+              onSubmitEditing={() => cardVerificationCodeRef.current?.blur()}
               placeholder={'Security code'}
               placeholderTextColor="#99a0bf"
               style={styles.elements}

@@ -181,4 +181,62 @@ describe('CardVerificationCodeElement', () => {
       });
     });
   });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardVerificationCodeElement
+          btRef={mockedRef}
+          placeholder="CVC"
+          cvcLength={3}
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('CVC');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        complete: false,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: false,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardVerificationCodeElement
+          btRef={mockedRef}
+          placeholder="CVC"
+          cvcLength={3}
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('CVC');
+
+      fireEvent.changeText(el, '123');
+      fireEvent(el, 'submitEditing', { nativeEvent: { text: '123' } });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(event).toStrictEqual({
+        complete: true,
+        empty: false,
+        errors: undefined,
+        maskSatisfied: true,
+        valid: true,
+      });
+    });
+  });
 });

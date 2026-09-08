@@ -27,6 +27,7 @@ export const CardNumberElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
   enterKeyHint,
   inputAccessoryViewID,
   keyboardType = 'numeric',
@@ -46,6 +47,7 @@ export const CardNumberElement = ({
     _onChange,
     _onBlur,
     _onFocus,
+    _onSubmitEditing,
     elementValue,
     mask,
     selectedNetwork,
@@ -57,6 +59,7 @@ export const CardNumberElement = ({
     onBlur,
     onChange,
     onFocus,
+    onSubmitEditing,
     cardTypes,
     skipLuhnValidation,
     binLookup,
@@ -84,6 +87,7 @@ export const CardNumberElement = ({
         onBlur={_onBlur}
         onChangeText={_onChange}
         onFocus={_onFocus}
+        onSubmitEditing={_onSubmitEditing}
         placeholder={placeholder}
         placeholderFillCharacter=""
         placeholderTextColor={placeholderTextColor}

@@ -30,20 +30,29 @@ export const CardVerificationCodeElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
   placeholder,
   placeholderTextColor,
   returnKeyType,
   style,
   textContentType,
 }: CardVerificationCodeProps) => {
-  const { elementRef, elementValue, mask, _onChange, _onBlur, _onFocus } =
-    useCardVerificationCodeElement({
-      btRef,
-      cvcLength,
-      onChange,
-      onBlur,
-      onFocus,
-    });
+  const {
+    elementRef,
+    elementValue,
+    mask,
+    _onChange,
+    _onBlur,
+    _onFocus,
+    _onSubmitEditing,
+  } = useCardVerificationCodeElement({
+    btRef,
+    cvcLength,
+    onChange,
+    onBlur,
+    onFocus,
+    onSubmitEditing,
+  });
 
   return (
     <MaskInput
@@ -56,6 +65,7 @@ export const CardVerificationCodeElement = ({
       onBlur={_onBlur}
       onChangeText={_onChange}
       onFocus={_onFocus}
+      onSubmitEditing={_onSubmitEditing}
       placeholder={placeholder}
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}

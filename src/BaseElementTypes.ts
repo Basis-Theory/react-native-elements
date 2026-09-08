@@ -128,6 +128,7 @@ interface EventConsumers {
   onBlur?: EventConsumer;
   onChange?: EventConsumer;
   onFocus?: EventConsumer;
+  onSubmitEditing?: EventConsumer;
 }
 
 type CreateEvent = (value: string) => ElementEvent;

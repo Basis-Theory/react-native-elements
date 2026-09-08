@@ -183,4 +183,53 @@ describe('CardVerificationCodeElement', () => {
       });
     });
   });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardExpirationDateElement
+          btRef={mockedRef}
+          placeholder="Expiration Date"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Expiration Date');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        complete: false,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: false,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardExpirationDateElement
+          btRef={mockedRef}
+          placeholder="Expiration Date"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Expiration Date');
+
+      fireEvent(el, 'submitEditing', { nativeEvent: { text: '12/30' } });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('12/30');
+    });
+  });
 });
