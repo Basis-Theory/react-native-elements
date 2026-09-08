@@ -5,25 +5,35 @@ import type { UseCardExpirationDateElementProps } from './CardExpirationDateElem
 import { useCardExpirationDateElement } from './CardExpirationDateElement.hook';
 
 type TextInputSupportedProps =
+  | 'autoComplete'
   | 'editable'
+  | 'enterKeyHint'
+  | 'inputAccessoryViewID'
   | 'keyboardType'
   | 'placeholder'
   | 'placeholderTextColor'
-  | 'style';
+  | 'returnKeyType'
+  | 'style'
+  | 'textContentType';
 
 type CardExpirationDateProps = UseCardExpirationDateElementProps &
   Pick<TextInputProps, TextInputSupportedProps>;
 
 export const CardExpirationDateElement = ({
+  autoComplete,
   btRef,
   editable,
+  enterKeyHint,
+  inputAccessoryViewID,
   keyboardType,
   onBlur,
   onChange,
   onFocus,
   placeholder,
   placeholderTextColor,
+  returnKeyType,
   style,
+  textContentType,
 }: CardExpirationDateProps) => {
   const { elementRef, _onChange, _onBlur, _onFocus, elementValue, mask } =
     useCardExpirationDateElement({
@@ -35,7 +45,10 @@ export const CardExpirationDateElement = ({
 
   return (
     <MaskInput
+      autoComplete={autoComplete}
       editable={editable}
+      enterKeyHint={enterKeyHint}
+      inputAccessoryViewID={inputAccessoryViewID}
       keyboardType={keyboardType}
       mask={mask}
       onBlur={_onBlur}
@@ -45,7 +58,9 @@ export const CardExpirationDateElement = ({
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}
       ref={elementRef}
+      returnKeyType={returnKeyType}
       style={style}
+      textContentType={textContentType}
       value={elementValue}
     />
   );

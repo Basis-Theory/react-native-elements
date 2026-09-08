@@ -5,26 +5,36 @@ import type { UseCardVerificationCodeElementProps } from './CardVerificationCode
 import { useCardVerificationCodeElement } from './CardVerificationCodeElement.hook';
 
 type TextInputSupportedProps =
+  | 'autoComplete'
   | 'editable'
+  | 'enterKeyHint'
+  | 'inputAccessoryViewID'
   | 'keyboardType'
   | 'placeholder'
   | 'placeholderTextColor'
-  | 'style';
+  | 'returnKeyType'
+  | 'style'
+  | 'textContentType';
 
 type CardVerificationCodeProps = UseCardVerificationCodeElementProps &
   Pick<TextInputProps, TextInputSupportedProps>;
 
 export const CardVerificationCodeElement = ({
+  autoComplete,
   btRef,
   cvcLength,
   editable,
+  enterKeyHint,
+  inputAccessoryViewID,
   keyboardType,
   onBlur,
   onChange,
   onFocus,
   placeholder,
   placeholderTextColor,
+  returnKeyType,
   style,
+  textContentType,
 }: CardVerificationCodeProps) => {
   const { elementRef, elementValue, mask, _onChange, _onBlur, _onFocus } =
     useCardVerificationCodeElement({
@@ -37,7 +47,10 @@ export const CardVerificationCodeElement = ({
 
   return (
     <MaskInput
+      autoComplete={autoComplete}
       editable={editable}
+      enterKeyHint={enterKeyHint}
+      inputAccessoryViewID={inputAccessoryViewID}
       keyboardType={keyboardType}
       mask={mask}
       onBlur={_onBlur}
@@ -47,7 +60,9 @@ export const CardVerificationCodeElement = ({
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}
       ref={elementRef}
+      returnKeyType={returnKeyType}
       style={style}
+      textContentType={textContentType}
       value={elementValue}
     />
   );
