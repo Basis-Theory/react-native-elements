@@ -44,6 +44,30 @@ describe('CardVerificationCodeElement', () => {
     );
   });
 
+  test('forwards keyboard behavior props', () => {
+    render(
+      <CardVerificationCodeElement
+        autoComplete="cc-csc"
+        btRef={mockedRef}
+        cvcLength={3}
+        enterKeyHint="done"
+        inputAccessoryViewID="card-input-accessory"
+        placeholder="CVC"
+        returnKeyType="done"
+        style={{}}
+        textContentType="creditCardSecurityCode"
+      />
+    );
+
+    const el = screen.getByPlaceholderText('CVC');
+
+    expect(el).toHaveProp('autoComplete', 'cc-csc');
+    expect(el).toHaveProp('enterKeyHint', 'done');
+    expect(el).toHaveProp('inputAccessoryViewID', 'card-input-accessory');
+    expect(el).toHaveProp('returnKeyType', 'done');
+    expect(el).toHaveProp('textContentType', 'creditCardSecurityCode');
+  });
+
   describe('Validation and Change Events', () => {
     test.each([
       [

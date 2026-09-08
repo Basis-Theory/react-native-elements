@@ -5,11 +5,15 @@ import { useTextElement } from './TextElement.hook';
 import MaskInput from 'react-native-mask-input';
 
 type TextInputSupportedProps =
+  | 'autoComplete'
   | 'editable'
+  | 'enterKeyHint'
+  | 'inputAccessoryViewID'
   | 'keyboardType'
   | 'maxLength'
   | 'placeholder'
   | 'placeholderTextColor'
+  | 'returnKeyType'
   | 'secureTextEntry'
   | 'style'
   | 'textContentType';
@@ -18,8 +22,11 @@ type TextElementProps = UseTextElementProps &
   Pick<TextInputProps, TextInputSupportedProps>;
 
 export const TextElement = ({
+  autoComplete,
   btRef,
   editable,
+  enterKeyHint,
+  inputAccessoryViewID,
   keyboardType,
   mask,
   maxLength,
@@ -28,6 +35,7 @@ export const TextElement = ({
   onFocus,
   placeholder,
   placeholderTextColor,
+  returnKeyType,
   secureTextEntry,
   style,
   textContentType,
@@ -43,7 +51,10 @@ export const TextElement = ({
 
   return (
     <MaskInput
+      autoComplete={autoComplete}
       editable={editable}
+      enterKeyHint={enterKeyHint}
+      inputAccessoryViewID={inputAccessoryViewID}
       keyboardType={keyboardType}
       mask={mask}
       maxLength={maxLength}
@@ -54,6 +65,7 @@ export const TextElement = ({
       placeholderFillCharacter=""
       placeholderTextColor={placeholderTextColor}
       ref={elementRef}
+      returnKeyType={returnKeyType}
       secureTextEntry={secureTextEntry}
       style={style}
       textContentType={textContentType}

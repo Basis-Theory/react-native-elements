@@ -6,21 +6,29 @@ import { useCardNumberElement } from './CardNumberElement.hook';
 import { BrandPicker } from './BrandPicker';
 
 type TextInputSupportedProps =
+  | 'autoComplete'
   | 'editable'
+  | 'enterKeyHint'
+  | 'inputAccessoryViewID'
   | 'keyboardType'
   | 'placeholder'
   | 'placeholderTextColor'
-  | 'style';
+  | 'returnKeyType'
+  | 'style'
+  | 'textContentType';
 
 type CardNumberProps = UseCardNumberElementProps &
   Pick<TextInputProps, TextInputSupportedProps>;
 
 export const CardNumberElement = ({
+  autoComplete,
   btRef,
   cardTypes,
   onBlur,
   onChange,
   onFocus,
+  enterKeyHint,
+  inputAccessoryViewID,
   keyboardType = 'numeric',
   placeholder,
   placeholderTextColor,
@@ -29,7 +37,9 @@ export const CardNumberElement = ({
   binLookup,
   coBadgedSupport,
   preSelectedNetworks,
+  returnKeyType,
   style,
+  textContentType,
 }: CardNumberProps) => {
   const {
     elementRef,
@@ -65,7 +75,10 @@ export const CardNumberElement = ({
         />
       )}
       <MaskInput
+        autoComplete={autoComplete}
         editable={editable}
+        enterKeyHint={enterKeyHint}
+        inputAccessoryViewID={inputAccessoryViewID}
         keyboardType={keyboardType}
         mask={mask}
         onBlur={_onBlur}
@@ -75,7 +88,9 @@ export const CardNumberElement = ({
         placeholderFillCharacter=""
         placeholderTextColor={placeholderTextColor}
         ref={elementRef}
+        returnKeyType={returnKeyType}
         style={style}
+        textContentType={textContentType}
         value={elementValue}
       />
     </View>

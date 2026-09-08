@@ -97,6 +97,27 @@ describe('TextElement', () => {
     });
   });
 
+  test('forwards keyboard behavior props', () => {
+    render(
+      <TextElement
+        autoComplete="name"
+        btRef={mockedRef}
+        enterKeyHint="done"
+        inputAccessoryViewID="text-input-accessory"
+        placeholder="Name"
+        returnKeyType="done"
+        style={{}}
+      />
+    );
+
+    const el = screen.getByPlaceholderText('Name');
+
+    expect(el).toHaveProp('autoComplete', 'name');
+    expect(el).toHaveProp('enterKeyHint', 'done');
+    expect(el).toHaveProp('inputAccessoryViewID', 'text-input-accessory');
+    expect(el).toHaveProp('returnKeyType', 'done');
+  });
+
   describe('OnBlur', () => {
     test('triggers event', () => {
       const onBlur = jest.fn();

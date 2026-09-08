@@ -38,6 +38,29 @@ describe('CardVerificationCodeElement', () => {
     });
   });
 
+  test('forwards keyboard behavior props', () => {
+    render(
+      <CardExpirationDateElement
+        autoComplete="cc-exp"
+        btRef={mockedRef}
+        enterKeyHint="next"
+        inputAccessoryViewID="card-input-accessory"
+        placeholder="Expiration Date"
+        returnKeyType="next"
+        style={{}}
+        textContentType="creditCardExpiration"
+      />
+    );
+
+    const el = screen.getByPlaceholderText('Expiration Date');
+
+    expect(el).toHaveProp('autoComplete', 'cc-exp');
+    expect(el).toHaveProp('enterKeyHint', 'next');
+    expect(el).toHaveProp('inputAccessoryViewID', 'card-input-accessory');
+    expect(el).toHaveProp('returnKeyType', 'next');
+    expect(el).toHaveProp('textContentType', 'creditCardExpiration');
+  });
+
   describe('Validation and Change Events', () => {
     test.each([
       [

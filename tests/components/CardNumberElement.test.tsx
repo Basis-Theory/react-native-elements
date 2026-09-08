@@ -56,6 +56,42 @@ describe('CardNumberElement', () => {
     });
   });
 
+  test('forwards keyboard behavior props', () => {
+    render(
+      <CardNumberElement
+        autoComplete="cc-number"
+        btRef={mockedRef}
+        enterKeyHint="next"
+        inputAccessoryViewID="card-input-accessory"
+        placeholder="Card Number"
+        returnKeyType="next"
+        style={{}}
+        textContentType="creditCardNumber"
+      />
+    );
+
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'autoComplete',
+      'cc-number'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'enterKeyHint',
+      'next'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'inputAccessoryViewID',
+      'card-input-accessory'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'returnKeyType',
+      'next'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'textContentType',
+      'creditCardNumber'
+    );
+  });
+
   describe('onChange setState (ENG-11696)', () => {
     test('fires onChange once per change in StrictMode', () => {
       const onChange = jest.fn();
