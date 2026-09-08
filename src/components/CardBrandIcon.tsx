@@ -8,6 +8,7 @@ import {
 import type { CardBrand } from '../CardElementTypes';
 import { labelizeCardBrand } from '../utils/shared';
 
+/* eslint-disable @typescript-eslint/no-var-requires -- Metro requires static require calls for bundled images. */
 const cardBrandIcons: Record<CardBrand, number> = {
   accel: require('../assets/card-brands/accel.png'),
   bancontact: require('../assets/card-brands/bancontact.png'),
@@ -38,6 +39,7 @@ const cardBrandIcons: Record<CardBrand, number> = {
   mir: require('../assets/card-brands/mir.png'),
   unknown: require('../assets/card-brands/unknown.png'),
 };
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 export type CardBrandIconProps = {
   brand?: CardBrand;
