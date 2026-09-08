@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, type TextInputProps, type ViewStyle } from 'react-native';
+import {
+  type ImageStyle,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type TextInputProps,
+  type ViewStyle,
+} from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import type { UseCardNumberElementProps } from './CardNumberElement.hook';
 import { useCardNumberElement } from './CardNumberElement.hook';
 import { BrandPicker } from './BrandPicker';
+import { CardBrandIcon } from './CardBrandIcon';
 
 type TextInputSupportedProps =
   | 'editable'
@@ -12,8 +20,17 @@ type TextInputSupportedProps =
   | 'placeholderTextColor'
   | 'style';
 
-type CardNumberProps = UseCardNumberElementProps &
-  Pick<TextInputProps, TextInputSupportedProps>;
+export type CardNumberIconPosition = 'left' | 'right' | 'none';
+
+export type CardNumberElementProps = UseCardNumberElementProps &
+  Pick<TextInputProps, TextInputSupportedProps> & {
+    /** Position of the built-in card brand icon. Defaults to `none`. */
+    iconPosition?: CardNumberIconPosition;
+    /** Styles applied to the card brand image, including size and tint. */
+    iconStyle?: StyleProp<ImageStyle>;
+    /** Styles applied to the container around the icon or brand selector. */
+    iconContainerStyle?: StyleProp<ViewStyle>;
+  };
 
 export const CardNumberElement = ({
   btRef,
@@ -30,13 +47,17 @@ export const CardNumberElement = ({
   coBadgedSupport,
   preSelectedNetworks,
   style,
-}: CardNumberProps) => {
+  iconPosition,
+  iconStyle,
+  iconContainerStyle,
+}: CardNumberElementProps) => {
   const {
     elementRef,
     _onChange,
     _onBlur,
     _onFocus,
     elementValue,
+    cardBrand,
     mask,
     selectedNetwork,
     onNetworkSelect,
@@ -54,9 +75,33 @@ export const CardNumberElement = ({
     preSelectedNetworks,
   });
 
+  const positionedIcon = iconPosition === 'left' || iconPosition === 'right';
+  const displayBrand = selectedNetwork ?? cardBrand;
+
+  const brandArea = positionedIcon ? (
+    <View
+      style={[styles.iconContainer, iconContainerStyle]}
+      testID={`card-brand-icon-container-${iconPosition}`}
+    >
+      {showBrandSelector ? (
+        <BrandPicker
+          brands={brandSelectorOptions}
+          displayBrand={displayBrand}
+          iconStyle={iconStyle}
+          onBrandSelect={onNetworkSelect}
+          selectedBrand={selectedNetwork}
+          variant="icon"
+        />
+      ) : (
+        <CardBrandIcon brand={displayBrand} style={iconStyle} />
+      )}
+    </View>
+  ) : null;
+
   return (
-    <View>
-      {showBrandSelector && (
+    <View style={positionedIcon ? styles.container : undefined}>
+      {iconPosition === 'left' && brandArea}
+      {iconPosition === undefined && showBrandSelector && (
         <BrandPicker
           brands={brandSelectorOptions}
           selectedBrand={selectedNetwork}
@@ -75,9 +120,24 @@ export const CardNumberElement = ({
         placeholderFillCharacter=""
         placeholderTextColor={placeholderTextColor}
         ref={elementRef}
-        style={style}
+        style={[positionedIcon && styles.input, style]}
         value={elementValue}
       />
+      {iconPosition === 'right' && brandArea}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    flex: 1,
+  },
+});

@@ -404,6 +404,82 @@ describe('CardNumberElement', () => {
     });
   });
 
+  describe('card brand icons', () => {
+    test('does not render an icon by default', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.queryByTestId('card-brand-icon')).toBeNull();
+    });
+
+    test.each(['left', 'right'] as const)(
+      'renders the icon on the %s with custom styles',
+      (iconPosition) => {
+        render(
+          <CardNumberElement
+            btRef={mockedRef}
+            iconContainerStyle={{ paddingHorizontal: 6 }}
+            iconPosition={iconPosition}
+            iconStyle={{ height: 20, tintColor: '#123456', width: 30 }}
+            placeholder="Card Number"
+            style={{}}
+          />
+        );
+
+        const icon = screen.getByTestId('card-brand-icon');
+        const iconContainer = screen.getByTestId(
+          `card-brand-icon-container-${iconPosition}`
+        );
+
+        expect(icon).toHaveStyle({
+          height: 20,
+          tintColor: '#123456',
+          width: 30,
+        });
+        expect(iconContainer).toHaveStyle({ paddingHorizontal: 6 });
+      }
+    );
+
+    test('updates the icon when the detected brand changes', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.getByLabelText('Unknown card brand')).toBeTruthy();
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
+    });
+
+    test('explicit none hides the built-in brand area', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="none"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.queryByTestId('card-brand-icon-container-left')).toBeNull();
+      expect(screen.queryByTestId('card-brand-icon-container-right')).toBeNull();
+    });
+  });
+
   describe('Co-badge Support', () => {
     const mockBt = {
       config: {
@@ -504,6 +580,70 @@ describe('CardNumberElement', () => {
       // BrandPicker should be rendered (it shows "Select card brand" when no brand is selected)
       await waitFor(() => {
         expect(screen.getByText('Select card brand')).toBeTruthy();
+      });
+    });
+
+    test('integrates the co-badge selector into a positioned icon', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="right"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      const selector = await screen.findByTestId('card-brand-selector');
+      expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
+
+      fireEvent.press(selector);
+      fireEvent.press(screen.getByText('Cartes Bancaires'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('Cartes Bancaires card brand')
+        ).toBeTruthy();
+      });
+    });
+
+    test('explicit none hides the selector without disabling co-badge validation', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="none"
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      expect(screen.queryByTestId('card-brand-selector')).toBeNull();
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.objectContaining({ type: 'network_not_selected' }),
+            ]),
+          })
+        );
       });
     });
 

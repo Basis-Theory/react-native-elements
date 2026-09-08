@@ -16,6 +16,7 @@ import { useBinLookup } from './useBinLookup';
 import { useCleanupStateBeforeUnmount } from './shared/useCleanStateOnUnmount';
 import { CardBrand, CoBadgedSupport } from '../CardElementTypes';
 import { useBrandSelector } from './shared/useBrandSelector';
+import { useCardMetadata } from './shared/useCardMetadata';
 
 type UseCardNumberElementProps = {
   btRef?: ForwardedRef<BTRef>;
@@ -58,6 +59,7 @@ export const useCardNumberElement = ({
   const elementRef = useRef<TextInput>(null);
   const [elementValue, setElementValue] = useState<string>('');
   const [selectedNetwork, setSelectedNetwork] = useState<CardBrand | undefined>(undefined);
+  const { getMetadataFromCardNumber } = useCardMetadata();
 
   const binEnabled = binLookup || hasCoBadgedSupport;
   const { binInfo, pending: binLookupPending } = useBinLookup(binEnabled, elementValue.replaceAll(' ', ''));
@@ -73,6 +75,7 @@ export const useCardNumberElement = ({
   });
 
   const brandOptionsCount = brandSelectorOptions.length;
+  const cardBrand = getMetadataFromCardNumber(elementValue).brand as CardBrand;
 
   useCleanupStateBeforeUnmount(id);
 
@@ -115,6 +118,7 @@ export const useCardNumberElement = ({
   return {
     elementRef,
     elementValue,
+    cardBrand,
     selectedNetwork,
     onNetworkSelect,
     binInfo,
