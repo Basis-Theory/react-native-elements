@@ -7,6 +7,7 @@ import 'react-native';
 import React from 'react';
 
 import {
+  act,
   render,
   userEvent,
   fireEvent,
@@ -14,6 +15,7 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import { CardNumberElement } from '../../src';
+import type { BTRef } from '../../src';
 import { BasisTheoryProvider } from '../../src/BasisTheoryProvider';
 import { CoBadgedSupport } from '../../src/CardElementTypes';
 import cardValidator from 'card-validator';
@@ -90,6 +92,41 @@ describe('CardNumberElement', () => {
       'textContentType',
       'creditCardNumber'
     );
+  });
+
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+
+      render(
+        <CardNumberElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent.changeText(el, '4242424242424242');
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: true, empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: false, empty: true })
+      );
+    });
   });
 
   describe('onChange setState (ENG-11696)', () => {

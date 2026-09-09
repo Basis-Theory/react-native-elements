@@ -6,14 +6,49 @@ import 'react-native';
 import React from 'react';
 
 import {
+  act,
   render,
   fireEvent,
   screen,
   userEvent,
 } from '@testing-library/react-native';
 import { TextElement } from '../../src';
+import type { BTRef } from '../../src';
 
 describe('TextElement', () => {
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+
+      render(
+        <TextElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      fireEvent.changeText(screen.getByPlaceholderText('Name'), 'John Doe');
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ empty: true })
+      );
+    });
+  });
+
   const mockedRef = {
     current: {
       id: '123',

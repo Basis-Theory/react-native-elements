@@ -42,12 +42,16 @@ const createBtRef = ({
   elementRef,
   valueSetter,
   type,
+  onChange,
 }: CreateBtRefArgs) => ({
   id,
   format: (plaintextValue: string) => plaintextValue,
   clear: () => {
     delete _elementValues[id];
     elementRef.current?.clear();
+    // TextInput.clear() emits no change event, so notify explicitly to leave
+    // the element in the same state as the user deleting every character.
+    onChange?.('');
   },
   focus: () => elementRef.current?.focus(),
   blur: () => elementRef.current?.blur(),
@@ -117,6 +121,7 @@ export const useBtRef = ({
       elementRef,
       valueSetter,
       type,
+      onChange,
     });
 
     updateRef(btRef!, newBtRef);
