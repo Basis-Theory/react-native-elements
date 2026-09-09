@@ -5,10 +5,47 @@
 import 'react-native';
 import React from 'react';
 
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { CardExpirationDateElement } from '../../src';
+import type { BTDateRef } from '../../src';
 
 describe('CardVerificationCodeElement', () => {
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTDateRef>();
+
+      render(
+        <CardExpirationDateElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Expiration Date"
+          style={{}}
+        />
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Expiration Date'),
+        '1234'
+      );
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: true, empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: false, empty: true })
+      );
+    });
+  });
+
   const mockedRef = {
     current: {
       id: '123',
