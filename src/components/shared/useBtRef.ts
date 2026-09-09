@@ -125,5 +125,5 @@ export const useBtRef = ({
     });
 
     updateRef(btRef!, newBtRef);
-  }, [btRef, elementRef, id]);
+  }, [btRef, elementRef, id, onChange]);
 };
