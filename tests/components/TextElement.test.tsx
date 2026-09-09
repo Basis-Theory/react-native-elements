@@ -47,6 +47,36 @@ describe('TextElement', () => {
         expect.objectContaining({ empty: true })
       );
     });
+
+    test('emits the change event to the latest onChange callback', () => {
+      const firstOnChange = jest.fn();
+      const latestOnChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+      const { rerender } = render(
+        <TextElement
+          btRef={btRef}
+          onChange={firstOnChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      rerender(
+        <TextElement
+          btRef={btRef}
+          onChange={latestOnChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(firstOnChange).not.toHaveBeenCalled();
+      expect(latestOnChange).toHaveBeenCalledTimes(1);
+    });
   });
 
   const mockedRef = {
