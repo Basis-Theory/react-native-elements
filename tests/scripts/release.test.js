@@ -1,6 +1,8 @@
 const {
   ReleaseError,
   changelogNeedsEntry,
+  isPublishConflict,
+  publishArgs,
   resolveParams,
 } = require('../../scripts/release');
 
@@ -176,5 +178,65 @@ describe('changelogNeedsEntry', () => {
   test('is not satisfied by a version that merely contains it', () => {
     expect(changelogNeedsEntry('## [13.1.0](https://x)', '3.1.0')).toBe(true);
     expect(changelogNeedsEntry('## [3.1.01](https://x)', '3.1.0')).toBe(true);
+  });
+});
+
+describe('publishArgs', () => {
+  test('publishes to latest when no dist-tag is given', () => {
+    expect(publishArgs({})).toStrictEqual(['publish', '--access', 'public']);
+  });
+
+  test('publishes under the given dist-tag', () => {
+    expect(publishArgs({ distTag: 'v3-lts' })).toStrictEqual([
+      'publish',
+      '--access',
+      'public',
+      '--tag',
+      'v3-lts',
+    ]);
+  });
+
+  test('adds the dry-run flag', () => {
+    expect(publishArgs({ distTag: 'v3-lts', dryRun: true })).toStrictEqual([
+      'publish',
+      '--access',
+      'public',
+      '--tag',
+      'v3-lts',
+      '--dry-run',
+    ]);
+  });
+
+  test('never tags a dry run it was not asked to tag', () => {
+    expect(publishArgs({ dryRun: true })).toStrictEqual([
+      'publish',
+      '--access',
+      'public',
+      '--dry-run',
+    ]);
+  });
+});
+
+describe('isPublishConflict', () => {
+  test.each([
+    'npm error code EPUBLISHCONFLICT',
+    'npm error 403 You cannot publish over the previously published versions: 3.1.0.',
+    'Cannot publish over the previously published version 3.1.0',
+    'You cannot republish a version that already exists',
+  ])('treats %p as an already published version', (output) => {
+    expect(isPublishConflict(output)).toBe(true);
+  });
+
+  test.each([
+    'npm error code EEXIST',
+    'EEXIST: file already exists',
+    'npm error 403 Forbidden',
+    'npm error code ENEEDAUTH',
+    'npm error 404 Not found',
+    'npm error code E404 version already exists somewhere else',
+    '',
+    undefined,
+  ])('keeps %p a failure', (output) => {
+    expect(isPublishConflict(output)).toBe(false);
   });
 });

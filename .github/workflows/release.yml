@@ -108,7 +108,7 @@ jobs:
         env:
           NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
           NPM_DRY_RUN: ${{ inputs.dry_run }}
-        run: ./scripts/publish-to-npm.sh
+        run: node scripts/release.js publish
 
       - name: Commit Version to Repo
         if: ${{ !inputs.dry_run }}
