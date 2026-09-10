@@ -77,6 +77,34 @@ describe('TextElement', () => {
       expect(firstOnChange).not.toHaveBeenCalled();
       expect(latestOnChange).toHaveBeenCalledTimes(1);
     });
+
+    test('publishes the ref once to a stable callback ref', () => {
+      const published: unknown[] = [];
+
+      const Harness = () => {
+        const [, setBtRef] = React.useState<BTRef | null>(null);
+        const [, forceRender] = React.useState(0);
+        const btRef = React.useCallback((value: BTRef) => {
+          published.push(value);
+          setBtRef(value);
+        }, []);
+
+        return (
+          <>
+            <TextElement
+              btRef={btRef}
+              onChange={() => forceRender((count) => count + 1)}
+              placeholder="Name"
+              style={{}}
+            />
+          </>
+        );
+      };
+
+      render(<Harness />);
+
+      expect(published).toHaveLength(1);
+    });
   });
 
   const mockedRef = {

@@ -1,5 +1,5 @@
 import type { Dispatch, ForwardedRef, RefObject, SetStateAction } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { TextInput } from 'react-native';
 import type {
   BTDateRef,
@@ -105,15 +105,24 @@ export const useBtRef = ({
   setElementValue,
   onChange,
 }: UseBtRefProps) => {
+  // The published ref has to reach the latest onChange without listing it as a
+  // dependency: it is a new function on every render, and republishing the ref
+  // that often loops a callback ref that stores what it receives.
+  const latestOnChange = useRef(onChange);
+
   useEffect(() => {
+    latestOnChange.current = onChange;
+  });
+
+  useEffect(() => {
+    const notifyChange = (value: string) => latestOnChange.current?.(value);
+
     const valueSetter: ValueSetter = (val) => {
       const formattedValue = valueFormatter(val);
 
       setElementValue(formattedValue);
-      
-      if (onChange) {
-        onChange(formattedValue);
-      }
+
+      notifyChange(formattedValue);
     };
 
     const newBtRef = createBtRef({
@@ -121,9 +130,9 @@ export const useBtRef = ({
       elementRef,
       valueSetter,
       type,
-      onChange,
+      onChange: notifyChange,
     });
 
     updateRef(btRef!, newBtRef);
-  }, [btRef, elementRef, id, onChange]);
+  }, [btRef, elementRef, id]);
 };
