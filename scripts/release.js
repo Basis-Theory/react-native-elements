@@ -92,6 +92,27 @@ function resolveParams(
 const changelogNeedsEntry = (changelog, version) =>
   !changelog.includes(`[${version}](`);
 
+const isTruthy = (value) => ['1', 'true'].includes(String(value ?? '').toLowerCase());
+
+const publishArgs = ({ distTag, dryRun }) => [
+  'publish',
+  '--access',
+  'public',
+  // A maintenance line publishes under its own dist-tag so 'latest' keeps
+  // pointing at the mainline major.
+  ...(distTag ? ['--tag', distTag] : []),
+  ...(dryRun ? ['--dry-run'] : []),
+];
+
+// Republishing an existing version is the one npm failure this workflow treats
+// as success, so a re-run of a partially failed release can finish. Every other
+// failure, including anything else that merely mentions an existing file, has
+// to stay a failure.
+const PUBLISH_CONFLICT =
+  /EPUBLISHCONFLICT|cannot publish over (?:the )?previously published version|cannot republish a version that already exists/i;
+
+const isPublishConflict = (output) => PUBLISH_CONFLICT.test(String(output ?? ''));
+
 const capture = (command, args) =>
   execFileSync(command, args, {
     cwd: REPO_ROOT,
@@ -206,6 +227,43 @@ const commands = {
     }
   },
 
+  publish: () => {
+    const distTag = process.env.NPM_DIST_TAG;
+    const dryRun = isTruthy(process.env.NPM_DRY_RUN);
+
+    console.log('Publishing with OIDC trusted publishing');
+
+    if (distTag) {
+      console.log(`Publishing to dist-tag ${distTag}`);
+    }
+
+    if (dryRun) {
+      console.log('NPM_DRY_RUN is set, nothing will be published');
+    }
+
+    try {
+      execFileSync('npm', publishArgs({ distTag, dryRun }), {
+        cwd: path.join(REPO_ROOT, 'dist'),
+        encoding: 'utf8',
+        stdio: ['ignore', 'inherit', 'pipe'],
+      });
+    } catch (error) {
+      const output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+
+      console.log(output);
+
+      if (!isPublishConflict(output)) {
+        throw new ReleaseError(`npm publish failed with exit code ${error.status}.`);
+      }
+
+      console.log('Package version already exists, skipping publish');
+
+      return;
+    }
+
+    console.log('Package published successfully');
+  },
+
   'commit-version': () => {
     const targetBranch = requiredEnv('TARGET_BRANCH');
     const { version } = readPackageJson();
@@ -268,4 +326,10 @@ if (require.main === module) {
   }
 }
 
-module.exports = { ReleaseError, changelogNeedsEntry, resolveParams };
+module.exports = {
+  ReleaseError,
+  changelogNeedsEntry,
+  isPublishConflict,
+  publishArgs,
+  resolveParams,
+};

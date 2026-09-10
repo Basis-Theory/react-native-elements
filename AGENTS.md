@@ -29,21 +29,13 @@ Always verify fixes with targeted tests before considering done.
 - **`prepare.js` is critical**: Runs after `bob build` to create the publishable `dist/package.json`. It strips devDependencies and rewrites `main`/`module`/`types` paths. Breaking this breaks npm publish.
 - **Publishing from `dist/`**: `cd dist && npm publish` — the dist directory is a self-contained package.
 - **Version bumped by CI**: `package.json` version in source reflects the last published release. CI bumps it via `make update-version` before publish.
-- **Release triggered by GitHub Release**: Not on push to master — release workflow fires on `release: [released]`, plus `workflow_dispatch` for maintenance branches.
+- **Release triggered by GitHub Release**: Not on push to master — release workflow fires on `release: [released]` event.
 - **Peer deps**: `react` and `react-native` are peer dependencies. Tests use specific pinned versions in devDeps.
 - **Resolution overrides**: Several `resolutions` in package.json for transitive dependency issues — check before upgrading deps.
 
 ## Release
 
-Published as `@basis-theory/react-native-elements` via npm OIDC trusted publishing. Trusted publishing is bound to `.github/workflows/release.yml` and the `PROD` environment, so every publish path lives in that one workflow file.
-
-**Mainline (current major).** Create a GitHub Release. CI runs `make update-version`, updates `CHANGELOG.md`, `make build`, publishes to the `latest` dist-tag, and commits the version bump to `master`.
-
-**Maintenance lines (e.g. 3.x).** Run the Release workflow with `workflow_dispatch` from a `release/<major>.x` branch, passing `version` and `npm_dist_tag` (e.g. `3.1.0` / `v3-lts`). It publishes under that dist-tag so `latest` keeps pointing at the current major, commits the bump to the maintenance branch, and creates a non-latest GitHub Release and tag. `dry_run` runs everything through `npm publish --dry-run` and skips the push. Dispatch only runs on `release/<major>.x` branches, only for that major, and only for a version that exists on neither npm nor a git tag.
-
-Consumers of a maintenance line install by range or dist-tag: `yarn add @basis-theory/react-native-elements@^3.1.0` or `@v3-lts`.
-
-The workflow's decisions live in `scripts/release.js`, not in the YAML. It exposes one subcommand per step (`resolve-params`, `verify-unpublished`, `update-changelog`, `commit-version`, `create-github-release`); the branch, version, and dist-tag rules are pure functions covered by `tests/scripts/release.test.js`.
+Triggered by creating a GitHub Release. CI runs `make update-version`, `make build`, then `cd dist && npm publish`. Published as `@basis-theory/react-native-elements`.
 
 ## Docs
 
