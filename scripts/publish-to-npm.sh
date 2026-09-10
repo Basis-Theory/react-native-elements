@@ -7,9 +7,23 @@ cd $(dirname $0)/../dist
 
 echo "🔐 Publishing with OIDC trusted publishing"
 
+publish_args=(--access public)
+
+# Maintenance lines publish under their own dist-tag so 'latest' keeps
+# pointing at the mainline major.
+if [ -n "${NPM_DIST_TAG:-}" ]; then
+  echo "Publishing to dist-tag ${NPM_DIST_TAG}"
+  publish_args+=(--tag "$NPM_DIST_TAG")
+fi
+
+if [ "${NPM_DRY_RUN:-}" = "1" ] || [ "${NPM_DRY_RUN:-}" = "true" ]; then
+  echo "NPM_DRY_RUN is set, nothing will be published"
+  publish_args+=(--dry-run)
+fi
+
 # Temporarily disable exit on error so we can inspect npm publish output
 set +e
-publish_output=$(npm publish --access public 2>&1)
+publish_output=$(npm publish "${publish_args[@]}" 2>&1)
 publish_result=$?
 set -e
 

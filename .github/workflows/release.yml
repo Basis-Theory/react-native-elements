@@ -3,6 +3,26 @@ name: Release
 on:
   release:
     types: [released]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, no leading v (e.g. 3.1.0)"
+        required: true
+        type: string
+      npm_dist_tag:
+        description: "npm dist-tag to publish under. Cannot be 'latest' - that tag tracks the mainline major."
+        required: true
+        default: v3-lts
+        type: string
+      dry_run:
+        description: "Build and validate without publishing, tagging, or pushing"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build-release:
@@ -32,6 +52,68 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
+      - name: Resolve Release Parameters
+        id: params
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_DIST_TAG: ${{ inputs.npm_dist_tag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "release" ]; then
+            version="${RELEASE_TAG#v}"
+            dist_tag=""            # empty publishes to the 'latest' dist-tag
+            target_branch="master"
+          else
+            version="${INPUT_VERSION#v}"
+            dist_tag="$INPUT_DIST_TAG"
+            target_branch="$REF_NAME"
+
+            if [ "$target_branch" = "master" ]; then
+              echo "::error::Dispatch is for maintenance branches. Release master by publishing a GitHub Release."
+              exit 1
+            fi
+
+            if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+              echo "::error::'$version' is not a valid semantic version."
+              exit 1
+            fi
+
+            # 'latest' must keep pointing at the mainline major, and npm
+            # rejects any dist-tag that parses as a semver range.
+            if [ "$dist_tag" = "latest" ]; then
+              echo "::error::'latest' tracks the mainline major. Use something like v3-lts."
+              exit 1
+            fi
+
+            if ! [[ "$dist_tag" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]] || [[ "$dist_tag" =~ ^[vV]?[0-9xX*]+(\.[0-9xX*]+)*$ ]]; then
+              echo "::error::'$dist_tag' is not a usable dist-tag - npm rejects anything that reads as a version range. Use something like v3-lts."
+              exit 1
+            fi
+
+            # release/<major>.x branches may only publish their own major.
+            if [[ "$target_branch" =~ ^release/([0-9]+)\.x$ ]]; then
+              branch_major="${BASH_REMATCH[1]}"
+              if [ "${version%%.*}" != "$branch_major" ]; then
+                echo "::error::$target_branch releases ${branch_major}.x versions, not $version."
+                exit 1
+              fi
+            fi
+
+            if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+              echo "::error::Tag v$version already exists."
+              exit 1
+            fi
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "npm_dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
+          echo "target_branch=$target_branch" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version from $target_branch to dist-tag '${dist_tag:-latest}'"
+
       - name: Start Deploy Message
         uses: Basis-Theory/public-github-actions/deploy-slack-action@12362db6b1ad6b524d28c47a6489c3e73ecd656a # master
         with:
@@ -52,30 +134,29 @@ jobs:
 
       - name: Bump Version
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          VERSION: ${{ steps.params.outputs.version }}
         run: |
-          make update-version NEW_VERSION="${TAG_NAME#v}"
+          make update-version NEW_VERSION="$VERSION"
 
       - name: Fetch tags
         run: git fetch --tags --force
 
       - name: Update CHANGELOG (conventional-changelog)
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          VERSION: ${{ steps.params.outputs.version }}
         run: |
           set -euo pipefail
-          VER="${TAG_NAME#v}"
-          if grep -qF "[$VER](" CHANGELOG.md; then
-            echo "CHANGELOG already lists ${VER}; skipping."
+          if grep -qF "[$VERSION](" CHANGELOG.md; then
+            echo "CHANGELOG already lists ${VERSION}; skipping."
             exit 0
           fi
-          # The release tag already exists (it triggered this run); drop it
-          # locally so conventional-changelog emits this version instead of an
-          # empty section. The remote tag is untouched.
-          git tag -d "$TAG_NAME" 2>/dev/null || true
+          # A release-triggered run already has its tag; drop it locally so
+          # conventional-changelog emits this version instead of an empty
+          # section. The remote tag is untouched.
+          git tag -d "v$VERSION" 2>/dev/null || true
           yarn changelog:release
-          if ! grep -qF "[$VER](" CHANGELOG.md; then
-            echo "::warning::conventional-changelog produced no ${VER} entry (no conventional commits since the previous tag)."
+          if ! grep -qF "[$VERSION](" CHANGELOG.md; then
+            echo "::warning::conventional-changelog produced no ${VERSION} entry (no conventional commits since the previous tag)."
           fi
 
       - name: Build
@@ -84,9 +165,15 @@ jobs:
           SKIP_INSTALL: 1 # install with cache was done already
 
       - name: Publish Package to NPM
+        env:
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
+          NPM_DRY_RUN: ${{ inputs.dry_run }}
         run: ./scripts/publish-to-npm.sh
 
       - name: Commit Version to Repo
+        if: ${{ !inputs.dry_run }}
+        env:
+          TARGET_BRANCH: ${{ steps.params.outputs.target_branch }}
         run: |
           set -euo pipefail
           git config --local user.email "platform@basistheory.com"
@@ -98,7 +185,24 @@ jobs:
             exit 0
           fi
           git commit -m "chore(release): ${VERSION} [skip ci]"
-          git push origin HEAD:master
+          git push origin "HEAD:${TARGET_BRANCH}"
+
+      - name: Tag and Create GitHub Release
+        # Mainline releases are tagged by deploy-dev and released by hand; a
+        # maintenance branch has no such path, so tag it here. GITHUB_TOKEN is
+        # deliberate - a release it creates does not re-trigger this workflow.
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.params.outputs.version }}
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
+        run: |
+          set -euo pipefail
+          gh release create "v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
+            --title "v$VERSION" \
+            --notes "Maintenance release published to npm under the \`$NPM_DIST_TAG\` dist-tag." \
+            --latest=false
 
       - name: Stop Deploy Message
         if: always()
