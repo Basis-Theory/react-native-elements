@@ -67,6 +67,15 @@ jobs:
             version="${RELEASE_TAG#v}"
             dist_tag=""            # empty publishes to the 'latest' dist-tag
             target_branch="master"
+
+            # This path publishes to 'latest' and pushes its bump to master, so
+            # it only applies to tags on master. Maintenance lines release by
+            # dispatching from their own branch.
+            git fetch --quiet origin master
+            if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+              echo "::error::$RELEASE_TAG is not on master. Release a maintenance line by dispatching this workflow from its release/<major>.x branch."
+              exit 1
+            fi
           else
             version="${INPUT_VERSION#v}"
             dist_tag="$INPUT_DIST_TAG"
