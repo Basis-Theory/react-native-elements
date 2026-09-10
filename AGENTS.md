@@ -39,7 +39,7 @@ Published as `@basis-theory/react-native-elements` via npm OIDC trusted publishi
 
 **Mainline (current major).** Create a GitHub Release. CI runs `make update-version`, updates `CHANGELOG.md`, `make build`, publishes to the `latest` dist-tag, and commits the version bump to `master`.
 
-**Maintenance lines (e.g. 3.x).** Run the Release workflow with `workflow_dispatch` from a `release/<major>.x` branch, passing `version` and `npm_dist_tag` (e.g. `3.1.0` / `v3-lts`). It publishes under that dist-tag so `latest` keeps pointing at the current major, commits the bump to the maintenance branch, and creates a non-latest GitHub Release and tag. `dry_run` runs everything through `npm publish --dry-run` and skips the push. Dispatch is rejected on `master` and when the version's major does not match the branch.
+**Maintenance lines (e.g. 3.x).** Run the Release workflow with `workflow_dispatch` from a `release/<major>.x` branch, passing `version` and `npm_dist_tag` (e.g. `3.1.0` / `v3-lts`). It publishes under that dist-tag so `latest` keeps pointing at the current major, commits the bump to the maintenance branch, and creates a non-latest GitHub Release and tag. `dry_run` runs everything through `npm publish --dry-run` and skips the push. Dispatch only runs on `release/<major>.x` branches, only for that major, and only for a version that exists on neither npm nor a git tag.
 
 Consumers of a maintenance line install by range or dist-tag: `yarn add @basis-theory/react-native-elements@^3.1.0` or `@v3-lts`.
 

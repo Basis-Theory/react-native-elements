@@ -72,13 +72,22 @@ jobs:
             dist_tag="$INPUT_DIST_TAG"
             target_branch="$REF_NAME"
 
-            if [ "$target_branch" = "master" ]; then
-              echo "::error::Dispatch is for maintenance branches. Release master by publishing a GitHub Release."
+            # This workflow holds npm publishing authority, so dispatch is
+            # confined to maintenance branches. Everything else, master
+            # included, releases through a GitHub Release.
+            if ! [[ "$target_branch" =~ ^release/([0-9]+)\.x$ ]]; then
+              echo "::error::Dispatch only runs on release/<major>.x branches, not '$target_branch'."
               exit 1
             fi
+            branch_major="${BASH_REMATCH[1]}"
 
             if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
               echo "::error::'$version' is not a valid semantic version."
+              exit 1
+            fi
+
+            if [ "${version%%.*}" != "$branch_major" ]; then
+              echo "::error::$target_branch releases ${branch_major}.x versions, not $version."
               exit 1
             fi
 
@@ -92,15 +101,6 @@ jobs:
             if ! [[ "$dist_tag" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]] || [[ "$dist_tag" =~ ^[vV]?[0-9xX*]+(\.[0-9xX*]+)*$ ]]; then
               echo "::error::'$dist_tag' is not a usable dist-tag - npm rejects anything that reads as a version range. Use something like v3-lts."
               exit 1
-            fi
-
-            # release/<major>.x branches may only publish their own major.
-            if [[ "$target_branch" =~ ^release/([0-9]+)\.x$ ]]; then
-              branch_major="${BASH_REMATCH[1]}"
-              if [ "${version%%.*}" != "$branch_major" ]; then
-                echo "::error::$target_branch releases ${branch_major}.x versions, not $version."
-                exit 1
-              fi
             fi
 
             if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
@@ -163,6 +163,21 @@ jobs:
         run: make build
         env:
           SKIP_INSTALL: 1 # install with cache was done already
+
+      - name: Verify Version Is Unpublished
+        # The tag is cut from whatever this run built, so the run must not
+        # succeed against a version npm already holds - a retry from a moved
+        # branch head would otherwise tag code that is not what consumers get.
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          VERSION: ${{ steps.params.outputs.version }}
+        run: |
+          set -euo pipefail
+          PACKAGE=$(jq -r '.name' package.json)
+          if npm view "$PACKAGE@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$PACKAGE@$VERSION is already on npm. Release a new version rather than re-running this one."
+            exit 1
+          fi
 
       - name: Publish Package to NPM
         env:
