@@ -60,68 +60,7 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_DIST_TAG: ${{ inputs.npm_dist_tag }}
-        run: |
-          set -euo pipefail
-
-          if [ "$EVENT_NAME" = "release" ]; then
-            version="${RELEASE_TAG#v}"
-            dist_tag=""            # empty publishes to the 'latest' dist-tag
-            target_branch="master"
-
-            # This path publishes to 'latest' and pushes its bump to master, so
-            # it only applies to tags on master. Maintenance lines release by
-            # dispatching from their own branch.
-            git fetch --quiet origin master
-            if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
-              echo "::error::$RELEASE_TAG is not on master. Release a maintenance line by dispatching this workflow from its release/<major>.x branch."
-              exit 1
-            fi
-          else
-            version="${INPUT_VERSION#v}"
-            dist_tag="$INPUT_DIST_TAG"
-            target_branch="$REF_NAME"
-
-            # This workflow holds npm publishing authority, so dispatch is
-            # confined to maintenance branches. Everything else, master
-            # included, releases through a GitHub Release.
-            if ! [[ "$target_branch" =~ ^release/([0-9]+)\.x$ ]]; then
-              echo "::error::Dispatch only runs on release/<major>.x branches, not '$target_branch'."
-              exit 1
-            fi
-            branch_major="${BASH_REMATCH[1]}"
-
-            if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-              echo "::error::'$version' is not a valid semantic version."
-              exit 1
-            fi
-
-            if [ "${version%%.*}" != "$branch_major" ]; then
-              echo "::error::$target_branch releases ${branch_major}.x versions, not $version."
-              exit 1
-            fi
-
-            # 'latest' must keep pointing at the mainline major, and npm
-            # rejects any dist-tag that parses as a semver range.
-            if [ "$dist_tag" = "latest" ]; then
-              echo "::error::'latest' tracks the mainline major. Use something like v3-lts."
-              exit 1
-            fi
-
-            if ! [[ "$dist_tag" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]] || [[ "$dist_tag" =~ ^[vV]?[0-9xX*]+(\.[0-9xX*]+)*$ ]]; then
-              echo "::error::'$dist_tag' is not a usable dist-tag - npm rejects anything that reads as a version range. Use something like v3-lts."
-              exit 1
-            fi
-
-            if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-              echo "::error::Tag v$version already exists."
-              exit 1
-            fi
-          fi
-
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "npm_dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
-          echo "target_branch=$target_branch" >> "$GITHUB_OUTPUT"
-          echo "Releasing $version from $target_branch to dist-tag '${dist_tag:-latest}'"
+        run: node scripts/release.js resolve-params
 
       - name: Start Deploy Message
         uses: Basis-Theory/public-github-actions/deploy-slack-action@12362db6b1ad6b524d28c47a6489c3e73ecd656a # master
@@ -144,8 +83,7 @@ jobs:
       - name: Bump Version
         env:
           VERSION: ${{ steps.params.outputs.version }}
-        run: |
-          make update-version NEW_VERSION="$VERSION"
+        run: make update-version NEW_VERSION="$VERSION"
 
       - name: Fetch tags
         run: git fetch --tags --force
@@ -153,20 +91,7 @@ jobs:
       - name: Update CHANGELOG (conventional-changelog)
         env:
           VERSION: ${{ steps.params.outputs.version }}
-        run: |
-          set -euo pipefail
-          if grep -qF "[$VERSION](" CHANGELOG.md; then
-            echo "CHANGELOG already lists ${VERSION}; skipping."
-            exit 0
-          fi
-          # A release-triggered run already has its tag; drop it locally so
-          # conventional-changelog emits this version instead of an empty
-          # section. The remote tag is untouched.
-          git tag -d "v$VERSION" 2>/dev/null || true
-          yarn changelog:release
-          if ! grep -qF "[$VERSION](" CHANGELOG.md; then
-            echo "::warning::conventional-changelog produced no ${VERSION} entry (no conventional commits since the previous tag)."
-          fi
+        run: node scripts/release.js update-changelog
 
       - name: Build
         run: make build
@@ -174,19 +99,10 @@ jobs:
           SKIP_INSTALL: 1 # install with cache was done already
 
       - name: Verify Version Is Unpublished
-        # The tag is cut from whatever this run built, so the run must not
-        # succeed against a version npm already holds - a retry from a moved
-        # branch head would otherwise tag code that is not what consumers get.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           VERSION: ${{ steps.params.outputs.version }}
-        run: |
-          set -euo pipefail
-          PACKAGE=$(jq -r '.name' package.json)
-          if npm view "$PACKAGE@$VERSION" version >/dev/null 2>&1; then
-            echo "::error::$PACKAGE@$VERSION is already on npm. Release a new version rather than re-running this one."
-            exit 1
-          fi
+        run: node scripts/release.js verify-unpublished
 
       - name: Publish Package to NPM
         env:
@@ -198,35 +114,15 @@ jobs:
         if: ${{ !inputs.dry_run }}
         env:
           TARGET_BRANCH: ${{ steps.params.outputs.target_branch }}
-        run: |
-          set -euo pipefail
-          git config --local user.email "platform@basistheory.com"
-          git config --local user.name "github-actions[bot]"
-          VERSION=$(jq -r '.version' package.json)
-          git add package.json CHANGELOG.md
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
-          git commit -m "chore(release): ${VERSION} [skip ci]"
-          git push origin "HEAD:${TARGET_BRANCH}"
+        run: node scripts/release.js commit-version
 
       - name: Tag and Create GitHub Release
-        # Mainline releases are tagged by deploy-dev and released by hand; a
-        # maintenance branch has no such path, so tag it here. GITHUB_TOKEN is
-        # deliberate - a release it creates does not re-trigger this workflow.
         if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.params.outputs.version }}
           NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
-        run: |
-          set -euo pipefail
-          gh release create "v$VERSION" \
-            --target "$(git rev-parse HEAD)" \
-            --title "v$VERSION" \
-            --notes "Maintenance release published to npm under the \`$NPM_DIST_TAG\` dist-tag." \
-            --latest=false
+        run: node scripts/release.js create-github-release
 
       - name: Stop Deploy Message
         if: always()

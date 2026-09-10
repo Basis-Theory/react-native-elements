@@ -43,6 +43,8 @@ Published as `@basis-theory/react-native-elements` via npm OIDC trusted publishi
 
 Consumers of a maintenance line install by range or dist-tag: `yarn add @basis-theory/react-native-elements@^3.1.0` or `@v3-lts`.
 
+The workflow's decisions live in `scripts/release.js`, not in the YAML. It exposes one subcommand per step (`resolve-params`, `verify-unpublished`, `update-changelog`, `commit-version`, `create-github-release`); the branch, version, and dist-tag rules are pure functions covered by `tests/scripts/release.test.js`.
+
 ## Docs
 
 - [React Native Elements SDK](https://developers.basistheory.com/docs/sdks/mobile/react-native/)
