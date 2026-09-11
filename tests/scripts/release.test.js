@@ -6,6 +6,7 @@ const {
   isVersionMissing,
   publishArgs,
   resolveParams,
+  tagPointsAt,
 } = require('../../scripts/release');
 
 const onMaster = { isOnMaster: () => true, tagExists: () => false };
@@ -327,4 +328,31 @@ describe('isSameArtifact', () => {
   ])('refuses to call %p and %p the same artifact', (published, built) => {
     expect(isSameArtifact(published, built)).toBe(false);
   });
+});
+
+describe('tagPointsAt', () => {
+  const distTags = { latest: '4.0.3', 'v3-lts': '3.1.0' };
+
+  test('accepts a tag that resolves to the released version', () => {
+    expect(tagPointsAt(distTags, 'v3-lts', '3.1.0')).toBe(true);
+  });
+
+  test('rejects a tag that has moved on to a later version', () => {
+    expect(tagPointsAt(distTags, 'v3-lts', '3.0.9')).toBe(false);
+  });
+
+  test('rejects a tag npm does not have', () => {
+    expect(tagPointsAt(distTags, 'v4-lts', '4.0.3')).toBe(false);
+  });
+
+  test.each([undefined, '', null])('rejects %p as a tag to prove', (distTag) => {
+    expect(tagPointsAt(distTags, distTag, '3.1.0')).toBe(false);
+  });
+
+  test.each([undefined, null, {}])(
+    'rejects %p as a dist-tag listing',
+    (tags) => {
+      expect(tagPointsAt(tags, 'v3-lts', '3.1.0')).toBe(false);
+    }
+  );
 });
