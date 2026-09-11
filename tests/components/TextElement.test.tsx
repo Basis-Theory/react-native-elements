@@ -6,14 +6,79 @@ import 'react-native';
 import React from 'react';
 
 import {
+  act,
   render,
   fireEvent,
   screen,
   userEvent,
 } from '@testing-library/react-native';
 import { TextElement } from '../../src';
+import type { BTRef } from '../../src';
 
 describe('TextElement', () => {
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+
+      render(
+        <TextElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      fireEvent.changeText(screen.getByPlaceholderText('Name'), 'John Doe');
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ empty: true })
+      );
+    });
+
+    test('emits the change event to the latest onChange callback', () => {
+      const firstOnChange = jest.fn();
+      const latestOnChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+      const { rerender } = render(
+        <TextElement
+          btRef={btRef}
+          onChange={firstOnChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      rerender(
+        <TextElement
+          btRef={btRef}
+          onChange={latestOnChange}
+          placeholder="Name"
+          style={{}}
+        />
+      );
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(firstOnChange).not.toHaveBeenCalled();
+      expect(latestOnChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
   const mockedRef = {
     current: {
       id: '123',
@@ -97,6 +162,27 @@ describe('TextElement', () => {
     });
   });
 
+  test('forwards keyboard behavior props', () => {
+    render(
+      <TextElement
+        autoComplete="name"
+        btRef={mockedRef}
+        enterKeyHint="done"
+        inputAccessoryViewID="text-input-accessory"
+        placeholder="Name"
+        returnKeyType="done"
+        style={{}}
+      />
+    );
+
+    const el = screen.getByPlaceholderText('Name');
+
+    expect(el).toHaveProp('autoComplete', 'name');
+    expect(el).toHaveProp('enterKeyHint', 'done');
+    expect(el).toHaveProp('inputAccessoryViewID', 'text-input-accessory');
+    expect(el).toHaveProp('returnKeyType', 'done');
+  });
+
   describe('OnBlur', () => {
     test('triggers event', () => {
       const onBlur = jest.fn();
@@ -174,6 +260,56 @@ describe('TextElement', () => {
         maskSatisfied: false,
         valid: false,
       });
+    });
+  });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <TextElement
+          btRef={mockedRef}
+          placeholder="Name"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Name');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        complete: true,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: true,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <TextElement
+          btRef={mockedRef}
+          placeholder="Name"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Name');
+
+      fireEvent.changeText(el, 'Jane Roe');
+      fireEvent(el, 'submitEditing', { nativeEvent: { text: 'Jane Roe' } });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('Jane Roe');
     });
   });
 });
