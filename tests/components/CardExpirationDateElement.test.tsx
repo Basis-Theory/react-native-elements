@@ -5,10 +5,47 @@
 import 'react-native';
 import React from 'react';
 
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { CardExpirationDateElement } from '../../src';
+import type { BTDateRef } from '../../src';
 
 describe('CardVerificationCodeElement', () => {
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTDateRef>();
+
+      render(
+        <CardExpirationDateElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Expiration Date"
+          style={{}}
+        />
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Expiration Date'),
+        '1234'
+      );
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: true, empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: false, empty: true })
+      );
+    });
+  });
+
   const mockedRef = {
     current: {
       id: '123',
@@ -36,6 +73,29 @@ describe('CardVerificationCodeElement', () => {
 
       expect(el.props.value).toStrictEqual('12/34');
     });
+  });
+
+  test('forwards keyboard behavior props', () => {
+    render(
+      <CardExpirationDateElement
+        autoComplete="cc-exp"
+        btRef={mockedRef}
+        enterKeyHint="next"
+        inputAccessoryViewID="card-input-accessory"
+        placeholder="Expiration Date"
+        returnKeyType="next"
+        style={{}}
+        textContentType="creditCardExpiration"
+      />
+    );
+
+    const el = screen.getByPlaceholderText('Expiration Date');
+
+    expect(el).toHaveProp('autoComplete', 'cc-exp');
+    expect(el).toHaveProp('enterKeyHint', 'next');
+    expect(el).toHaveProp('inputAccessoryViewID', 'card-input-accessory');
+    expect(el).toHaveProp('returnKeyType', 'next');
+    expect(el).toHaveProp('textContentType', 'creditCardExpiration');
   });
 
   describe('Validation and Change Events', () => {
@@ -158,6 +218,55 @@ describe('CardVerificationCodeElement', () => {
         maskSatisfied: false,
         valid: false,
       });
+    });
+  });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardExpirationDateElement
+          btRef={mockedRef}
+          placeholder="Expiration Date"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Expiration Date');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        complete: false,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: false,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardExpirationDateElement
+          btRef={mockedRef}
+          placeholder="Expiration Date"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Expiration Date');
+
+      fireEvent(el, 'submitEditing', { nativeEvent: { text: '12/30' } });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('12/30');
     });
   });
 });

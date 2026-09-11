@@ -196,31 +196,43 @@ export const Collect = () => {
             />
 
             <CardNumberElement
+              autoComplete="cc-number"
               btRef={cardNumberRef}
               coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
               binLookup={true}
               keyboardType="numeric"
+              enterKeyHint="next"
               onChange={updateElementsEvents('cardNumber')}
+              onSubmitEditing={() => cardExpirationDateRef.current?.focus()}
               placeholder="Card Number"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardNumber"
             />
             <CardExpirationDateElement
+              autoComplete="cc-exp"
               btRef={cardExpirationDateRef}
+              enterKeyHint="next"
               keyboardType="numeric"
               onChange={updateElementsEvents('cardExpirationDate')}
+              onSubmitEditing={() => cardVerificationCodeRef.current?.focus()}
               placeholder="Card Expiration Date"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardExpiration"
             />
             <CardVerificationCodeElement
+              autoComplete="cc-csc"
               btRef={cardVerificationCodeRef}
               cvcLength={cvcLength}
+              enterKeyHint="done"
               keyboardType="numeric"
               onChange={updateElementsEvents('cvc')}
+              onSubmitEditing={() => cardVerificationCodeRef.current?.blur()}
               placeholder={'Security code'}
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardSecurityCode"
             />
 
             <Pressable
@@ -319,4 +331,3 @@ export const Collect = () => {
     </View>
   );
 };
-

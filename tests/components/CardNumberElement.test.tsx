@@ -7,6 +7,7 @@ import 'react-native';
 import React from 'react';
 
 import {
+  act,
   render,
   userEvent,
   fireEvent,
@@ -14,6 +15,7 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import { CardNumberElement } from '../../src';
+import type { BTRef } from '../../src';
 import { BasisTheoryProvider } from '../../src/BasisTheoryProvider';
 import { CoBadgedSupport } from '../../src/CardElementTypes';
 import cardValidator from 'card-validator';
@@ -53,6 +55,77 @@ describe('CardNumberElement', () => {
       fireEvent.changeText(el, '4242424242424242');
 
       expect(el.props.value).toStrictEqual('4242 4242 4242 4242');
+    });
+  });
+
+  test('forwards keyboard behavior props', () => {
+    render(
+      <CardNumberElement
+        autoComplete="cc-number"
+        btRef={mockedRef}
+        enterKeyHint="next"
+        inputAccessoryViewID="card-input-accessory"
+        placeholder="Card Number"
+        returnKeyType="next"
+        style={{}}
+        textContentType="creditCardNumber"
+      />
+    );
+
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'autoComplete',
+      'cc-number'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'enterKeyHint',
+      'next'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'inputAccessoryViewID',
+      'card-input-accessory'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'returnKeyType',
+      'next'
+    );
+    expect(screen.getByPlaceholderText('Card Number')).toHaveProp(
+      'textContentType',
+      'creditCardNumber'
+    );
+  });
+
+  describe('clear', () => {
+    test('emits an onChange event so consumers can reset derived state', () => {
+      const onChange = jest.fn();
+      const btRef = React.createRef<BTRef>();
+
+      render(
+        <CardNumberElement
+          btRef={btRef}
+          onChange={onChange}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent.changeText(el, '4242424242424242');
+
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: true, empty: false })
+      );
+
+      onChange.mockClear();
+
+      act(() => {
+        btRef.current?.clear();
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ complete: false, empty: true })
+      );
     });
   });
 
@@ -1802,6 +1875,63 @@ describe('CardNumberElement', () => {
           })
         );
       });
+    });
+  });
+
+  describe('OnSubmitEditing', () => {
+    test('triggers event', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent(el, 'submitEditing');
+
+      expect(onSubmitEditing).toHaveBeenCalledWith({
+        brand: 'unknown',
+        cardBin: undefined,
+        cardLast4: undefined,
+        complete: false,
+        cvcLength: undefined,
+        empty: true,
+        errors: undefined,
+        maskSatisfied: false,
+        valid: false,
+      });
+    });
+
+    test('does not hand the native event payload to the consumer', () => {
+      const onSubmitEditing = jest.fn();
+
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+          onSubmitEditing={onSubmitEditing}
+        />
+      );
+
+      const el = screen.getByPlaceholderText('Card Number');
+
+      fireEvent.changeText(el, '4242424242424242');
+      fireEvent(el, 'submitEditing', {
+        nativeEvent: { text: '4242424242424242' },
+      });
+
+      const event = onSubmitEditing.mock.calls[0][0];
+
+      expect(event).not.toHaveProperty('nativeEvent');
+      expect(JSON.stringify(event)).not.toContain('4242424242424242');
+      expect(event).toMatchObject({ cardLast4: '4242', complete: true });
     });
   });
 });

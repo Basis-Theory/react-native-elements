@@ -32,6 +32,7 @@ export const useCardNumberElement = ({
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
   cardTypes,
   skipLuhnValidation,
   binLookup,
@@ -88,24 +89,26 @@ export const useCardNumberElement = ({
     id,
   });
 
-  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
-    setElementValue,
-    transform: [' ', ''],
-    element: {
-      id,
-      validatorOptions: { mask, skipLuhnValidation, coBadgedSupport },
-      type,
-      binLookup,
-      coBadgedSupport,
-      binInfo,
-      binLookupPending,
-      selectedNetwork,
-      brandOptionsCount
-    },
-    onChange,
-    onBlur,
-    onFocus,
-  });
+  const { _onChange, _onBlur, _onFocus, _onSubmitEditing } =
+    useUserEventHandlers({
+      setElementValue,
+      transform: [' ', ''],
+      element: {
+        id,
+        validatorOptions: { mask, skipLuhnValidation, coBadgedSupport },
+        type,
+        binLookup,
+        coBadgedSupport,
+        binInfo,
+        binLookupPending,
+        selectedNetwork,
+        brandOptionsCount,
+      },
+      onChange,
+      onBlur,
+      onFocus,
+      onSubmitEditing,
+    });
 
   useBtRef({
     btRef,
@@ -127,6 +130,7 @@ export const useCardNumberElement = ({
     _onChange,
     _onBlur,
     _onFocus,
+    _onSubmitEditing,
     mask,
   };
 };

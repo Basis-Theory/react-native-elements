@@ -14,11 +14,16 @@ import { BrandPicker } from './BrandPicker';
 import { CardBrandIcon } from './CardBrandIcon';
 
 type TextInputSupportedProps =
+  | 'autoComplete'
   | 'editable'
+  | 'enterKeyHint'
+  | 'inputAccessoryViewID'
   | 'keyboardType'
   | 'placeholder'
   | 'placeholderTextColor'
-  | 'style';
+  | 'returnKeyType'
+  | 'style'
+  | 'textContentType';
 
 export type CardNumberIconPosition = 'left' | 'right' | 'none';
 
@@ -33,11 +38,15 @@ export type CardNumberElementProps = UseCardNumberElementProps &
   };
 
 export const CardNumberElement = ({
+  autoComplete,
   btRef,
   cardTypes,
   onBlur,
   onChange,
   onFocus,
+  onSubmitEditing,
+  enterKeyHint,
+  inputAccessoryViewID,
   keyboardType = 'numeric',
   placeholder,
   placeholderTextColor,
@@ -46,7 +55,9 @@ export const CardNumberElement = ({
   binLookup,
   coBadgedSupport,
   preSelectedNetworks,
+  returnKeyType,
   style,
+  textContentType,
   iconPosition,
   iconStyle,
   iconContainerStyle,
@@ -56,6 +67,7 @@ export const CardNumberElement = ({
     _onChange,
     _onBlur,
     _onFocus,
+    _onSubmitEditing,
     elementValue,
     cardBrand,
     mask,
@@ -68,6 +80,7 @@ export const CardNumberElement = ({
     onBlur,
     onChange,
     onFocus,
+    onSubmitEditing,
     cardTypes,
     skipLuhnValidation,
     binLookup,
@@ -110,17 +123,23 @@ export const CardNumberElement = ({
         />
       )}
       <MaskInput
+        autoComplete={autoComplete}
         editable={editable}
+        enterKeyHint={enterKeyHint}
+        inputAccessoryViewID={inputAccessoryViewID}
         keyboardType={keyboardType}
         mask={mask}
         onBlur={_onBlur}
         onChangeText={_onChange}
         onFocus={_onFocus}
+        onSubmitEditing={_onSubmitEditing}
         placeholder={placeholder}
         placeholderFillCharacter=""
         placeholderTextColor={placeholderTextColor}
         ref={elementRef}
+        returnKeyType={returnKeyType}
         style={[positionedIcon && styles.input, style]}
+        textContentType={textContentType}
         value={elementValue}
       />
       {iconPosition === 'right' && brandArea}
