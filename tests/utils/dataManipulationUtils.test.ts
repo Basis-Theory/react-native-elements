@@ -104,6 +104,27 @@ describe('replace element refs', () => {
         },
         expectedData: {},
       },
+      {
+        description: 'drops both date parts when the date element is cleared',
+        stateValues: {
+          date: '',
+        },
+        expectedData: {},
+      },
+      {
+        description: 'drops both date parts when only the month is typed',
+        stateValues: {
+          date: '12',
+        },
+        expectedData: {},
+      },
+      {
+        description: 'drops both date parts when the year is still missing',
+        stateValues: {
+          date: '12/',
+        },
+        expectedData: {},
+      },
     ];
 
     test.each(testCases)('$description', ({ stateValues, expectedData }) => {

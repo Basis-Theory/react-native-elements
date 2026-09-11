@@ -108,7 +108,9 @@ export const useUserEventHandlers = ({
       }
     },
     _onSubmitEditing: (_event: TextInputSubmitEditingEvent) => {
-      const val = _elementValues[element.id] ?? '';
+      // Raw, like _onChange: consumers read `complete` here to decide whether
+      // to advance focus, so the two must agree about the same keystroke.
+      const val = _elementRawValues[element.id] ?? '';
 
       if (onSubmitEditing && isString(val)) {
         const event = createEvent(val);
