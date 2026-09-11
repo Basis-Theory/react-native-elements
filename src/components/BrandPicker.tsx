@@ -1,13 +1,27 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Text, View, TouchableOpacity, Modal, ScrollView, ViewStyle, TextStyle } from 'react-native';
-import { CardBrand } from '../CardElementTypes';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  type ImageStyle,
+  type StyleProp,
+  type ViewStyle,
+  type TextStyle,
+} from 'react-native';
+import type { CardBrand } from '../CardElementTypes';
 import { labelizeCardBrand } from '../utils/shared';
+import { CardBrandIcon } from './CardBrandIcon';
 
 interface BrandPickerProps {
   brands: CardBrand[];
   selectedBrand: CardBrand | undefined;
   onBrandSelect: (brand: CardBrand | undefined) => void;
   style?: ViewStyle;
+  displayBrand?: CardBrand;
+  iconStyle?: StyleProp<ImageStyle>;
+  variant?: 'icon' | 'text';
 }
 
 const defaultStyles = {
@@ -61,6 +75,16 @@ const defaultStyles = {
     fontSize: 16,
     textAlign: 'center' as const,
   },
+  iconButton: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  optionContent: {
+    alignItems: 'center' as const,
+    flexDirection: 'row' as const,
+    gap: 8,
+    justifyContent: 'center' as const,
+  },
 };
 
 const isTextStyle = (style: ViewStyle | undefined): style is TextStyle & ViewStyle => {
@@ -74,6 +98,9 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   selectedBrand,
   onBrandSelect,
   style,
+  displayBrand = 'unknown',
+  iconStyle,
+  variant = 'text',
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -109,14 +136,21 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   }
 
   return (
-    <View style={defaultStyles.container}>
+    <View style={variant === 'text' ? defaultStyles.container : undefined}>
       <TouchableOpacity
+        accessibilityLabel="Select card brand"
         onPress={handleShowPicker}
-        style={[style]}
+        style={[variant === 'icon' && defaultStyles.iconButton, style]}
+        testID="card-brand-selector"
       >
-        <Text style={buttonTextStyle}>
-          {displayText}
-        </Text>
+        {variant === 'icon' ? (
+          <CardBrandIcon
+            brand={selectedBrand ?? displayBrand}
+            style={iconStyle}
+          />
+        ) : (
+          <Text style={buttonTextStyle}>{displayText}</Text>
+        )}
       </TouchableOpacity>
 
       <Modal
@@ -146,9 +180,18 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
                     selectedBrand === brand && defaultStyles.selectedOption,
                   ]}
                 >
-                  <Text style={defaultStyles.optionText}>
-                    {labelizeCardBrand(brand)}
-                  </Text>
+                  <View style={defaultStyles.optionContent}>
+                    {variant === 'icon' && (
+                      <CardBrandIcon
+                        brand={brand}
+                        style={iconStyle}
+                        testID={`card-brand-option-icon-${brand}`}
+                      />
+                    )}
+                    <Text style={defaultStyles.optionText}>
+                      {labelizeCardBrand(brand)}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
