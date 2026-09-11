@@ -12,22 +12,22 @@ const {
 const onMaster = {
   isOnMaster: () => true,
   tagExists: () => false,
-  tagIsOnHead: () => false,
+  isReleaseCommit: () => false,
 };
 const offMaster = {
   isOnMaster: () => false,
   tagExists: () => false,
-  tagIsOnHead: () => false,
+  isReleaseCommit: () => false,
 };
 const taggedAlready = {
   isOnMaster: () => true,
   tagExists: () => true,
-  tagIsOnHead: () => false,
+  isReleaseCommit: () => false,
 };
-const taggedOnHead = {
+const taggedOnReleaseCommit = {
   isOnMaster: () => true,
   tagExists: () => true,
-  tagIsOnHead: () => true,
+  isReleaseCommit: () => true,
 };
 
 const dispatch = (overrides = {}) => ({
@@ -175,19 +175,31 @@ describe('resolveParams', () => {
       }
     );
 
-    test('rejects a version tagged on another commit', () => {
+    test('rejects a version whose tag belongs to another commit', () => {
       expect(() => resolveParams(dispatch(), taggedAlready)).toThrow(
-        'Tag v3.1.0 already exists on another commit.'
+        /Tag v3\.1\.0 already exists and this is not that release's commit/
       );
     });
 
     // A run that pushed the tag and then failed must be able to finish.
-    test('continues when the tag is this run own, left by a failed attempt', () => {
-      expect(resolveParams(dispatch(), taggedOnHead)).toStrictEqual({
+    test('continues when the checkout is that tag own release commit', () => {
+      expect(resolveParams(dispatch(), taggedOnReleaseCommit)).toStrictEqual({
         npmDistTag: 'v3-lts',
         targetBranch: 'release/3.x',
         version: '3.1.0',
       });
+    });
+
+    test('asks about the release commit with the tag and the version', () => {
+      const isReleaseCommit = jest.fn().mockReturnValue(true);
+
+      resolveParams(dispatch(), {
+        isOnMaster: () => true,
+        tagExists: () => true,
+        isReleaseCommit,
+      });
+
+      expect(isReleaseCommit).toHaveBeenCalledWith('v3.1.0', '3.1.0');
     });
 
     test('looks for the tag under its v prefix', () => {

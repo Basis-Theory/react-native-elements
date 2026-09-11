@@ -86,13 +86,17 @@ function resolveParams(
     );
   }
 
-  // An existing tag on the commit this run would tag is this release's own,
-  // left by a run that pushed it and then failed; carrying on lets the rerun
-  // finish the release. A tag anywhere else belongs to a different release and
-  // this version is not free to take.
-  if (checks.tagExists(`v${version}`) && !checks.tagIsOnHead(`v${version}`)) {
+  // The tag may already exist only when this checkout is the released commit
+  // it belongs to, which is the state a run leaves behind when it pushed the
+  // tag and then failed; the rerun goes on to finish the release. In every
+  // other case the version is already spoken for, including a tag that merely
+  // shares the current head and would be stranded once the bump commits.
+  if (
+    checks.tagExists(`v${version}`) &&
+    !checks.isReleaseCommit(`v${version}`, version)
+  ) {
     throw new ReleaseError(
-      `Tag v${version} already exists on another commit. Release a new version rather than re-running this one.`
+      `Tag v${version} already exists and this is not that release's commit. Release a new version rather than re-running this one.`
     );
   }
 
@@ -172,9 +176,14 @@ const checks = {
   },
   tagExists: (tag) =>
     succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`]),
-  tagIsOnHead: (tag) =>
+  // True only when the checkout already *is* the released commit: the version
+  // is committed, so this run will add none, and the tag sits on it. That pair
+  // is what distinguishes our own tag from a failed run out of one that
+  // happens to share the current head and would be left behind by the bump.
+  isReleaseCommit: (tag, version) =>
+    readPackageJson().version === version &&
     capture('git', ['rev-parse', `refs/tags/${tag}^{commit}`]).trim() ===
-    capture('git', ['rev-parse', 'HEAD']).trim(),
+      capture('git', ['rev-parse', 'HEAD']).trim(),
 };
 
 const readPackageJson = () =>
