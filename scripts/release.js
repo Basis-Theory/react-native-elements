@@ -224,6 +224,42 @@ const builtArtifact = () => {
   return packed[0];
 };
 
+// npm applies a dist-tag as part of publishing, so a skipped publish leaves it
+// unproven: the tag can have moved to a later version since. Read rather than
+// write, because OIDC trusted publishing authorizes publishes, not tag edits.
+const tagPointsAt = (distTags, distTag, version) =>
+  Boolean(distTag) && distTags?.[distTag] === version;
+
+const publishedDistTags = (name) => {
+  try {
+    return JSON.parse(
+      execFileSync('npm', ['view', name, 'dist-tags', '--json'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+    );
+  } catch {
+    return undefined;
+  }
+};
+
+// Only meaningful for a requested dist-tag. 'latest' is not asserted, since it
+// legitimately moves on to newer versions.
+const requireDistTag = (name, version, distTag) => {
+  if (!distTag) {
+    return;
+  }
+
+  if (!tagPointsAt(publishedDistTags(name), distTag, version)) {
+    throw new ReleaseError(
+      `npm dist-tag '${distTag}' does not point at ${name}@${version}, and this run did not publish it. Run 'npm dist-tag add ${name}@${version} ${distTag}' and dispatch again.`
+    );
+  }
+
+  console.log(`npm dist-tag '${distTag}' already points at ${version}`);
+};
+
 const publishedMatchesBuild = () => {
   const { name, version } = readPackageJson();
 
@@ -283,6 +319,8 @@ const commands = {
         `npm already holds a different ${name}@${version}. Release a new version rather than re-running this one.`
       );
     }
+
+    requireDistTag(name, version, process.env.NPM_DIST_TAG);
 
     console.log(
       `${name}@${version} was already published by an earlier run of this release; finishing the commit, tag and release.`
@@ -346,6 +384,8 @@ const commands = {
         const { name, version } = readPackageJson();
 
         if (publishedMatchesBuild()) {
+          requireDistTag(name, version, distTag);
+
           console.log(
             `${name}@${version} is already published from this exact artifact, skipping publish`
           );
@@ -434,4 +474,5 @@ module.exports = {
   isVersionMissing,
   publishArgs,
   resolveParams,
+  tagPointsAt,
 };
