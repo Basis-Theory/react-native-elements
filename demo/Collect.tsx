@@ -228,7 +228,6 @@ export const Collect = () => {
               enterKeyHint="done"
               keyboardType="numeric"
               onChange={updateElementsEvents('cvc')}
-              onSubmitEditing={() => cardVerificationCodeRef.current?.blur()}
               placeholder={'Security code'}
               placeholderTextColor="#99a0bf"
               style={styles.elements}
