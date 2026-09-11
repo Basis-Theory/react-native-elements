@@ -128,6 +128,20 @@ const isIdempotentFailure = ({ eventName, output }) =>
 const isVersionMissing = (output) =>
   /\bE404\b|404 Not Found|No match found for version/i.test(String(output ?? ''));
 
+// Identity of a published version against what this run built. Integrity is the
+// modern field; shasum covers anything published before npm recorded it.
+const isSameArtifact = (published, built) => {
+  if (published?.integrity && built?.integrity) {
+    return published.integrity === built.integrity;
+  }
+
+  if (published?.shasum && built?.shasum) {
+    return published.shasum === built.shasum;
+  }
+
+  return false;
+};
+
 const capture = (command, args) =>
   execFileSync(command, args, {
     cwd: REPO_ROOT,
@@ -175,6 +189,47 @@ const requiredEnv = (name) => {
   return value;
 };
 
+// The published tarball's fingerprint, or null when npm does not have the
+// version at all. Any other npm failure is a fault, not an answer.
+const publishedArtifact = (name, version) => {
+  try {
+    // stderr is piped, not inherited: npm reports the 404 there and this has to
+    // read it to tell an unpublished version from an unreachable registry.
+    const view = execFileSync(
+      'npm',
+      ['view', `${name}@${version}`, 'dist', '--json'],
+      { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    return JSON.parse(view);
+  } catch (error) {
+    const output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+
+    if (isVersionMissing(output)) {
+      return null;
+    }
+
+    throw new ReleaseError(
+      `Could not confirm the published state of ${name}@${version}: ${
+        output.trim() || error.message
+      }`
+    );
+  }
+};
+
+// The fingerprint of the tarball this run built, without publishing it.
+const builtArtifact = () => {
+  const packed = JSON.parse(
+    execFileSync('npm', ['pack', '--dry-run', '--json'], {
+      cwd: path.join(REPO_ROOT, 'dist'),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+  );
+
+  return packed[0];
+};
+
 const setOutput = (name, value) => {
   if (process.env.GITHUB_OUTPUT) {
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
@@ -208,33 +263,31 @@ const commands = {
   // The tag is cut from whatever this run built, so the run must not succeed
   // against a version npm already holds - a retry from a moved branch head
   // would otherwise tag code that is not what consumers get.
-  'verify-unpublished': () => {
+  'verify-publishable': () => {
     const version = requiredEnv('VERSION');
     const { name } = readPackageJson();
+    const published = publishedArtifact(name, version);
 
-    try {
-      execFileSync('npm', ['view', `${name}@${version}`, 'version'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-    } catch (error) {
-      const output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+    if (!published) {
+      setOutput('already_published', 'false');
 
-      if (isVersionMissing(output)) {
-        return;
-      }
+      return;
+    }
 
+    // npm already holds this version. Completing the release is only safe when
+    // what it holds is what this run just built, which is the case after a run
+    // that published and then failed to commit or tag. Anything else would let
+    // a retry attest to code npm is not serving.
+    if (!isSameArtifact(published, builtArtifact())) {
       throw new ReleaseError(
-        `Could not confirm ${name}@${version} is unpublished: ${
-          output.trim() || error.message
-        }`
+        `npm already holds a different ${name}@${version}. Release a new version rather than re-running this one.`
       );
     }
 
-    throw new ReleaseError(
-      `${name}@${version} is already on npm. Release a new version rather than re-running this one.`
+    console.log(
+      `${name}@${version} was already published by an earlier run of this release; finishing the commit, tag and release.`
     );
+    setOutput('already_published', 'true');
   },
 
   'update-changelog': () => {
@@ -364,6 +417,7 @@ module.exports = {
   changelogNeedsEntry,
   isIdempotentFailure,
   isPublishConflict,
+  isSameArtifact,
   isVersionMissing,
   publishArgs,
   resolveParams,
