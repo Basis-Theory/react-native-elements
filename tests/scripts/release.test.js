@@ -1,7 +1,9 @@
 const {
   ReleaseError,
   changelogNeedsEntry,
+  isIdempotentFailure,
   isPublishConflict,
+  isVersionMissing,
   publishArgs,
   resolveParams,
 } = require('../../scripts/release');
@@ -38,6 +40,27 @@ describe('resolveParams', () => {
         resolveParams({ eventName: 'release', releaseTag: '4.1.0' }, onMaster)
           .version
       ).toBe('4.1.0');
+    });
+
+    test.each(['hotfix', 'v3.1', 'v..', 'v1.2.3.4', ''])(
+      'rejects %p as a release tag',
+      (releaseTag) => {
+        expect(() =>
+          resolveParams({ eventName: 'release', releaseTag }, onMaster)
+        ).toThrow(/is not a valid semantic version/);
+      }
+    );
+
+    test('rejects a malformed tag before consulting master', () => {
+      const isOnMaster = jest.fn();
+
+      expect(() =>
+        resolveParams(
+          { eventName: 'release', releaseTag: 'hotfix' },
+          { isOnMaster, tagExists: () => false }
+        )
+      ).toThrow(/is not a valid semantic version/);
+      expect(isOnMaster).not.toHaveBeenCalled();
     });
 
     test('rejects a tag that is not on master', () => {
@@ -239,4 +262,51 @@ describe('isPublishConflict', () => {
   ])('keeps %p a failure', (output) => {
     expect(isPublishConflict(output)).toBe(false);
   });
+});
+
+describe('isVersionMissing', () => {
+  test.each([
+    'npm error code E404',
+    "npm error 404 No match found for version 3.1.0",
+    'npm error 404 Not Found - GET https://registry.npmjs.org/pkg',
+  ])('treats %p as an unpublished version', (output) => {
+    expect(isVersionMissing(output)).toBe(true);
+  });
+
+  test.each([
+    'npm error code ECONNREFUSED',
+    'npm error network request to https://registry.npmjs.org failed',
+    'npm error code ENOTFOUND',
+    'npm error code EAI_AGAIN',
+    'npm error code ETIMEDOUT',
+    'npm error 500 Internal Server Error',
+    'npm error code ENEEDAUTH',
+    '',
+    undefined,
+  ])('refuses to read %p as an answer', (output) => {
+    expect(isVersionMissing(output)).toBe(false);
+  });
+});
+
+describe('isIdempotentFailure', () => {
+  const conflict = 'npm error code EPUBLISHCONFLICT';
+
+  test('lets a release re-run past a version it already published', () => {
+    expect(isIdempotentFailure({ eventName: 'release', output: conflict })).toBe(
+      true
+    );
+  });
+
+  test('fails a dispatch that hits a conflict its own check ruled out', () => {
+    expect(
+      isIdempotentFailure({ eventName: 'workflow_dispatch', output: conflict })
+    ).toBe(false);
+  });
+
+  test.each(['npm error 403 Forbidden', 'EEXIST: file already exists', ''])(
+    'keeps %p a failure on the release path',
+    (output) => {
+      expect(isIdempotentFailure({ eventName: 'release', output })).toBe(false);
+    }
+  );
 });
