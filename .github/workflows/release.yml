@@ -98,13 +98,15 @@ jobs:
         env:
           SKIP_INSTALL: 1 # install with cache was done already
 
-      - name: Verify Version Is Unpublished
+      - name: Verify Version Is Publishable
+        id: publishable
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           VERSION: ${{ steps.params.outputs.version }}
-        run: node scripts/release.js verify-unpublished
+        run: node scripts/release.js verify-publishable
 
       - name: Publish Package to NPM
+        if: ${{ steps.publishable.outputs.already_published != 'true' }}
         env:
           EVENT_NAME: ${{ github.event_name }}
           NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}

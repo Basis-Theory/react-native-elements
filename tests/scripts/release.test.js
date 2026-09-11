@@ -3,6 +3,7 @@ const {
   changelogNeedsEntry,
   isIdempotentFailure,
   isPublishConflict,
+  isSameArtifact,
   isVersionMissing,
   publishArgs,
   resolveParams,
@@ -309,4 +310,45 @@ describe('isIdempotentFailure', () => {
       expect(isIdempotentFailure({ eventName: 'release', output })).toBe(false);
     }
   );
+});
+
+describe('isSameArtifact', () => {
+  const integrity = 'sha512-abc123';
+  const shasum = 'd34db33f';
+
+  test('matches a republish of the very tarball this run built', () => {
+    expect(isSameArtifact({ integrity, shasum }, { integrity, shasum })).toBe(
+      true
+    );
+  });
+
+  test('rejects a different tarball published under the same version', () => {
+    expect(
+      isSameArtifact({ integrity, shasum }, { integrity: 'sha512-zzz', shasum })
+    ).toBe(false);
+  });
+
+  test('falls back to shasum when integrity is not recorded', () => {
+    expect(isSameArtifact({ shasum }, { shasum })).toBe(true);
+    expect(isSameArtifact({ shasum }, { shasum: 'other' })).toBe(false);
+  });
+
+  test('prefers integrity over a shasum that happens to agree', () => {
+    expect(
+      isSameArtifact(
+        { integrity, shasum },
+        { integrity: 'sha512-different', shasum }
+      )
+    ).toBe(false);
+  });
+
+  test.each([
+    [undefined, undefined],
+    [{}, {}],
+    [{ integrity }, {}],
+    [{}, { integrity }],
+    [null, { integrity }],
+  ])('refuses to call %p and %p the same artifact', (published, built) => {
+    expect(isSameArtifact(published, built)).toBe(false);
+  });
 });
