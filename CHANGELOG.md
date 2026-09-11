@@ -1,3 +1,9 @@
+# [3.1.0](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.2...v3.1.0) (2026-09-11)
+
+
+### Features
+
+* backport input autofill and keyboard props to 3.x ([#62](https://github.com/Basis-Theory/react-native-elements/issues/62)) ([8ee7997](https://github.com/Basis-Theory/react-native-elements/commit/8ee7997221658ebcd69f69d3addd8f294a3b7e2b)), closes [#56](https://github.com/Basis-Theory/react-native-elements/issues/56) [#58](https://github.com/Basis-Theory/react-native-elements/issues/58)
 
 ## [2.5.1](https://github.com/Basis-Theory/react-native-elements/compare/v2.5.0...v2.5.1) (2026-01-27)
 
