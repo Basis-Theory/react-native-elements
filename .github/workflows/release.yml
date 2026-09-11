@@ -102,6 +102,7 @@ jobs:
         id: publishable
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
           VERSION: ${{ steps.params.outputs.version }}
         run: node scripts/release.js verify-publishable
 
