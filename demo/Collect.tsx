@@ -57,17 +57,20 @@ export const Collect = () => {
   const updateElementsEvents =
     (eventSource: 'cardExpirationDate' | 'cardNumber' | 'cvc') =>
     (event: ElementEvent) => {
-      queueMicrotask(() => {
-        if (event.cvcLength) {
-          setCvcLength(event.cvcLength);
-        }
+      if (event.cvcLength) {
+        setCvcLength(event.cvcLength);
+      }
 
-        setElementsEvents({
-          ...elementsEvents,
-          [eventSource]: event,
-        });
-      })
+      setElementsEvents((prev) => ({
+        ...prev,
+        [eventSource]: event,
+      }));
     };
+
+  const allFieldsComplete =
+    Boolean(elementsEvents.cardNumber?.complete) &&
+    Boolean(elementsEvents.cardExpirationDate?.complete) &&
+    Boolean(elementsEvents.cvc?.complete);
 
   const createTokenWithTokenize = async () => {
     try {
@@ -193,38 +196,51 @@ export const Collect = () => {
             />
 
             <CardNumberElement
+              autoComplete="cc-number"
               btRef={cardNumberRef}
               coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
               binLookup={true}
               keyboardType="numeric"
+              enterKeyHint="next"
               onChange={updateElementsEvents('cardNumber')}
+              onSubmitEditing={() => cardExpirationDateRef.current?.focus()}
               placeholder="Card Number"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardNumber"
             />
             <CardExpirationDateElement
+              autoComplete="cc-exp"
               btRef={cardExpirationDateRef}
+              enterKeyHint="next"
               keyboardType="numeric"
               onChange={updateElementsEvents('cardExpirationDate')}
+              onSubmitEditing={() => cardVerificationCodeRef.current?.focus()}
               placeholder="Card Expiration Date"
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardExpiration"
             />
             <CardVerificationCodeElement
+              autoComplete="cc-csc"
               btRef={cardVerificationCodeRef}
               cvcLength={cvcLength}
+              enterKeyHint="done"
               keyboardType="numeric"
               onChange={updateElementsEvents('cvc')}
               placeholder={'Security code'}
               placeholderTextColor="#99a0bf"
               style={styles.elements}
+              textContentType="creditCardSecurityCode"
             />
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={createToken}
               style={{
                 marginTop: 24,
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Create token'}</Text>
@@ -251,18 +267,22 @@ export const Collect = () => {
             <Divider />
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={createTokenWithTokenize}
               style={{
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Tokenize Data'}</Text>
             </Pressable>
 
             <Pressable
+              disabled={!allFieldsComplete}
               onPress={encryptToken}
               style={{
                 ...styles.button,
+                opacity: allFieldsComplete ? 1 : 0.4,
               }}
             >
               <Text style={styles.buttonText}>{'Encrypt Token'}</Text>
@@ -310,4 +330,3 @@ export const Collect = () => {
     </View>
   );
 };
-

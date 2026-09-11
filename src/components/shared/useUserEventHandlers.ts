@@ -6,7 +6,11 @@ import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
 import { useTransform } from './useTransform';
 import { ValidatorOptions } from '../../utils/validation';
-import { NativeSyntheticEvent, TextInputFocusEventData } from 'react-native';
+import {
+  NativeSyntheticEvent,
+  TextInputFocusEventData,
+  TextInputSubmitEditingEventData,
+} from 'react-native';
 import { isString } from '../../utils/shared';
 import { BinInfo, CardBrand } from '../../CardElementTypes';
 
@@ -32,6 +36,7 @@ export const useUserEventHandlers = ({
   onChange,
   onBlur,
   onFocus,
+  onSubmitEditing,
   transform,
 }: UseUserEventHandlers) => {
   const createEvent = useElementEvent(element);
@@ -78,15 +83,13 @@ export const useUserEventHandlers = ({
       _elementRawValues[element.id] = _elementValue;
       _elementValues[element.id] = transformation.apply(_elementValue);
 
-      setElementValue(() => {
-        if (onChange) {
-          const event = createEvent(_elementValue);
+      setElementValue(_elementValue);
 
-          onChange(event);
-        }
+      if (onChange) {
+        const event = createEvent(_elementValue);
 
-        return _elementValue;
-      });
+        onChange(event);
+      }
     },
     _onFocus: (_event: NativeSyntheticEvent<TextInputFocusEventData>) => {
       const val = _elementValues[element.id] ?? '';
@@ -102,6 +105,18 @@ export const useUserEventHandlers = ({
       if (onBlur && isString(val)) {
         const event = createEvent(val);
         onBlur(event);
+      }
+    },
+    _onSubmitEditing: (
+      _event: NativeSyntheticEvent<TextInputSubmitEditingEventData>
+    ) => {
+      // Raw, like _onChange: consumers read `complete` here to decide whether
+      // to advance focus, so the two must agree about the same keystroke.
+      const val = _elementRawValues[element.id] ?? '';
+
+      if (onSubmitEditing && isString(val)) {
+        const event = createEvent(val);
+        onSubmitEditing(event);
       }
     },
     _onReady: () => {
