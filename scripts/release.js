@@ -423,20 +423,35 @@ const commands = {
   },
 
   // Mainline releases are tagged by deploy-dev and released by hand; a
-  // maintenance branch has no such path, so tag it here. GITHUB_TOKEN is
-  // deliberate - a release it creates does not re-trigger this workflow.
+  // maintenance branch has no such path, so tag it here.
   'create-github-release': () => {
     const version = requiredEnv('VERSION');
     const npmDistTag = requiredEnv('NPM_DIST_TAG');
+    const tag = `v${version}`;
+
+    // The v* ruleset admits only the apps it names, and the checkout's app
+    // token is one of them while GITHUB_TOKEN is not, so the tag is pushed
+    // over that remote. The release then points at an existing ref and creates
+    // nothing, so it needs no such standing, and leaving it on GITHUB_TOKEN
+    // keeps it from re-triggering this workflow.
+    if (!succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`])) {
+      stream('git', ['tag', tag]);
+    }
+
+    stream('git', ['push', 'origin', tag]);
+
+    if (succeeds('gh', ['release', 'view', tag])) {
+      console.log(`GitHub release ${tag} already exists, nothing to create`);
+
+      return;
+    }
 
     stream('gh', [
       'release',
       'create',
-      `v${version}`,
-      '--target',
-      capture('git', ['rev-parse', 'HEAD']).trim(),
+      tag,
       '--title',
-      `v${version}`,
+      tag,
       '--notes',
       `Maintenance release published to npm under the \`${npmDistTag}\` dist-tag.`,
       '--latest=false',
