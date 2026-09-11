@@ -3,6 +3,26 @@ name: Release
 on:
   release:
     types: [released]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, no leading v (e.g. 3.1.0)"
+        required: true
+        type: string
+      npm_dist_tag:
+        description: "npm dist-tag to publish under. Cannot be 'latest' - that tag tracks the mainline major."
+        required: true
+        default: v3-lts
+        type: string
+      dry_run:
+        description: "Build and validate without publishing, tagging, or pushing"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build-release:
@@ -32,6 +52,16 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
+      - name: Resolve Release Parameters
+        id: params
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_DIST_TAG: ${{ inputs.npm_dist_tag }}
+        run: node scripts/release.js resolve-params
+
       - name: Start Deploy Message
         uses: Basis-Theory/public-github-actions/deploy-slack-action@12362db6b1ad6b524d28c47a6489c3e73ecd656a # master
         with:
@@ -52,53 +82,50 @@ jobs:
 
       - name: Bump Version
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
-        run: |
-          make update-version NEW_VERSION="${TAG_NAME#v}"
+          VERSION: ${{ steps.params.outputs.version }}
+        run: make update-version NEW_VERSION="$VERSION"
 
       - name: Fetch tags
         run: git fetch --tags --force
 
       - name: Update CHANGELOG (conventional-changelog)
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
-        run: |
-          set -euo pipefail
-          VER="${TAG_NAME#v}"
-          if grep -qF "[$VER](" CHANGELOG.md; then
-            echo "CHANGELOG already lists ${VER}; skipping."
-            exit 0
-          fi
-          # The release tag already exists (it triggered this run); drop it
-          # locally so conventional-changelog emits this version instead of an
-          # empty section. The remote tag is untouched.
-          git tag -d "$TAG_NAME" 2>/dev/null || true
-          yarn changelog:release
-          if ! grep -qF "[$VER](" CHANGELOG.md; then
-            echo "::warning::conventional-changelog produced no ${VER} entry (no conventional commits since the previous tag)."
-          fi
+          VERSION: ${{ steps.params.outputs.version }}
+        run: node scripts/release.js update-changelog
 
       - name: Build
         run: make build
         env:
           SKIP_INSTALL: 1 # install with cache was done already
 
+      - name: Verify Version Is Publishable
+        id: publishable
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
+          VERSION: ${{ steps.params.outputs.version }}
+        run: node scripts/release.js verify-publishable
+
       - name: Publish Package to NPM
-        run: ./scripts/publish-to-npm.sh
+        if: ${{ steps.publishable.outputs.already_published != 'true' }}
+        env:
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
+          NPM_DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/release.js publish
 
       - name: Commit Version to Repo
-        run: |
-          set -euo pipefail
-          git config --local user.email "platform@basistheory.com"
-          git config --local user.name "github-actions[bot]"
-          VERSION=$(jq -r '.version' package.json)
-          git add package.json CHANGELOG.md
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
-          git commit -m "chore(release): ${VERSION} [skip ci]"
-          git push origin HEAD:master
+        if: ${{ !inputs.dry_run }}
+        env:
+          TARGET_BRANCH: ${{ steps.params.outputs.target_branch }}
+        run: node scripts/release.js commit-version
+
+      - name: Tag and Create GitHub Release
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.params.outputs.version }}
+          NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
+        run: node scripts/release.js create-github-release
 
       - name: Stop Deploy Message
         if: always()
