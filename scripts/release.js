@@ -176,12 +176,14 @@ const checks = {
   },
   tagExists: (tag) =>
     succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`]),
-  // True only when the checkout already *is* the released commit: the version
-  // is committed, so this run will add none, and the tag sits on it. That pair
-  // is what distinguishes our own tag from a failed run out of one that
-  // happens to share the current head and would be left behind by the bump.
+  // True only when the checkout already *is* the released commit, which takes
+  // all three: the version committed and the changelog written, so the steps
+  // ahead have nothing left to commit and cannot move the head out from under
+  // the tag, and the tag sitting on that commit. Short of that, an existing
+  // tag belongs to something else and this version is not free to take.
   isReleaseCommit: (tag, version) =>
     readPackageJson().version === version &&
+    !changelogNeedsEntry(fs.readFileSync(changelogPath(), 'utf8'), version) &&
     capture('git', ['rev-parse', `refs/tags/${tag}^{commit}`]).trim() ===
       capture('git', ['rev-parse', 'HEAD']).trim(),
 };
