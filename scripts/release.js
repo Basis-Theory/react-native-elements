@@ -320,7 +320,7 @@ const commands = {
       );
     }
 
-    requireDistTag(name, version, process.env.NPM_DIST_TAG);
+    requireDistTag(name, version, requiredEnv('NPM_DIST_TAG'));
 
     console.log(
       `${name}@${version} was already published by an earlier run of this release; finishing the commit, tag and release.`
