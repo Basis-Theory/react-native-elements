@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/Basis-Theory/react-native-elements/compare/v4.1.0...v4.2.0) (2026-09-11)
+
+
+### Features
+
+* add dispatch release path for maintenance branches ([#60](https://github.com/Basis-Theory/react-native-elements/issues/60)) ([adc9655](https://github.com/Basis-Theory/react-native-elements/commit/adc9655524c7024a99151eaa1137c1d53e92bcdc))
+
 ## [4.0.3](https://github.com/Basis-Theory/react-native-elements/compare/v4.0.2...v4.0.3) (2026-08-10)
 
 
