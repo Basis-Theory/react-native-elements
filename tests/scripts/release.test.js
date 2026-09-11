@@ -9,9 +9,26 @@ const {
   tagPointsAt,
 } = require('../../scripts/release');
 
-const onMaster = { isOnMaster: () => true, tagExists: () => false };
-const offMaster = { isOnMaster: () => false, tagExists: () => false };
-const taggedAlready = { isOnMaster: () => true, tagExists: () => true };
+const onMaster = {
+  isOnMaster: () => true,
+  tagExists: () => false,
+  tagIsOnHead: () => false,
+};
+const offMaster = {
+  isOnMaster: () => false,
+  tagExists: () => false,
+  tagIsOnHead: () => false,
+};
+const taggedAlready = {
+  isOnMaster: () => true,
+  tagExists: () => true,
+  tagIsOnHead: () => false,
+};
+const taggedOnHead = {
+  isOnMaster: () => true,
+  tagExists: () => true,
+  tagIsOnHead: () => true,
+};
 
 const dispatch = (overrides = {}) => ({
   eventName: 'workflow_dispatch',
@@ -158,10 +175,19 @@ describe('resolveParams', () => {
       }
     );
 
-    test('rejects a version that is already tagged', () => {
+    test('rejects a version tagged on another commit', () => {
       expect(() => resolveParams(dispatch(), taggedAlready)).toThrow(
-        'Tag v3.1.0 already exists.'
+        'Tag v3.1.0 already exists on another commit.'
       );
+    });
+
+    // A run that pushed the tag and then failed must be able to finish.
+    test('continues when the tag is this run own, left by a failed attempt', () => {
+      expect(resolveParams(dispatch(), taggedOnHead)).toStrictEqual({
+        npmDistTag: 'v3-lts',
+        targetBranch: 'release/3.x',
+        version: '3.1.0',
+      });
     });
 
     test('looks for the tag under its v prefix', () => {

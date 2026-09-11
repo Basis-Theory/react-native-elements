@@ -86,8 +86,14 @@ function resolveParams(
     );
   }
 
-  if (checks.tagExists(`v${version}`)) {
-    throw new ReleaseError(`Tag v${version} already exists.`);
+  // An existing tag on the commit this run would tag is this release's own,
+  // left by a run that pushed it and then failed; carrying on lets the rerun
+  // finish the release. A tag anywhere else belongs to a different release and
+  // this version is not free to take.
+  if (checks.tagExists(`v${version}`) && !checks.tagIsOnHead(`v${version}`)) {
+    throw new ReleaseError(
+      `Tag v${version} already exists on another commit. Release a new version rather than re-running this one.`
+    );
   }
 
   return { version, npmDistTag, targetBranch };
@@ -166,6 +172,9 @@ const checks = {
   },
   tagExists: (tag) =>
     succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`]),
+  tagIsOnHead: (tag) =>
+    capture('git', ['rev-parse', `refs/tags/${tag}^{commit}`]).trim() ===
+    capture('git', ['rev-parse', 'HEAD']).trim(),
 };
 
 const readPackageJson = () =>
