@@ -1,7 +1,6 @@
 const {
   ReleaseError,
   changelogNeedsEntry,
-  isIdempotentFailure,
   isPublishConflict,
   isSameArtifact,
   isVersionMissing,
@@ -287,29 +286,6 @@ describe('isVersionMissing', () => {
   ])('refuses to read %p as an answer', (output) => {
     expect(isVersionMissing(output)).toBe(false);
   });
-});
-
-describe('isIdempotentFailure', () => {
-  const conflict = 'npm error code EPUBLISHCONFLICT';
-
-  test('lets a release re-run past a version it already published', () => {
-    expect(isIdempotentFailure({ eventName: 'release', output: conflict })).toBe(
-      true
-    );
-  });
-
-  test('fails a dispatch that hits a conflict its own check ruled out', () => {
-    expect(
-      isIdempotentFailure({ eventName: 'workflow_dispatch', output: conflict })
-    ).toBe(false);
-  });
-
-  test.each(['npm error 403 Forbidden', 'EEXIST: file already exists', ''])(
-    'keeps %p a failure on the release path',
-    (output) => {
-      expect(isIdempotentFailure({ eventName: 'release', output })).toBe(false);
-    }
-  );
 });
 
 describe('isSameArtifact', () => {

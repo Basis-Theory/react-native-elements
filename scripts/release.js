@@ -117,12 +117,6 @@ const PUBLISH_CONFLICT =
 
 const isPublishConflict = (output) => PUBLISH_CONFLICT.test(String(output ?? ''));
 
-// A dispatch already proved the version was unpublished, so a conflict there
-// means something raced and has to fail. The release path has no such check and
-// stays idempotent so a partly failed release can be re-run.
-const isIdempotentFailure = ({ eventName, output }) =>
-  eventName !== 'workflow_dispatch' && isPublishConflict(output);
-
 // npm exits non-zero for an unpublished version and for an unreachable
 // registry alike, so only an explicit 404 counts as an answer.
 const isVersionMissing = (output) =>
@@ -228,6 +222,12 @@ const builtArtifact = () => {
   );
 
   return packed[0];
+};
+
+const publishedMatchesBuild = () => {
+  const { name, version } = readPackageJson();
+
+  return isSameArtifact(publishedArtifact(name, version), builtArtifact());
 };
 
 const setOutput = (name, value) => {
@@ -338,13 +338,27 @@ const commands = {
 
       console.log(output);
 
-      if (!isIdempotentFailure({ eventName: process.env.EVENT_NAME, output })) {
-        throw new ReleaseError(`npm publish failed with exit code ${error.status}.`);
+      // A conflict is only success when npm is already serving the artifact
+      // this run built. Trusting the error text alone would let a release
+      // report success while consumers receive different code under a version
+      // the tag and repository state claim is this one.
+      if (isPublishConflict(output)) {
+        const { name, version } = readPackageJson();
+
+        if (publishedMatchesBuild()) {
+          console.log(
+            `${name}@${version} is already published from this exact artifact, skipping publish`
+          );
+
+          return;
+        }
+
+        throw new ReleaseError(
+          `npm already holds a different ${name}@${version}. Release a new version rather than re-running this one.`
+        );
       }
 
-      console.log('Package version already exists, skipping publish');
-
-      return;
+      throw new ReleaseError(`npm publish failed with exit code ${error.status}.`);
     }
 
     console.log('Package published successfully');
@@ -415,7 +429,6 @@ if (require.main === module) {
 module.exports = {
   ReleaseError,
   changelogNeedsEntry,
-  isIdempotentFailure,
   isPublishConflict,
   isSameArtifact,
   isVersionMissing,

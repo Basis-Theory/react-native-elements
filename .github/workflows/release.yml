@@ -108,7 +108,6 @@ jobs:
       - name: Publish Package to NPM
         if: ${{ steps.publishable.outputs.already_published != 'true' }}
         env:
-          EVENT_NAME: ${{ github.event_name }}
           NPM_DIST_TAG: ${{ steps.params.outputs.npm_dist_tag }}
           NPM_DRY_RUN: ${{ inputs.dry_run }}
         run: node scripts/release.js publish
