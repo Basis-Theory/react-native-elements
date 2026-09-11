@@ -452,11 +452,24 @@ const commands = {
     // over that remote. The release then points at an existing ref and creates
     // nothing, so it needs no such standing, and leaving it on GITHUB_TOKEN
     // keeps it from re-triggering this workflow.
-    if (!succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`])) {
-      stream('git', ['tag', tag]);
+    // origin is the authority on whether this version is tagged. A local tag
+    // is not: update-changelog deletes it to make conventional-changelog emit
+    // the section. Recreating one on a later commit would only collide with
+    // the published tag, and moving a released tag is worse than leaving it.
+    if (
+      succeeds('git', [
+        'ls-remote',
+        '--exit-code',
+        '--tags',
+        'origin',
+        `refs/tags/${tag}`,
+      ])
+    ) {
+      console.log(`${tag} is already on origin, leaving it where it points`);
+    } else {
+      stream('git', ['tag', '-f', tag]);
+      stream('git', ['push', 'origin', tag]);
     }
-
-    stream('git', ['push', 'origin', tag]);
 
     if (succeeds('gh', ['release', 'view', tag])) {
       console.log(`GitHub release ${tag} already exists, nothing to create`);
