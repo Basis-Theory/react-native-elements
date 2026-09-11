@@ -24,6 +24,20 @@ function resolveParams(
   { eventName, releaseTag, refName, inputVersion, inputDistTag },
   checks
 ) {
+  if (eventName !== 'release' && eventName !== 'workflow_dispatch') {
+    throw new ReleaseError(`'${eventName}' does not start a release.`);
+  }
+
+  // Whatever comes out of here reaches `make update-version`, which writes the
+  // string into package.json unchallenged, so both paths validate it.
+  const version = stripLeadingV(
+    eventName === 'release' ? releaseTag : inputVersion
+  );
+
+  if (!SEMVER.test(version)) {
+    throw new ReleaseError(`'${version}' is not a valid semantic version.`);
+  }
+
   if (eventName === 'release') {
     // This path publishes to 'latest' and pushes its bump to master, so it
     // only applies to tags on master. Maintenance lines dispatch instead.
@@ -34,14 +48,10 @@ function resolveParams(
     }
 
     return {
-      version: stripLeadingV(releaseTag),
+      version,
       npmDistTag: '', // empty publishes to the 'latest' dist-tag
       targetBranch: 'master',
     };
-  }
-
-  if (eventName !== 'workflow_dispatch') {
-    throw new ReleaseError(`'${eventName}' does not start a release.`);
   }
 
   const targetBranch = String(refName ?? '');
@@ -54,12 +64,6 @@ function resolveParams(
     throw new ReleaseError(
       `Dispatch only runs on release/<major>.x branches, not '${targetBranch}'.`
     );
-  }
-
-  const version = stripLeadingV(inputVersion);
-
-  if (!SEMVER.test(version)) {
-    throw new ReleaseError(`'${version}' is not a valid semantic version.`);
   }
 
   if (version.split('.')[0] !== branch[1]) {
@@ -112,6 +116,17 @@ const PUBLISH_CONFLICT =
   /EPUBLISHCONFLICT|cannot publish over (?:the )?previously published version|cannot republish a version that already exists/i;
 
 const isPublishConflict = (output) => PUBLISH_CONFLICT.test(String(output ?? ''));
+
+// A dispatch already proved the version was unpublished, so a conflict there
+// means something raced and has to fail. The release path has no such check and
+// stays idempotent so a partly failed release can be re-run.
+const isIdempotentFailure = ({ eventName, output }) =>
+  eventName !== 'workflow_dispatch' && isPublishConflict(output);
+
+// npm exits non-zero for an unpublished version and for an unreachable
+// registry alike, so only an explicit 404 counts as an answer.
+const isVersionMissing = (output) =>
+  /\bE404\b|404 Not Found|No match found for version/i.test(String(output ?? ''));
 
 const capture = (command, args) =>
   execFileSync(command, args, {
@@ -197,11 +212,29 @@ const commands = {
     const version = requiredEnv('VERSION');
     const { name } = readPackageJson();
 
-    if (succeeds('npm', ['view', `${name}@${version}`, 'version'])) {
+    try {
+      execFileSync('npm', ['view', `${name}@${version}`, 'version'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (error) {
+      const output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+
+      if (isVersionMissing(output)) {
+        return;
+      }
+
       throw new ReleaseError(
-        `${name}@${version} is already on npm. Release a new version rather than re-running this one.`
+        `Could not confirm ${name}@${version} is unpublished: ${
+          output.trim() || error.message
+        }`
       );
     }
+
+    throw new ReleaseError(
+      `${name}@${version} is already on npm. Release a new version rather than re-running this one.`
+    );
   },
 
   'update-changelog': () => {
@@ -252,7 +285,7 @@ const commands = {
 
       console.log(output);
 
-      if (!isPublishConflict(output)) {
+      if (!isIdempotentFailure({ eventName: process.env.EVENT_NAME, output })) {
         throw new ReleaseError(`npm publish failed with exit code ${error.status}.`);
       }
 
@@ -329,7 +362,9 @@ if (require.main === module) {
 module.exports = {
   ReleaseError,
   changelogNeedsEntry,
+  isIdempotentFailure,
   isPublishConflict,
+  isVersionMissing,
   publishArgs,
   resolveParams,
 };
