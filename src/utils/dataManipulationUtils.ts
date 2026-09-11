@@ -40,13 +40,19 @@ const replaceElementRefs = <T>(val: unknown): T =>
       (val) => {
         const value = _elementValues[val.id] as string;
 
-        if (isString(value)) {
-          return val.datepart === 'month'
-            ? value.split('/')[0]
-            : `20${value.split('/')[1]}`;
-        } else {
+        if (!isString(value)) {
           return undefined;
         }
+
+        const [month, year] = value.split('/');
+
+        // A cleared or half-typed date has no part worth sending: splitting it
+        // yields '' for the month and '20undefined' for the year.
+        if (!month || !year) {
+          return undefined;
+        }
+
+        return val.datepart === 'month' ? month : `20${year}`;
       },
     ],
     [
