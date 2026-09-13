@@ -86,8 +86,18 @@ function resolveParams(
     );
   }
 
-  if (checks.tagExists(`v${version}`)) {
-    throw new ReleaseError(`Tag v${version} already exists.`);
+  // The tag may already exist only when this checkout is the released commit
+  // it belongs to, which is the state a run leaves behind when it pushed the
+  // tag and then failed; the rerun goes on to finish the release. In every
+  // other case the version is already spoken for, including a tag that merely
+  // shares the current head and would be stranded once the bump commits.
+  if (
+    checks.tagExists(`v${version}`) &&
+    !checks.isReleaseCommit(`v${version}`, version)
+  ) {
+    throw new ReleaseError(
+      `Tag v${version} already exists and this is not that release's commit. Release a new version rather than re-running this one.`
+    );
   }
 
   return { version, npmDistTag, targetBranch };
@@ -166,6 +176,16 @@ const checks = {
   },
   tagExists: (tag) =>
     succeeds('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`]),
+  // True only when the checkout already *is* the released commit, which takes
+  // all three: the version committed and the changelog written, so the steps
+  // ahead have nothing left to commit and cannot move the head out from under
+  // the tag, and the tag sitting on that commit. Short of that, an existing
+  // tag belongs to something else and this version is not free to take.
+  isReleaseCommit: (tag, version) =>
+    readPackageJson().version === version &&
+    !changelogNeedsEntry(fs.readFileSync(changelogPath(), 'utf8'), version) &&
+    capture('git', ['rev-parse', `refs/tags/${tag}^{commit}`]).trim() ===
+      capture('git', ['rev-parse', 'HEAD']).trim(),
 };
 
 const readPackageJson = () =>
@@ -423,20 +443,48 @@ const commands = {
   },
 
   // Mainline releases are tagged by deploy-dev and released by hand; a
-  // maintenance branch has no such path, so tag it here. GITHUB_TOKEN is
-  // deliberate - a release it creates does not re-trigger this workflow.
+  // maintenance branch has no such path, so tag it here.
   'create-github-release': () => {
     const version = requiredEnv('VERSION');
     const npmDistTag = requiredEnv('NPM_DIST_TAG');
+    const tag = `v${version}`;
+
+    // The v* ruleset admits only the apps it names, and the checkout's app
+    // token is one of them while GITHUB_TOKEN is not, so the tag is pushed
+    // over that remote. The release then points at an existing ref and creates
+    // nothing, so it needs no such standing, and leaving it on GITHUB_TOKEN
+    // keeps it from re-triggering this workflow.
+    // origin is the authority on whether this version is tagged. A local tag
+    // is not: update-changelog deletes it to make conventional-changelog emit
+    // the section. Recreating one on a later commit would only collide with
+    // the published tag, and moving a released tag is worse than leaving it.
+    if (
+      succeeds('git', [
+        'ls-remote',
+        '--exit-code',
+        '--tags',
+        'origin',
+        `refs/tags/${tag}`,
+      ])
+    ) {
+      console.log(`${tag} is already on origin, leaving it where it points`);
+    } else {
+      stream('git', ['tag', '-f', tag]);
+      stream('git', ['push', 'origin', tag]);
+    }
+
+    if (succeeds('gh', ['release', 'view', tag])) {
+      console.log(`GitHub release ${tag} already exists, nothing to create`);
+
+      return;
+    }
 
     stream('gh', [
       'release',
       'create',
-      `v${version}`,
-      '--target',
-      capture('git', ['rev-parse', 'HEAD']).trim(),
+      tag,
       '--title',
-      `v${version}`,
+      tag,
       '--notes',
       `Maintenance release published to npm under the \`${npmDistTag}\` dist-tag.`,
       '--latest=false',

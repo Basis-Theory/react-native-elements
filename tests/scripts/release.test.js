@@ -9,9 +9,26 @@ const {
   tagPointsAt,
 } = require('../../scripts/release');
 
-const onMaster = { isOnMaster: () => true, tagExists: () => false };
-const offMaster = { isOnMaster: () => false, tagExists: () => false };
-const taggedAlready = { isOnMaster: () => true, tagExists: () => true };
+const onMaster = {
+  isOnMaster: () => true,
+  tagExists: () => false,
+  isReleaseCommit: () => false,
+};
+const offMaster = {
+  isOnMaster: () => false,
+  tagExists: () => false,
+  isReleaseCommit: () => false,
+};
+const taggedAlready = {
+  isOnMaster: () => true,
+  tagExists: () => true,
+  isReleaseCommit: () => false,
+};
+const taggedOnReleaseCommit = {
+  isOnMaster: () => true,
+  tagExists: () => true,
+  isReleaseCommit: () => true,
+};
 
 const dispatch = (overrides = {}) => ({
   eventName: 'workflow_dispatch',
@@ -158,10 +175,31 @@ describe('resolveParams', () => {
       }
     );
 
-    test('rejects a version that is already tagged', () => {
+    test('rejects a version whose tag belongs to another commit', () => {
       expect(() => resolveParams(dispatch(), taggedAlready)).toThrow(
-        'Tag v3.1.0 already exists.'
+        /Tag v3\.1\.0 already exists and this is not that release's commit/
       );
+    });
+
+    // A run that pushed the tag and then failed must be able to finish.
+    test('continues when the checkout is that tag own release commit', () => {
+      expect(resolveParams(dispatch(), taggedOnReleaseCommit)).toStrictEqual({
+        npmDistTag: 'v3-lts',
+        targetBranch: 'release/3.x',
+        version: '3.1.0',
+      });
+    });
+
+    test('asks about the release commit with the tag and the version', () => {
+      const isReleaseCommit = jest.fn().mockReturnValue(true);
+
+      resolveParams(dispatch(), {
+        isOnMaster: () => true,
+        tagExists: () => true,
+        isReleaseCommit,
+      });
+
+      expect(isReleaseCommit).toHaveBeenCalledWith('v3.1.0', '3.1.0');
     });
 
     test('looks for the tag under its v prefix', () => {
