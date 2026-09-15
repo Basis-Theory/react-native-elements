@@ -25,6 +25,7 @@ export const useTextElement = ({
   onChange,
   onBlur,
   onFocus,
+  onSubmitEditing,
   transform,
 }: UseTextElementProps) => {
   const id = useId();
@@ -36,18 +37,20 @@ export const useTextElement = ({
 
   useCleanupStateBeforeUnmount(id);
 
-  const { _onChange, _onBlur, _onFocus } = useUserEventHandlers({
-    setElementValue,
-    element: {
-      id,
-      validatorOptions: { mask },
-      type: ElementType.TEXT,
-    },
-    onChange,
-    onBlur,
-    onFocus,
-    transform,
-  });
+  const { _onChange, _onBlur, _onFocus, _onSubmitEditing } =
+    useUserEventHandlers({
+      setElementValue,
+      element: {
+        id,
+        validatorOptions: { mask },
+        type: ElementType.TEXT,
+      },
+      onChange,
+      onBlur,
+      onFocus,
+      onSubmitEditing,
+      transform,
+    });
 
   useBtRef({
     btRef,
@@ -62,6 +65,7 @@ export const useTextElement = ({
     _onChange,
     _onBlur,
     _onFocus,
+    _onSubmitEditing,
     elementValue,
   };
 };

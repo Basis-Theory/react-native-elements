@@ -6,7 +6,11 @@ import type { ElementType, EventConsumers } from '../../BaseElementTypes';
 import type { TransformType } from './useTransform';
 import { useTransform } from './useTransform';
 import { ValidatorOptions } from '../../utils/validation';
-import { BlurEvent, FocusEvent } from 'react-native';
+import {
+  BlurEvent,
+  FocusEvent,
+  TextInputSubmitEditingEvent,
+} from 'react-native';
 import { isString } from '../../utils/shared';
 import { BinInfo, CardBrand } from '../../CardElementTypes';
 
@@ -32,6 +36,7 @@ export const useUserEventHandlers = ({
   onChange,
   onBlur,
   onFocus,
+  onSubmitEditing,
   transform,
 }: UseUserEventHandlers) => {
   const createEvent = useElementEvent(element);
@@ -100,6 +105,14 @@ export const useUserEventHandlers = ({
       if (onBlur && isString(val)) {
         const event = createEvent(val);
         onBlur(event);
+      }
+    },
+    _onSubmitEditing: (_event: TextInputSubmitEditingEvent) => {
+      const val = _elementValues[element.id] ?? '';
+
+      if (onSubmitEditing && isString(val)) {
+        const event = createEvent(val);
+        onSubmitEditing(event);
       }
     },
     _onReady: () => {
