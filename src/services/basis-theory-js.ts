@@ -56,9 +56,12 @@ const getDefaultApiBaseUrl = (
   // Names are matched case-insensitively, and a region named in `environment` is taken
   // as an alias for `region`: quietly sending an 'EU' caller to the compatibility host
   // is the mis-route an explicit region exists to prevent.
-  const stage = environment?.toLowerCase();
+  const stage = environment?.trim().toLowerCase();
+  // Falsy rather than nullish: callers commonly build this as `selectedRegion || ''`,
+  // and an empty string must fall through to the environment-derived alias instead of
+  // overriding it and silently landing an EU tenant on the compatibility host.
   const selectedRegion =
-    region?.toLowerCase() ??
+    region?.trim().toLowerCase() ||
     (stage === 'us' || stage === 'eu' ? stage : undefined);
 
   // `test` and `uat` are one single-region environment: no api.us/api.eu variant of it

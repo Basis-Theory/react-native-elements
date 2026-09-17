@@ -158,6 +158,32 @@ describe('basis-theory-js service', () => {
     );
   });
 
+  describe('blank region values', () => {
+    it.each([
+      ['', 'empty string'],
+      ['   ', 'whitespace only'],
+    ])(
+      'falls back to the environment-derived region when region is %s (%s)',
+      (region) => {
+        expect(getDefaultApiBaseUrl(undefined, false, 'eu', region)).toBe(
+          'https://api.eu.basistheory.com'
+        );
+      }
+    );
+
+    it('keeps the compatibility default when neither names a region', () => {
+      expect(getDefaultApiBaseUrl(undefined, false, undefined, '')).toBe(
+        'https://api.basistheory.com'
+      );
+    });
+
+    it('still honours an explicitly named region', () => {
+      expect(getDefaultApiBaseUrl(undefined, false, undefined, 'eu')).toBe(
+        'https://api.eu.basistheory.com'
+      );
+    });
+  });
+
   describe('getBasisTheoryConfig', () => {
     it('should expose the resolved regional baseUrl', async () => {
       await loadBasisTheoryInstance(
