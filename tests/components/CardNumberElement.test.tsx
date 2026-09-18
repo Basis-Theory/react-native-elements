@@ -559,6 +559,63 @@ describe('CardNumberElement', () => {
       expect(screen.getByLabelText('Mir card brand')).toBeTruthy();
     });
 
+    test.each([
+      ['left', 'paddingLeft', 'paddingRight'],
+      ['right', 'paddingRight', 'paddingLeft'],
+    ] as const)(
+      'reserves room inside the input for a %s icon',
+      (iconPosition, reserved, opposite) => {
+        render(
+          <CardNumberElement
+            btRef={mockedRef}
+            iconPosition={iconPosition}
+            placeholder="Card Number"
+            style={{ padding: 10 }}
+          />
+        );
+
+        // caller padding 10 + 12 inset + 36 icon + 8 gap
+        expect(screen.getByPlaceholderText('Card Number')).toHaveStyle({
+          [reserved]: 66,
+        });
+        expect(screen.getByPlaceholderText('Card Number')).not.toHaveStyle({
+          [opposite]: 66,
+        });
+      }
+    );
+
+    test('overlays the icon on the field, offset by the input margins', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{ marginRight: 4, marginTop: 12 }}
+        />
+      );
+
+      expect(screen.getByTestId('card-brand-icon-container-right')).toHaveStyle({
+        position: 'absolute',
+        right: 16, // 4 caller margin + 12 inset
+        top: 12,
+      });
+    });
+
+    test('does not swallow taps meant for the input', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(
+        screen.getByTestId('card-brand-icon-container-right').props.pointerEvents
+      ).toBe('none');
+    });
+
     test('explicit none hides the built-in brand area', () => {
       render(
         <CardNumberElement

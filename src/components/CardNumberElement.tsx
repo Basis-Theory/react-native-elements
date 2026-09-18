@@ -27,6 +27,13 @@ type TextInputSupportedProps =
 
 export type CardNumberIconPosition = 'left' | 'right' | 'none';
 
+/** Gap between the field edge and the icon, matching the web SDK's 12px inset. */
+const ICON_INSET = 12;
+/** Breathing room between the card number and the icon. */
+const ICON_GAP = 8;
+/** Keep in sync with CardBrandIcon's default width. */
+const DEFAULT_ICON_WIDTH = 36;
+
 export type CardNumberElementProps = UseCardNumberElementProps &
   Pick<TextInputProps, TextInputSupportedProps> & {
     /** Position of the built-in card brand icon. Defaults to `none`. */
@@ -91,19 +98,56 @@ export const CardNumberElement = ({
   const positionedIcon = iconPosition === 'left' || iconPosition === 'right';
   const displayBrand = selectedNetwork ?? cardBrand;
 
-  // The row centres each child's outer box, so vertical margins on the caller's input
-  // style would offset the icon against the field. Mirroring them keeps the two aligned.
+  // Overlay the icon on the field rather than sitting beside it, matching the web SDK:
+  // the brand area is absolutely positioned inside the input and the value is padded
+  // clear of it. Caller margins move the input's box, so the overlay mirrors them.
   const inputStyle = StyleSheet.flatten(style) ?? {};
-  const iconMargins = {
-    marginBottom:
-      inputStyle.marginBottom ?? inputStyle.marginVertical ?? inputStyle.margin,
-    marginTop:
-      inputStyle.marginTop ?? inputStyle.marginVertical ?? inputStyle.margin,
+  // Style values may be percentages, 'auto' or null; only numbers can be composed here.
+  const resolveEdge = (edge?: unknown, axis?: unknown, all?: unknown): number =>
+    typeof edge === 'number'
+      ? edge
+      : typeof axis === 'number'
+        ? axis
+        : typeof all === 'number'
+          ? all
+          : 0;
+
+  const marginTop = resolveEdge(inputStyle.marginTop, inputStyle.marginVertical, inputStyle.margin);
+  const marginBottom = resolveEdge(inputStyle.marginBottom, inputStyle.marginVertical, inputStyle.margin);
+  const marginLeft = resolveEdge(inputStyle.marginLeft, inputStyle.marginHorizontal, inputStyle.margin);
+  const marginRight = resolveEdge(inputStyle.marginRight, inputStyle.marginHorizontal, inputStyle.margin);
+
+  const iconWidth =
+    resolveEdge(StyleSheet.flatten(iconStyle)?.width) || DEFAULT_ICON_WIDTH;
+  const reserved = ICON_INSET + iconWidth + ICON_GAP;
+
+  const inputInset =
+    iconPosition === 'left'
+      ? {
+          paddingLeft:
+            resolveEdge(inputStyle.paddingLeft, inputStyle.paddingHorizontal, inputStyle.padding) +
+            reserved,
+        }
+      : {
+          paddingRight:
+            resolveEdge(inputStyle.paddingRight, inputStyle.paddingHorizontal, inputStyle.padding) +
+            reserved,
+        };
+
+  const overlayPosition = {
+    bottom: marginBottom,
+    top: marginTop,
+    ...(iconPosition === 'left'
+      ? { left: marginLeft + ICON_INSET }
+      : { right: marginRight + ICON_INSET }),
   };
 
   const brandArea = positionedIcon ? (
     <View
-      style={[styles.iconContainer, iconMargins, iconContainerStyle]}
+      // The plain icon must not swallow taps meant for the field; the co-badge
+      // selector is interactive, so only its subtree accepts them.
+      pointerEvents={showBrandSelector ? 'box-none' : 'none'}
+      style={[styles.iconOverlay, overlayPosition, iconContainerStyle]}
       testID={`card-brand-icon-container-${iconPosition}`}
     >
       {showBrandSelector ? (
@@ -122,8 +166,7 @@ export const CardNumberElement = ({
   ) : null;
 
   return (
-    <View style={positionedIcon ? styles.container : undefined}>
-      {iconPosition === 'left' && brandArea}
+    <View>
       {iconPosition === undefined && showBrandSelector && (
         <BrandPicker
           brands={brandSelectorOptions}
@@ -148,25 +191,19 @@ export const CardNumberElement = ({
         placeholderTextColor={placeholderTextColor}
         ref={elementRef}
         returnKeyType={returnKeyType}
-        style={[positionedIcon && styles.input, style]}
+        style={[style, positionedIcon && inputInset]}
         textContentType={textContentType}
         value={elementValue}
       />
-      {iconPosition === 'right' && brandArea}
+      {brandArea}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  iconContainer: {
+  iconOverlay: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  input: {
-    flex: 1,
+    position: 'absolute',
   },
 });
