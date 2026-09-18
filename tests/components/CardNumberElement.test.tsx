@@ -538,6 +538,27 @@ describe('CardNumberElement', () => {
       expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
     });
 
+    test('falls back to the unknown icon for brands without bundled artwork', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '2200000000000000'
+      );
+
+      expect(
+        screen.getByTestId('card-brand-icon').props.source.testUri
+      ).toContain('card-brands/unknown.png');
+      expect(screen.getByLabelText('Mir card brand')).toBeTruthy();
+    });
+
     test('explicit none hides the built-in brand area', () => {
       render(
         <CardNumberElement

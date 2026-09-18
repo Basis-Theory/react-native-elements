@@ -20,3 +20,9 @@ enabled, the positioned icon becomes the network selector. An explicit `none`
 hides both the icon and built-in selector without disabling co-badge validation
 or preselected networks. If `iconPosition` is omitted, the existing text-based
 co-badge picker remains available.
+
+Icons ship as PNGs rasterized from the web SDK's brand SVGs, so both SDKs render
+identical artwork. Brands the web SDK has no artwork for — including `mir`,
+`bancontact` and `dankort` — fall back to a generic card icon while still
+reporting the detected brand through `onChange` and to screen readers. See
+[`scripts/card-brand-icons`](scripts/card-brand-icons) to regenerate them.
