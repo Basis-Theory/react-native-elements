@@ -477,6 +477,133 @@ describe('CardNumberElement', () => {
     });
   });
 
+  describe('card brand icons', () => {
+    test('does not render an icon by default', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.queryByTestId('card-brand-icon')).toBeNull();
+    });
+
+    test.each(['left', 'right'] as const)(
+      'renders the icon on the %s at a fixed size',
+      (iconPosition) => {
+        render(
+          <CardNumberElement
+            btRef={mockedRef}
+            iconPosition={iconPosition}
+            placeholder="Card Number"
+            style={{}}
+          />
+        );
+
+        expect(
+          screen.getByTestId(`card-brand-icon-container-${iconPosition}`)
+        ).toBeTruthy();
+        expect(screen.getByTestId('card-brand-icon')).toHaveStyle({
+          height: 24,
+          width: 36,
+        });
+      }
+    );
+
+    test('updates the icon when the detected brand changes', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.getByLabelText('Unknown card brand')).toBeTruthy();
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
+    });
+
+    test.each([
+      ['left', 'paddingLeft', 'paddingRight'],
+      ['right', 'paddingRight', 'paddingLeft'],
+    ] as const)(
+      'reserves room inside the input for a %s icon',
+      (iconPosition, reserved, opposite) => {
+        render(
+          <CardNumberElement
+            btRef={mockedRef}
+            iconPosition={iconPosition}
+            placeholder="Card Number"
+            style={{ padding: 10 }}
+          />
+        );
+
+        // caller padding 10 + 12 inset + 36 icon + 8 gap
+        expect(screen.getByPlaceholderText('Card Number')).toHaveStyle({
+          [reserved]: 66,
+        });
+        expect(screen.getByPlaceholderText('Card Number')).not.toHaveStyle({
+          [opposite]: 66,
+        });
+      }
+    );
+
+    test('overlays the icon on the field, offset by the input margins', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{ marginRight: 4, marginTop: 12 }}
+        />
+      );
+
+      expect(screen.getByTestId('card-brand-icon-container-right')).toHaveStyle({
+        position: 'absolute',
+        right: 16, // 4 caller margin + 12 inset
+        top: 12,
+      });
+    });
+
+    test('does not swallow taps meant for the input', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="right"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(
+        screen.getByTestId('card-brand-icon-container-right').props.pointerEvents
+      ).toBe('none');
+    });
+
+    test('explicit none hides the built-in brand area', () => {
+      render(
+        <CardNumberElement
+          btRef={mockedRef}
+          iconPosition="none"
+          placeholder="Card Number"
+          style={{}}
+        />
+      );
+
+      expect(screen.queryByTestId('card-brand-icon-container-left')).toBeNull();
+      expect(screen.queryByTestId('card-brand-icon-container-right')).toBeNull();
+    });
+  });
+
   describe('Co-badge Support', () => {
     const mockBt = {
       config: {
@@ -578,6 +705,138 @@ describe('CardNumberElement', () => {
       await waitFor(() => {
         expect(screen.getByText('Select card brand')).toBeTruthy();
       });
+    });
+
+    test('integrates the co-badge selector into a positioned icon', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="right"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      const selector = await screen.findByTestId('card-brand-selector');
+      expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
+
+      fireEvent.press(selector);
+      fireEvent.press(screen.getByText('Cartes Bancaires'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('Cartes Bancaires card brand')
+        ).toBeTruthy();
+      });
+    });
+
+    test('explicit none hides the icon but still offers a required selector', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="none"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      expect(screen.queryByTestId('card-brand-icon-container-left')).toBeNull();
+      expect(screen.queryByTestId('card-brand-icon-container-right')).toBeNull();
+
+      // network_not_selected is raised under exactly these conditions, so a selector
+      // has to remain reachable or the field can never become valid.
+      await waitFor(() => {
+        expect(screen.getByTestId('card-brand-selector')).toBeTruthy();
+      });
+    });
+
+    test('resolves network_not_selected when the icon is hidden', async () => {
+      const onChange = jest.fn();
+
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="none"
+            onChange={onChange}
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.objectContaining({ type: 'network_not_selected' }),
+            ]),
+          })
+        );
+      });
+
+      fireEvent.press(await screen.findByTestId('card-brand-selector'));
+      fireEvent.press(screen.getByText('Cartes Bancaires'));
+
+      await waitFor(() => {
+        const last = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+
+        expect(
+          (last.errors ?? []).some(
+            (e: { type: string }) => e.type === 'network_not_selected'
+          )
+        ).toBe(false);
+      });
+    });
+
+    test('names the detected brand on the collapsed selector node', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="right"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      // TouchableOpacity collapses its subtree, so the brand has to be on the
+      // button itself — CardBrandIcon's own label never reaches a screen reader.
+      const selector = await screen.findByTestId('card-brand-selector');
+
+      expect(selector.props.accessibilityLabel).toBe(
+        'Select card brand, currently Visa'
+      );
+      expect(selector.props.accessibilityRole).toBe('button');
     });
 
     test('does not render BrandPicker when coBadgedSupport is not provided', () => {

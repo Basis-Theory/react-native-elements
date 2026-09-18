@@ -1,13 +1,24 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Text, View, TouchableOpacity, Modal, ScrollView, ViewStyle, TextStyle } from 'react-native';
-import { CardBrand } from '../CardElementTypes';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  type ViewStyle,
+  type TextStyle,
+} from 'react-native';
+import type { CardBrand } from '../CardElementTypes';
 import { labelizeCardBrand } from '../utils/shared';
+import { CardBrandIcon } from './CardBrandIcon';
 
 interface BrandPickerProps {
   brands: CardBrand[];
   selectedBrand: CardBrand | undefined;
   onBrandSelect: (brand: CardBrand | undefined) => void;
   style?: ViewStyle;
+  displayBrand?: CardBrand;
+  variant?: 'icon' | 'text';
 }
 
 const defaultStyles = {
@@ -61,6 +72,16 @@ const defaultStyles = {
     fontSize: 16,
     textAlign: 'center' as const,
   },
+  iconButton: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  optionContent: {
+    alignItems: 'center' as const,
+    flexDirection: 'row' as const,
+    gap: 8,
+    justifyContent: 'center' as const,
+  },
 };
 
 const isTextStyle = (style: ViewStyle | undefined): style is TextStyle & ViewStyle => {
@@ -74,6 +95,8 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   selectedBrand,
   onBrandSelect,
   style,
+  displayBrand = 'unknown',
+  variant = 'text',
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -89,6 +112,17 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   }, [selectedBrand]);
 
   const shouldRender = useMemo(() => brands.length > 0, [brands]);
+
+  // TouchableOpacity is `accessible` by default, which collapses its subtree into one
+  // node announced with *this* label — CardBrandIcon's own label never reaches the
+  // screen reader. Name the brand here so it is not lost.
+  const accessibilityLabel = useMemo(() => {
+    const shown = variant === 'icon' ? selectedBrand ?? displayBrand : selectedBrand;
+
+    return shown && shown !== 'unknown'
+      ? `Select card brand, currently ${labelizeCardBrand(shown)}`
+      : 'Select card brand';
+  }, [variant, selectedBrand, displayBrand]);
 
   const handleShowPicker = useCallback(() => {
     setPickerVisible(true);
@@ -109,14 +143,19 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   }
 
   return (
-    <View style={defaultStyles.container}>
+    <View style={variant === 'text' ? defaultStyles.container : undefined}>
       <TouchableOpacity
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="button"
         onPress={handleShowPicker}
-        style={[style]}
+        style={[variant === 'icon' && defaultStyles.iconButton, style]}
+        testID="card-brand-selector"
       >
-        <Text style={buttonTextStyle}>
-          {displayText}
-        </Text>
+        {variant === 'icon' ? (
+          <CardBrandIcon brand={selectedBrand ?? displayBrand} />
+        ) : (
+          <Text style={buttonTextStyle}>{displayText}</Text>
+        )}
       </TouchableOpacity>
 
       <Modal
@@ -146,9 +185,17 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
                     selectedBrand === brand && defaultStyles.selectedOption,
                   ]}
                 >
-                  <Text style={defaultStyles.optionText}>
-                    {labelizeCardBrand(brand)}
-                  </Text>
+                  <View style={defaultStyles.optionContent}>
+                    {variant === 'icon' && (
+                      <CardBrandIcon
+                        brand={brand}
+                        testID={`card-brand-option-icon-${brand}`}
+                      />
+                    )}
+                    <Text style={defaultStyles.optionText}>
+                      {labelizeCardBrand(brand)}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>

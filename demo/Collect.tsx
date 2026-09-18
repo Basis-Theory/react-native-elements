@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   StatusBar,
@@ -25,6 +26,22 @@ import { CoBadgedSupport } from '../src/CardElementTypes';
 
 const Divider = () => <View style={styles.divider} />;
 
+/** Sample numbers for exercising card brand detection and the brand icon. */
+const BRAND_SAMPLES: ReadonlyArray<{ label: string; value: string }> = [
+  { label: 'Visa', value: '4242424242424242' },
+  { label: 'Mastercard', value: '5555555555554444' },
+  { label: 'American Express', value: '378282246310005' },
+  { label: 'Discover', value: '6011111111111117' },
+  { label: 'Diners Club', value: '30569309025904' },
+  { label: 'JCB', value: '3530111333300000' },
+  { label: 'UnionPay', value: '6250947000000000' },
+  { label: 'Maestro', value: '6759649826438453' },
+  { label: 'Elo', value: '6362970000457013' },
+  { label: 'Hipercard', value: '6062826786276634' },
+  { label: 'Hiper', value: '6370950000000005' },
+  { label: 'MIR', value: '2200000000000004' },
+];
+
 export const Collect = () => {
   const [token, setToken] = useState<Token | undefined>();
   const [tokenizedData, setTokenizedData] = useState<
@@ -33,6 +50,8 @@ export const Collect = () => {
   const [encryptedToken, setEncryptedToken] = useState<EncryptedToken | undefined>();
 
   const [tokenId, setTokenId] = useState('');
+  const [sampleBrand, setSampleBrand] = useState<string>();
+  const [samplePickerOpen, setSamplePickerOpen] = useState(false);
 
   const [elementsEvents, setElementsEvents] = useState<ElementEvents>({
     cardExpirationDate: undefined,
@@ -202,6 +221,7 @@ export const Collect = () => {
               binLookup={true}
               keyboardType="numeric"
               enterKeyHint="next"
+              iconPosition="right"
               onChange={updateElementsEvents('cardNumber')}
               onSubmitEditing={() => cardExpirationDateRef.current?.focus()}
               placeholder="Card Number"
@@ -294,6 +314,55 @@ export const Collect = () => {
             <Pressable onPress={clearToken} style={styles.button}>
               <Text style={styles.buttonText}>{'Clear'}</Text>
             </Pressable>
+
+            <Pressable
+              onPress={() => setSamplePickerOpen(true)}
+              style={styles.brandSelect}
+            >
+              <Text style={styles.brandSelectText}>
+                {sampleBrand ?? 'Select a test card brand'}
+              </Text>
+            </Pressable>
+
+            <Modal
+              animationType="fade"
+              onRequestClose={() => setSamplePickerOpen(false)}
+              transparent
+              visible={samplePickerOpen}
+            >
+              <Pressable
+                onPress={() => setSamplePickerOpen(false)}
+                style={styles.brandModalOverlay}
+              >
+                <View style={styles.brandModalCard}>
+                  <Text style={styles.brandModalTitle}>Test card brand</Text>
+                  <ScrollView>
+                    {BRAND_SAMPLES.map((sample) => (
+                      <Pressable
+                        key={sample.label}
+                        onPress={() => {
+                          setSampleBrand(sample.label);
+                          setSamplePickerOpen(false);
+                          cardNumberRef.current?.setValue({
+                            id: 'brand-sample',
+                            format: () => sample.value,
+                          });
+                        }}
+                        style={[
+                          styles.brandOption,
+                          sampleBrand === sample.label &&
+                            styles.brandOptionSelected,
+                        ]}
+                      >
+                        <Text style={styles.brandOptionText}>
+                          {sample.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              </Pressable>
+            </Modal>
 
             {token && (
               <>
