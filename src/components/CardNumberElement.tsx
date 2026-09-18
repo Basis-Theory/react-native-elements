@@ -156,7 +156,12 @@ export const CardNumberElement = ({
 
   return (
     <View>
-      {iconPosition === undefined && showBrandSelector && (
+      {/*
+        Falls back to the text selector whenever the icon slot is not hosting one.
+        `showBrandSelector` is exactly the condition that raises `network_not_selected`,
+        so omitting this for `iconPosition="none"` would leave that error unresolvable.
+      */}
+      {!positionedIcon && showBrandSelector && (
         <BrandPicker
           brands={brandSelectorOptions}
           selectedBrand={selectedNetwork}

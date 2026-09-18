@@ -113,6 +113,17 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
 
   const shouldRender = useMemo(() => brands.length > 0, [brands]);
 
+  // TouchableOpacity is `accessible` by default, which collapses its subtree into one
+  // node announced with *this* label — CardBrandIcon's own label never reaches the
+  // screen reader. Name the brand here so it is not lost.
+  const accessibilityLabel = useMemo(() => {
+    const shown = variant === 'icon' ? selectedBrand ?? displayBrand : selectedBrand;
+
+    return shown && shown !== 'unknown'
+      ? `Select card brand, currently ${labelizeCardBrand(shown)}`
+      : 'Select card brand';
+  }, [variant, selectedBrand, displayBrand]);
+
   const handleShowPicker = useCallback(() => {
     setPickerVisible(true);
   }, []);
@@ -134,7 +145,8 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   return (
     <View style={variant === 'text' ? defaultStyles.container : undefined}>
       <TouchableOpacity
-        accessibilityLabel="Select card brand"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="button"
         onPress={handleShowPicker}
         style={[variant === 'icon' && defaultStyles.iconButton, style]}
         testID="card-brand-selector"

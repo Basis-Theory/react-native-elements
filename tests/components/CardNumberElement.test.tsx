@@ -738,7 +738,35 @@ describe('CardNumberElement', () => {
       });
     });
 
-    test('explicit none hides the selector without disabling co-badge validation', async () => {
+    test('explicit none hides the icon but still offers a required selector', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="none"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      expect(screen.queryByTestId('card-brand-icon-container-left')).toBeNull();
+      expect(screen.queryByTestId('card-brand-icon-container-right')).toBeNull();
+
+      // network_not_selected is raised under exactly these conditions, so a selector
+      // has to remain reachable or the field can never become valid.
+      await waitFor(() => {
+        expect(screen.getByTestId('card-brand-selector')).toBeTruthy();
+      });
+    });
+
+    test('resolves network_not_selected when the icon is hidden', async () => {
       const onChange = jest.fn();
 
       render(
@@ -759,7 +787,6 @@ describe('CardNumberElement', () => {
         '4242424242424242'
       );
 
-      expect(screen.queryByTestId('card-brand-selector')).toBeNull();
       await waitFor(() => {
         expect(onChange).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -769,6 +796,47 @@ describe('CardNumberElement', () => {
           })
         );
       });
+
+      fireEvent.press(await screen.findByTestId('card-brand-selector'));
+      fireEvent.press(screen.getByText('Cartes Bancaires'));
+
+      await waitFor(() => {
+        const last = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+
+        expect(
+          (last.errors ?? []).some(
+            (e: { type: string }) => e.type === 'network_not_selected'
+          )
+        ).toBe(false);
+      });
+    });
+
+    test('names the detected brand on the collapsed selector node', async () => {
+      render(
+        <BasisTheoryProvider bt={mockBt}>
+          <CardNumberElement
+            btRef={mockedRef}
+            coBadgedSupport={[CoBadgedSupport.CartesBancaires]}
+            iconPosition="right"
+            placeholder="Card Number"
+            style={{}}
+          />
+        </BasisTheoryProvider>
+      );
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText('Card Number'),
+        '4242424242424242'
+      );
+
+      // TouchableOpacity collapses its subtree, so the brand has to be on the
+      // button itself — CardBrandIcon's own label never reaches a screen reader.
+      const selector = await screen.findByTestId('card-brand-selector');
+
+      expect(selector.props.accessibilityLabel).toBe(
+        'Select card brand, currently Visa'
+      );
+      expect(selector.props.accessibilityRole).toBe('button');
     });
 
     test('does not render BrandPicker when coBadgedSupport is not provided', () => {

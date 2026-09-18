@@ -12,10 +12,12 @@ input. Icons are hidden by default for backward compatibility.
 ```
 
 Set `iconPosition` to `left`, `right`, or `none`. When co-badged card support is
-enabled, the positioned icon becomes the network selector. An explicit `none`
-hides both the icon and built-in selector without disabling co-badge validation
-or preselected networks. If `iconPosition` is omitted, the existing text-based
-co-badge picker remains available.
+enabled, the positioned icon becomes the network selector.
+
+`none` hides the icon. It does not hide a network selection the card actually
+requires: when co-badge support is enabled and a card matches more than one
+network, the text-based picker still appears, because `network_not_selected`
+would otherwise be unresolvable. Omitting `iconPosition` behaves the same way.
 
 Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x` and render at a fixed 36x24
 inside the field. Brands with no artwork fall back to a generic card icon while
