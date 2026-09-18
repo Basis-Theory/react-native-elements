@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  type ImageStyle,
-  type StyleProp,
   StyleSheet,
   View,
   type TextInputProps,
@@ -31,17 +29,15 @@ export type CardNumberIconPosition = 'left' | 'right' | 'none';
 const ICON_INSET = 12;
 /** Breathing room between the card number and the icon. */
 const ICON_GAP = 8;
-/** Keep in sync with CardBrandIcon's default width. */
-const DEFAULT_ICON_WIDTH = 36;
+/** Keep in sync with CardBrandIcon's width. */
+const ICON_WIDTH = 36;
+/** Horizontal room the icon needs inside the field. */
+const ICON_RESERVED = ICON_INSET + ICON_WIDTH + ICON_GAP;
 
 export type CardNumberElementProps = UseCardNumberElementProps &
   Pick<TextInputProps, TextInputSupportedProps> & {
     /** Position of the built-in card brand icon. Defaults to `none`. */
     iconPosition?: CardNumberIconPosition;
-    /** Styles applied to the card brand image, including size and tint. */
-    iconStyle?: StyleProp<ImageStyle>;
-    /** Styles applied to the container around the icon or brand selector. */
-    iconContainerStyle?: StyleProp<ViewStyle>;
   };
 
 export const CardNumberElement = ({
@@ -66,8 +62,6 @@ export const CardNumberElement = ({
   style,
   textContentType,
   iconPosition,
-  iconStyle,
-  iconContainerStyle,
 }: CardNumberElementProps) => {
   const {
     elementRef,
@@ -117,21 +111,17 @@ export const CardNumberElement = ({
   const marginLeft = resolveEdge(inputStyle.marginLeft, inputStyle.marginHorizontal, inputStyle.margin);
   const marginRight = resolveEdge(inputStyle.marginRight, inputStyle.marginHorizontal, inputStyle.margin);
 
-  const iconWidth =
-    resolveEdge(StyleSheet.flatten(iconStyle)?.width) || DEFAULT_ICON_WIDTH;
-  const reserved = ICON_INSET + iconWidth + ICON_GAP;
-
   const inputInset =
     iconPosition === 'left'
       ? {
           paddingLeft:
             resolveEdge(inputStyle.paddingLeft, inputStyle.paddingHorizontal, inputStyle.padding) +
-            reserved,
+            ICON_RESERVED,
         }
       : {
           paddingRight:
             resolveEdge(inputStyle.paddingRight, inputStyle.paddingHorizontal, inputStyle.padding) +
-            reserved,
+            ICON_RESERVED,
         };
 
   const overlayPosition = {
@@ -147,20 +137,19 @@ export const CardNumberElement = ({
       // The plain icon must not swallow taps meant for the field; the co-badge
       // selector is interactive, so only its subtree accepts them.
       pointerEvents={showBrandSelector ? 'box-none' : 'none'}
-      style={[styles.iconOverlay, overlayPosition, iconContainerStyle]}
+      style={[styles.iconOverlay, overlayPosition]}
       testID={`card-brand-icon-container-${iconPosition}`}
     >
       {showBrandSelector ? (
         <BrandPicker
           brands={brandSelectorOptions}
           displayBrand={displayBrand}
-          iconStyle={iconStyle}
           onBrandSelect={onNetworkSelect}
           selectedBrand={selectedNetwork}
           variant="icon"
         />
       ) : (
-        <CardBrandIcon brand={displayBrand} style={iconStyle} />
+        <CardBrandIcon brand={displayBrand} />
       )}
     </View>
   ) : null;

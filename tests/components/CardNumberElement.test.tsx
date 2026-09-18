@@ -491,30 +491,24 @@ describe('CardNumberElement', () => {
     });
 
     test.each(['left', 'right'] as const)(
-      'renders the icon on the %s with custom styles',
+      'renders the icon on the %s at a fixed size',
       (iconPosition) => {
         render(
           <CardNumberElement
             btRef={mockedRef}
-            iconContainerStyle={{ paddingHorizontal: 6 }}
             iconPosition={iconPosition}
-            iconStyle={{ height: 20, tintColor: '#123456', width: 30 }}
             placeholder="Card Number"
             style={{}}
           />
         );
 
-        const icon = screen.getByTestId('card-brand-icon');
-        const iconContainer = screen.getByTestId(
-          `card-brand-icon-container-${iconPosition}`
-        );
-
-        expect(icon).toHaveStyle({
-          height: 20,
-          tintColor: '#123456',
-          width: 30,
+        expect(
+          screen.getByTestId(`card-brand-icon-container-${iconPosition}`)
+        ).toBeTruthy();
+        expect(screen.getByTestId('card-brand-icon')).toHaveStyle({
+          height: 24,
+          width: 36,
         });
-        expect(iconContainer).toHaveStyle({ paddingHorizontal: 6 });
       }
     );
 

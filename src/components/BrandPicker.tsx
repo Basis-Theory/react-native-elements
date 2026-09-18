@@ -5,8 +5,6 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
-  type ImageStyle,
-  type StyleProp,
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
@@ -20,7 +18,6 @@ interface BrandPickerProps {
   onBrandSelect: (brand: CardBrand | undefined) => void;
   style?: ViewStyle;
   displayBrand?: CardBrand;
-  iconStyle?: StyleProp<ImageStyle>;
   variant?: 'icon' | 'text';
 }
 
@@ -99,7 +96,6 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
   onBrandSelect,
   style,
   displayBrand = 'unknown',
-  iconStyle,
   variant = 'text',
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -144,10 +140,7 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
         testID="card-brand-selector"
       >
         {variant === 'icon' ? (
-          <CardBrandIcon
-            brand={selectedBrand ?? displayBrand}
-            style={iconStyle}
-          />
+          <CardBrandIcon brand={selectedBrand ?? displayBrand} />
         ) : (
           <Text style={buttonTextStyle}>{displayText}</Text>
         )}
@@ -184,7 +177,6 @@ export const BrandPicker: React.FC<BrandPickerProps> = ({
                     {variant === 'icon' && (
                       <CardBrandIcon
                         brand={brand}
-                        style={iconStyle}
                         testID={`card-brand-option-icon-${brand}`}
                       />
                     )}

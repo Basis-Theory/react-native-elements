@@ -8,11 +8,7 @@
 input. Icons are hidden by default for backward compatibility.
 
 ```tsx
-<CardNumberElement
-  iconPosition="right"
-  iconStyle={{ width: 42, height: 28 }}
-  iconContainerStyle={{ paddingLeft: 8, borderRadius: 4 }}
-/>
+<CardNumberElement iconPosition="right" />
 ```
 
 Set `iconPosition` to `left`, `right`, or `none`. When co-badged card support is
@@ -21,9 +17,9 @@ hides both the icon and built-in selector without disabling co-badge validation
 or preselected networks. If `iconPosition` is omitted, the existing text-based
 co-badge picker remains available.
 
-Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x`. Brands with no artwork fall
-back to a generic card icon while still reporting the detected brand through
-`onChange` and to screen readers.
+Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x` and render at a fixed 36x24
+inside the field. Brands with no artwork fall back to a generic card icon while
+still reporting the detected brand through `onChange` and to screen readers.
 
 Artwork is derived from the Basis Theory Web SDK's brand icons, except for the
 following, which come from Wikimedia Commons and are public domain (logos remain
