@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/Basis-Theory/react-native-elements/compare/v4.2.0...v4.3.0) (2026-09-18)
+
+
+### Features
+
+* **ENG-11715:** add region option and uat and dev environments ([#57](https://github.com/Basis-Theory/react-native-elements/issues/57)) ([5231f4d](https://github.com/Basis-Theory/react-native-elements/commit/5231f4d63d557f2e1bb3fe602132944e2204d08a))
+
 # [4.2.0](https://github.com/Basis-Theory/react-native-elements/compare/v4.1.0...v4.2.0) (2026-09-11)
 
 
