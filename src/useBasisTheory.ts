@@ -8,7 +8,11 @@ import { Proxy } from './modules/proxy';
 import { Sessions } from './modules/sessions';
 import { TokenIntents } from './modules/tokenIntents';
 import { Tokens } from './modules/tokens';
-import { loadBasisTheoryInstance, getBasisTheoryInstance } from './services/basis-theory-js';
+import {
+  loadBasisTheoryInstance,
+  getBasisTheoryInstance,
+  getBasisTheoryConfig,
+} from './services/basis-theory-js';
 import type { BasisTheoryInstance } from './types';
 
 interface BasisTheoryInitOptions {
@@ -16,6 +20,7 @@ interface BasisTheoryInitOptions {
   useNgApi?: boolean;
   debug?: boolean;
   environment?: string;
+  region?: string;
 }
 
 const _BasisTheoryElements = async ({
@@ -24,14 +29,24 @@ const _BasisTheoryElements = async ({
   useNgApi,
   debug,
   environment,
+  region,
 }: BasisTheoryInitOptions & { apiKey: string }) => {
-  await loadBasisTheoryInstance(apiKey, apiBaseUrl, useNgApi, debug, environment);
+  await loadBasisTheoryInstance(
+    apiKey,
+    apiBaseUrl,
+    useNgApi,
+    debug,
+    environment,
+    region
+  );
 
   const bt: BasisTheoryInstance = getBasisTheoryInstance();
 
   const { setConfig } = _useConfigManager();
 
-  setConfig({ apiKey, baseUrl: apiBaseUrl ?? 'https://api.basistheory.com' });
+  // BIN lookup and other secondary clients read this config, so it has to carry the
+  // resolved URL rather than the raw option.
+  setConfig({ apiKey, baseUrl: getBasisTheoryConfig().baseUrl });
 
   const proxy = Proxy(bt);
 
