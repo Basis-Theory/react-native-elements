@@ -14,7 +14,7 @@
  */
 
 import { execFileSync } from 'child_process';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -71,6 +71,12 @@ const readBrandModules = (tier) => {
 const brands = [...readBrandModules('inline'), ...readBrandModules('lazy')].sort(
   (a, b) => a.brand.localeCompare(b.brand)
 );
+
+for (const file of readdirSync(OUT_DIR).filter((file) =>
+  file.endsWith('.svg')
+)) {
+  unlinkSync(resolve(OUT_DIR, file));
+}
 
 for (const { brand, viewBox, paths } of brands) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${paths}</svg>\n`;
