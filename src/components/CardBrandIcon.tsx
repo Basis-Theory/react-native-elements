@@ -15,7 +15,9 @@ import { labelizeCardBrand } from '../utils/shared';
 /* eslint-disable @typescript-eslint/no-var-requires -- Metro requires static require calls for bundled images. */
 const cardBrandIcons: Partial<Record<CardBrand, number>> = {
   'american-express': require('../assets/card-brands/american-express.png'),
+  bancontact: require('../assets/card-brands/bancontact.png'),
   'cartes-bancaires': require('../assets/card-brands/cartes-bancaires.png'),
+  dankort: require('../assets/card-brands/dankort.png'),
   'diners-club': require('../assets/card-brands/diners-club.png'),
   discover: require('../assets/card-brands/discover.png'),
   elo: require('../assets/card-brands/elo.png'),

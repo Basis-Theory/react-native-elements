@@ -21,14 +21,17 @@ hides both the icon and built-in selector without disabling co-badge validation
 or preselected networks. If `iconPosition` is omitted, the existing text-based
 co-badge picker remains available.
 
-Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x`. Brands with no artwork —
-including `bancontact` and `dankort` — fall back to a generic card icon while
-still reporting the detected brand through `onChange` and to screen readers.
+Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x`. Brands with no artwork fall
+back to a generic card icon while still reporting the detected brand through
+`onChange` and to screen readers.
 
-Artwork is derived from the Basis Theory Web SDK's brand icons, except for
-UnionPay, Hipercard, Hiper and MIR, which come from Wikimedia Commons
-([UnionPay](https://commons.wikimedia.org/wiki/File:UnionPay_logo.svg) and
-[Hipercard](https://commons.wikimedia.org/wiki/File:Hipercard_logo.svg), public
-domain; [MIR](https://commons.wikimedia.org/wiki/File:Mir-logo.SVG.svg), public
-domain; [Hiper](https://commons.wikimedia.org/wiki/File:Cart%C3%A3o_Hiper.jpg),
-CC0, Banco Itaú Unibanco).
+Artwork is derived from the Basis Theory Web SDK's brand icons, except for the
+following, which come from Wikimedia Commons and are public domain (logos remain
+trademarks of their respective networks):
+[UnionPay](https://commons.wikimedia.org/wiki/File:UnionPay_logo.svg),
+[Hipercard](https://commons.wikimedia.org/wiki/File:Hipercard_logo.svg),
+[MIR](https://commons.wikimedia.org/wiki/File:Mir-logo.SVG.svg),
+[Hiper](https://commons.wikimedia.org/wiki/File:Cart%C3%A3o_Hiper.jpg) (CC0,
+Banco Itaú Unibanco),
+[Bancontact](https://commons.wikimedia.org/wiki/File:Bancontact_logo_2021.svg)
+and [Dankort](https://commons.wikimedia.org/wiki/File:Dankort_logo.png).

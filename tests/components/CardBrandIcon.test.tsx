@@ -19,7 +19,9 @@ const DENSITIES = ['', '@2x', '@3x'];
  */
 const BUNDLED_BRANDS: CardBrand[] = [
   'american-express',
+  'bancontact',
   'cartes-bancaires',
+  'dankort',
   'diners-club',
   'discover',
   'elo',
