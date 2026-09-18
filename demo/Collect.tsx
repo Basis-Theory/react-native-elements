@@ -38,7 +38,7 @@ const BRAND_SAMPLES: ReadonlyArray<{ label: string; value: string }> = [
   { label: 'Maestro', value: '6759649826438453' },
   { label: 'Elo', value: '6362970000457013' },
   { label: 'Hipercard', value: '6062826786276634' },
-  { label: 'Hiper (no icon)', value: '6370950000000005' },
+  { label: 'Hiper', value: '6370950000000005' },
   { label: 'MIR', value: '2200000000000004' },
 ];
 

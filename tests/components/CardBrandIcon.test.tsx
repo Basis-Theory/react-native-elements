@@ -24,6 +24,7 @@ const BUNDLED_BRANDS: CardBrand[] = [
   'diners-club',
   'discover',
   'elo',
+  'hiper',
   'hipercard',
   'jcb',
   'maestro',

@@ -34,9 +34,7 @@ const DENSITIES = [1, 2, 3];
  * Skipping them makes CardBrandIcon fall back to the generic card, which beats
  * rendering a mangled logo. Drop an entry once svg-overrides/ has real artwork.
  */
-const SKIP = {
-  hiper: 'web SDK artwork is the Hipercard mark with most glyphs dropped; no Hiper source yet',
-};
+const SKIP = {};
 
 if (!existsSync(SVG_DIR)) {
   console.error('No synced SVGs found. Run `yarn icons:sync <elements-repo>` first.');

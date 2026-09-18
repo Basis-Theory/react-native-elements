@@ -20,6 +20,7 @@ const cardBrandIcons: Partial<Record<CardBrand, number>> = {
   'diners-club': require('../assets/card-brands/diners-club.png'),
   discover: require('../assets/card-brands/discover.png'),
   elo: require('../assets/card-brands/elo.png'),
+  hiper: require('../assets/card-brands/hiper.png'),
   hipercard: require('../assets/card-brands/hipercard.png'),
   jcb: require('../assets/card-brands/jcb.png'),
   maestro: require('../assets/card-brands/maestro.png'),

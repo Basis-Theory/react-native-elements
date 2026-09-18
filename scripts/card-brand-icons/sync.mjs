@@ -135,7 +135,7 @@ ships correct artwork for that brand, so it tracks upstream again.
 | \`unionpay\` | Upstream red panel missing; wordmark reads "Un o Pay" | Wikimedia Commons, public domain |
 | \`hipercard\` | Upstream wordmark reduced to "H\u02d9 d" | Wikimedia Commons, public domain |
 | \`mir\` | No upstream artwork | Wikimedia Commons, public domain |
-| \`hiper\` | Upstream file is byte-identical to the broken \`hipercard\` | none — skipped, falls back to \`unknown\` |
+| \`hiper\` | Upstream file is byte-identical to the broken \`hipercard\` | Wikimedia Commons, CC0 (Banco Itaú Unibanco) |
 
 Brands with neither upstream artwork nor an override (\`bancontact\`, \`dankort\` and the
 rare brands) fall back to the \`unknown\` icon, matching what web renders for them today.

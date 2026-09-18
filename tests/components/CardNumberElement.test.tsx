@@ -538,27 +538,6 @@ describe('CardNumberElement', () => {
       expect(screen.getByLabelText('Visa card brand')).toBeTruthy();
     });
 
-    test('falls back to the unknown icon for brands without bundled artwork', () => {
-      render(
-        <CardNumberElement
-          btRef={mockedRef}
-          iconPosition="right"
-          placeholder="Card Number"
-          style={{}}
-        />
-      );
-
-      fireEvent.changeText(
-        screen.getByPlaceholderText('Card Number'),
-        '6370950000000005'
-      );
-
-      expect(
-        screen.getByTestId('card-brand-icon').props.source.testUri
-      ).toContain('card-brands/unknown.png');
-      expect(screen.getByLabelText('Hiper card brand')).toBeTruthy();
-    });
-
     test.each([
       ['left', 'paddingLeft', 'paddingRight'],
       ['right', 'paddingRight', 'paddingLeft'],
