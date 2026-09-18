@@ -550,13 +550,13 @@ describe('CardNumberElement', () => {
 
       fireEvent.changeText(
         screen.getByPlaceholderText('Card Number'),
-        '2200000000000000'
+        '6370950000000005'
       );
 
       expect(
         screen.getByTestId('card-brand-icon').props.source.testUri
       ).toContain('card-brands/unknown.png');
-      expect(screen.getByLabelText('Mir card brand')).toBeTruthy();
+      expect(screen.getByLabelText('Hiper card brand')).toBeTruthy();
     });
 
     test.each([

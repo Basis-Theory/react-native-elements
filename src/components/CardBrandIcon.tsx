@@ -24,6 +24,7 @@ const cardBrandIcons: Partial<Record<CardBrand, number>> = {
   jcb: require('../assets/card-brands/jcb.png'),
   maestro: require('../assets/card-brands/maestro.png'),
   mastercard: require('../assets/card-brands/mastercard.png'),
+  mir: require('../assets/card-brands/mir.png'),
   unionpay: require('../assets/card-brands/unionpay.png'),
   unknown: require('../assets/card-brands/unknown.png'),
   visa: require('../assets/card-brands/visa.png'),

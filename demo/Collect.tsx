@@ -39,7 +39,7 @@ const BRAND_SAMPLES: ReadonlyArray<{ label: string; value: string }> = [
   { label: 'Elo', value: '6362970000457013' },
   { label: 'Hipercard', value: '6062826786276634' },
   { label: 'Hiper (no icon)', value: '6370950000000005' },
-  { label: 'MIR (no icon)', value: '2200000000000004' },
+  { label: 'MIR', value: '2200000000000004' },
 ];
 
 export const Collect = () => {
@@ -214,55 +214,6 @@ export const Collect = () => {
               value={tokenId}
             />
 
-            <Pressable
-              onPress={() => setSamplePickerOpen(true)}
-              style={styles.brandSelect}
-            >
-              <Text style={styles.brandSelectText}>
-                {sampleBrand ?? 'Select a test card brand'}
-              </Text>
-            </Pressable>
-
-            <Modal
-              animationType="fade"
-              onRequestClose={() => setSamplePickerOpen(false)}
-              transparent
-              visible={samplePickerOpen}
-            >
-              <Pressable
-                onPress={() => setSamplePickerOpen(false)}
-                style={styles.brandModalOverlay}
-              >
-                <View style={styles.brandModalCard}>
-                  <Text style={styles.brandModalTitle}>Test card brand</Text>
-                  <ScrollView>
-                    {BRAND_SAMPLES.map((sample) => (
-                      <Pressable
-                        key={sample.label}
-                        onPress={() => {
-                          setSampleBrand(sample.label);
-                          setSamplePickerOpen(false);
-                          cardNumberRef.current?.setValue({
-                            id: 'brand-sample',
-                            format: () => sample.value,
-                          });
-                        }}
-                        style={[
-                          styles.brandOption,
-                          sampleBrand === sample.label &&
-                            styles.brandOptionSelected,
-                        ]}
-                      >
-                        <Text style={styles.brandOptionText}>
-                          {sample.label}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
-              </Pressable>
-            </Modal>
-
             <CardNumberElement
               autoComplete="cc-number"
               btRef={cardNumberRef}
@@ -363,6 +314,55 @@ export const Collect = () => {
             <Pressable onPress={clearToken} style={styles.button}>
               <Text style={styles.buttonText}>{'Clear'}</Text>
             </Pressable>
+
+            <Pressable
+              onPress={() => setSamplePickerOpen(true)}
+              style={styles.brandSelect}
+            >
+              <Text style={styles.brandSelectText}>
+                {sampleBrand ?? 'Select a test card brand'}
+              </Text>
+            </Pressable>
+
+            <Modal
+              animationType="fade"
+              onRequestClose={() => setSamplePickerOpen(false)}
+              transparent
+              visible={samplePickerOpen}
+            >
+              <Pressable
+                onPress={() => setSamplePickerOpen(false)}
+                style={styles.brandModalOverlay}
+              >
+                <View style={styles.brandModalCard}>
+                  <Text style={styles.brandModalTitle}>Test card brand</Text>
+                  <ScrollView>
+                    {BRAND_SAMPLES.map((sample) => (
+                      <Pressable
+                        key={sample.label}
+                        onPress={() => {
+                          setSampleBrand(sample.label);
+                          setSamplePickerOpen(false);
+                          cardNumberRef.current?.setValue({
+                            id: 'brand-sample',
+                            format: () => sample.value,
+                          });
+                        }}
+                        style={[
+                          styles.brandOption,
+                          sampleBrand === sample.label &&
+                            styles.brandOptionSelected,
+                        ]}
+                      >
+                        <Text style={styles.brandOptionText}>
+                          {sample.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              </Pressable>
+            </Modal>
 
             {token && (
               <>

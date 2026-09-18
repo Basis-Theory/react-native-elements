@@ -28,6 +28,7 @@ const BUNDLED_BRANDS: CardBrand[] = [
   'jcb',
   'maestro',
   'mastercard',
+  'mir',
   'unionpay',
   'unknown',
   'visa',
