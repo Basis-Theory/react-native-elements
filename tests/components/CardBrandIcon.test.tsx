@@ -14,9 +14,8 @@ const ASSET_DIR = resolve(__dirname, '../../src/assets/card-brands');
 const DENSITIES = ['', '@2x', '@3x'];
 
 /**
- * Brands with bundled artwork. Everything else in CARD_BRANDS falls back to `unknown`,
- * which matches what the web SDK renders for them. Adding a brand here without running
- * `yarn icons:generate` fails the asset coverage test below.
+ * Brands with bundled artwork. Everything else in CARD_BRANDS falls back to `unknown`.
+ * Adding a brand here without adding its PNGs fails the asset coverage test below.
  */
 const BUNDLED_BRANDS: CardBrand[] = [
   'american-express',

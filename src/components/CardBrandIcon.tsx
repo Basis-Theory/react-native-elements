@@ -9,9 +9,8 @@ import type { CardBrand } from '../CardElementTypes';
 import { labelizeCardBrand } from '../utils/shared';
 
 /*
- * Assets are rasterized from the web SDK's brand SVGs so both SDKs render identical
- * artwork — see scripts/card-brand-icons. Brands the web SDK has no artwork for fall
- * back to `unknown`, matching what it displays for them.
+ * Brands without bundled artwork fall back to `unknown`. See the README for where
+ * each icon's artwork comes from.
  */
 /* eslint-disable @typescript-eslint/no-var-requires -- Metro requires static require calls for bundled images. */
 const cardBrandIcons: Partial<Record<CardBrand, number>> = {

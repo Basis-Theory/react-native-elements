@@ -21,8 +21,14 @@ hides both the icon and built-in selector without disabling co-badge validation
 or preselected networks. If `iconPosition` is omitted, the existing text-based
 co-badge picker remains available.
 
-Icons ship as PNGs rasterized from the web SDK's brand SVGs, so both SDKs render
-identical artwork. Brands with no usable artwork — including `bancontact`
-and `dankort` — fall back to a generic card icon while still
-reporting the detected brand through `onChange` and to screen readers. See
-[`scripts/card-brand-icons`](scripts/card-brand-icons) to regenerate them.
+Icons ship as bundled PNGs at `@1x`/`@2x`/`@3x`. Brands with no artwork —
+including `bancontact` and `dankort` — fall back to a generic card icon while
+still reporting the detected brand through `onChange` and to screen readers.
+
+Artwork is derived from the Basis Theory Web SDK's brand icons, except for
+UnionPay, Hipercard, Hiper and MIR, which come from Wikimedia Commons
+([UnionPay](https://commons.wikimedia.org/wiki/File:UnionPay_logo.svg) and
+[Hipercard](https://commons.wikimedia.org/wiki/File:Hipercard_logo.svg), public
+domain; [MIR](https://commons.wikimedia.org/wiki/File:Mir-logo.SVG.svg), public
+domain; [Hiper](https://commons.wikimedia.org/wiki/File:Cart%C3%A3o_Hiper.jpg),
+CC0, Banco Itaú Unibanco).
