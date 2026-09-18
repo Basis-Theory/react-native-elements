@@ -202,6 +202,7 @@ export const Collect = () => {
               binLookup={true}
               keyboardType="numeric"
               enterKeyHint="next"
+              iconPosition="right"
               onChange={updateElementsEvents('cardNumber')}
               onSubmitEditing={() => cardExpirationDateRef.current?.focus()}
               placeholder="Card Number"

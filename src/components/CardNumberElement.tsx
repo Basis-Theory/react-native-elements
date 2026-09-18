@@ -91,9 +91,19 @@ export const CardNumberElement = ({
   const positionedIcon = iconPosition === 'left' || iconPosition === 'right';
   const displayBrand = selectedNetwork ?? cardBrand;
 
+  // The row centres each child's outer box, so vertical margins on the caller's input
+  // style would offset the icon against the field. Mirroring them keeps the two aligned.
+  const inputStyle = StyleSheet.flatten(style) ?? {};
+  const iconMargins = {
+    marginBottom:
+      inputStyle.marginBottom ?? inputStyle.marginVertical ?? inputStyle.margin,
+    marginTop:
+      inputStyle.marginTop ?? inputStyle.marginVertical ?? inputStyle.margin,
+  };
+
   const brandArea = positionedIcon ? (
     <View
-      style={[styles.iconContainer, iconContainerStyle]}
+      style={[styles.iconContainer, iconMargins, iconContainerStyle]}
       testID={`card-brand-icon-container-${iconPosition}`}
     >
       {showBrandSelector ? (
