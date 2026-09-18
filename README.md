@@ -22,7 +22,7 @@ or preselected networks. If `iconPosition` is omitted, the existing text-based
 co-badge picker remains available.
 
 Icons ship as PNGs rasterized from the web SDK's brand SVGs, so both SDKs render
-identical artwork. Brands the web SDK has no artwork for — including `mir`,
+identical artwork. Brands with no usable artwork — including `mir`, `hiper`,
 `bancontact` and `dankort` — fall back to a generic card icon while still
 reporting the detected brand through `onChange` and to screen readers. See
 [`scripts/card-brand-icons`](scripts/card-brand-icons) to regenerate them.

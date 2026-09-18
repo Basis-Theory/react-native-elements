@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = resolve(__dirname, 'svg');
+const OVERRIDE_DIR = resolve(__dirname, 'svg-overrides');
 const SOURCE_DOC = resolve(__dirname, 'SOURCE.md');
 
 const BRANDS_SUBPATH = 'packages/elements/src/shared/icons/brands';
@@ -90,19 +91,28 @@ const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
   encoding: 'utf-8',
 }).trim();
 
+const overridden = existsSync(OVERRIDE_DIR)
+  ? readdirSync(OVERRIDE_DIR)
+      .filter((file) => file.endsWith('.svg'))
+      .map((file) => basename(file, '.svg'))
+      .sort()
+  : [];
+
 writeFileSync(
   SOURCE_DOC,
   `# Card brand icon source
 
-These SVGs are generated, not authored here. They are synced from the web SDK so both
-SDKs render identical artwork.
+These SVGs are generated, not authored here. \`svg/\` is synced from the web SDK so both
+SDKs render identical artwork; \`svg-overrides/\` holds local corrections that survive a
+sync and win during \`icons:generate\`.
 
 | | |
 | --- | --- |
 | Repository | \`Basis-Theory/basistheory-elements\` |
 | Path | \`${BRANDS_SUBPATH}/{inline,lazy}\` |
 | Commit | \`${commit}\` |
-| Brands | ${brands.length} |
+| Synced brands | ${brands.length} |
+| Overridden | ${overridden.length ? overridden.map((b) => `\`${b}\``).join(', ') : 'none'} |
 
 ## Updating
 
@@ -114,7 +124,19 @@ yarn icons:generate                             # re-rasterize src/assets/card-b
 Commit the regenerated PNGs — \`@resvg/resvg-js\` is only needed to regenerate them,
 never to build or consume the SDK.
 
-Brands absent from the web SDK (including \`mir\`, \`bancontact\` and \`dankort\`) fall
+## Overrides
+
+The web SDK ships three brand SVGs with glyph paths dropped by an optimization step.
+\`svg-overrides/\` replaces them until that is fixed upstream, at which point the
+override should be deleted so the brand tracks the web SDK again.
+
+| Brand | Upstream defect | Local source |
+| --- | --- | --- |
+| \`unionpay\` | Red panel missing; wordmark reads "Un o Pay" | Wikimedia Commons, public domain |
+| \`hipercard\` | Wordmark reduced to "H\u02d9 d" | Wikimedia Commons, public domain |
+| \`hiper\` | Byte-identical to the broken \`hipercard\` file | none — skipped, falls back to \`unknown\` |
+
+Brands absent from the web SDK (including \`mir\`, \`bancontact\` and \`dankort\`) also fall
 back to the \`unknown\` icon, matching what web renders for them today.
 `
 );
