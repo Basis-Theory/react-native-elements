@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.1.0...v3.1.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **ENG-12623:** widen react-native peer range to >=0.79.0 <0.86.0 ([#66](https://github.com/Basis-Theory/react-native-elements/issues/66)) ([f7068d9](https://github.com/Basis-Theory/react-native-elements/commit/f7068d9987fdf98ebe7c6071f15906cf7ce9efef))
+
 # [3.1.0](https://github.com/Basis-Theory/react-native-elements/compare/v3.0.2...v3.1.0) (2026-09-11)
 
 
