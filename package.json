@@ -30,7 +30,7 @@
   },
   "peerDependencies": {
     "react": "^18.3.1 || >= 18.2.0",
-    "react-native": "^0.79.0"
+    "react-native": ">=0.79.0 <0.86.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
