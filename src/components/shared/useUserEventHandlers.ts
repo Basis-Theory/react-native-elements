@@ -8,7 +8,6 @@ import { useTransform } from './useTransform';
 import { ValidatorOptions } from '../../utils/validation';
 import {
   NativeSyntheticEvent,
-  TextInputFocusEventData,
   TextInputSubmitEditingEventData,
 } from 'react-native';
 import { isString } from '../../utils/shared';
@@ -91,7 +90,7 @@ export const useUserEventHandlers = ({
         onChange(event);
       }
     },
-    _onFocus: (_event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    _onFocus: () => {
       const val = _elementValues[element.id] ?? '';
 
       if (onFocus && isString(val)) {
@@ -99,7 +98,7 @@ export const useUserEventHandlers = ({
         onFocus(event);
       }
     },
-    _onBlur: (_event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    _onBlur: () => {
       const val = _elementValues[element.id] ?? '';
 
       if (onBlur && isString(val)) {

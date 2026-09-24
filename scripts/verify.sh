@@ -7,6 +7,8 @@ cd $(dirname $0)/..
 
 yarn lint
 
+yarn tsc --noEmit
+
 
 #echo "Running tests..."
 

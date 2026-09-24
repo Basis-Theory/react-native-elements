@@ -55,3 +55,27 @@ jobs:
 
       - name: Verify
         run: make verify
+
+  verify-react-native-ceiling:
+    runs-on: ubuntu-latest
+    env:
+      CI: 1
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Node 20.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20.x
+
+      - name: Install deps (with cache)
+        uses: bahmutov/npm-install@v1
+        with:
+          install-command: yarn --immutable --no-progress --ignore-scripts
+
+      - name: Install the newest react-native the peer range allows
+        run: node scripts/react-native-ceiling.js
+
+      - name: Verify
+        run: make verify
