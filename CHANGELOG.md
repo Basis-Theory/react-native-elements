@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/Basis-Theory/react-native-elements/compare/v3.1.1...v3.2.0) (2026-10-26)
+
+
+### Features
+
+* add card brand icons to card number input ([#59](https://github.com/Basis-Theory/react-native-elements/issues/59)) ([#67](https://github.com/Basis-Theory/react-native-elements/issues/67)) ([8b9283a](https://github.com/Basis-Theory/react-native-elements/commit/8b9283a49c3a7578d314a8b0d90b35a827dc7366))
+
 ## [3.1.1](https://github.com/Basis-Theory/react-native-elements/compare/v3.1.0...v3.1.1) (2026-09-24)
 
 
